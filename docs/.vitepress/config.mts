@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "VideState",
   description: "A Roblox Vide source state handler.",
+  base: '/VideState/',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -38,7 +39,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/iDemandSky/VideState' }
     ]
   }
 })
