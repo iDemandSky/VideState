@@ -1,0 +1,9 @@
+{
+    "languageMode": "strict",
+    "aliases": {
+        "VideState": "src",
+        "packages": "./packages/roblox",
+        "luau-packages": "./packages/luau",
+        "Lest": "./.lest/core"
+    }
+}

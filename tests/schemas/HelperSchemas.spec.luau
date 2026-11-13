@@ -1,0 +1,121 @@
+const Lest = require("@Lest")
+const Vide = require("@packages/Vide")
+const VideState = require("@VideState")
+
+local describe, it, expect = Lest.describe, Lest.it, Lest.expect
+
+describe("centralized schema validators", function()
+    it("validates booleans and returns typed issues", function()
+        local schema = VideState.boolean()
+        expect(schema.parse(true).ok).toBe(true)
+        expect(schema.parse(false).ok).toBe(true)
+
+        local result = schema.parse("true")
+        expect(result.ok).toBe(false)
+        if not result.ok then
+            expect(result.issues[1].type).toBe("invalid_type")
+            expect(result.issues[1].message).toBe("expected Boolean, got string")
+        end
+    end)
+
+    it("validates enum arguments, membership, and input types", function()
+        local schema = VideState.enum("Idle", "Active")
+        expect(schema.parse("Idle").ok).toBe(true)
+        expect(schema.parse("Active").ok).toBe(true)
+        expect(schema.parse("Missing").ok).toBe(false)
+        expect(schema.parse(1).ok).toBe(false)
+        expect(function()
+            VideState.enum()
+        end).toThrow("at least one")
+        expect(function()
+            VideState.enum("Idle", 1 :: any)
+        end).toThrow("argument 2")
+    end)
+
+    it("validates finite floats, ranges, and decimal precision", function()
+        local schema = VideState.float({ min = 0.15, max = 2, step = 0.1 })
+        expect(schema.parse(0.2).ok).toBe(true)
+        expect(schema.parse(1.2).ok).toBe(true)
+        expect(schema.parse(0.25).ok).toBe(false)
+        expect(schema.parse(1.23).ok).toBe(false)
+        expect(schema.parse(0.149).ok).toBe(false)
+        expect(schema.parse(math.huge).ok).toBe(false)
+        expect(VideState.float({ step = 0.01 }).parse(1.23).ok).toBe(true)
+        expect(VideState.float({ step = 0.01 }).parse(1.234).ok).toBe(false)
+        expect(function()
+            VideState.float({ step = 0 })
+        end).toThrow("positive")
+        expect(function()
+            VideState.float({ min = 2, max = 1 })
+        end).toThrow("minimum")
+    end)
+
+    it("validates finite integers and bounds", function()
+        local schema = VideState.integer({ min = -1, max = 2 })
+        expect(schema.parse(-1).ok).toBe(true)
+        expect(schema.parse(2).ok).toBe(true)
+        expect(schema.parse(1.5).ok).toBe(false)
+        expect(schema.parse(math.huge).ok).toBe(false)
+        expect(schema.parse(3).ok).toBe(false)
+        expect(function()
+            VideState.integer({ min = 0.5 })
+        end).toThrow("integer")
+    end)
+
+    it("counts string code points, validates UTF-8, and truncates output", function()
+        expect(VideState.string({ maxLength = 2 }).parse("é🙂").ok).toBe(true)
+        expect(VideState.string({ maxLength = 2 }).parse("é🙂x").ok).toBe(false)
+        expect(VideState.string({ maxLength = 2 }).parse("\255").ok).toBe(false)
+
+        local truncated = VideState.string({ maxLength = 2, truncate = true }).parse("é🙂x")
+        expect(truncated.ok).toBe(true)
+        if truncated.ok then
+            expect(truncated.value).toBe("é🙂")
+        end
+
+        expect(function()
+            VideState.string({ maxLength = -1 })
+        end).toThrow("maxLength")
+        expect(function()
+            VideState.string({ truncate = "yes" :: any })
+        end).toThrow("truncate")
+    end)
+
+    it("validates strict records", function()
+        local schema = VideState.table({
+            active = VideState.boolean(),
+            mode = VideState.enum("Idle", "Active"),
+        })
+
+        expect(schema.parse({ active = false, mode = "Idle" }).ok).toBe(true)
+        expect(schema.parse({ active = true }).ok).toBe(false)
+        expect(schema.parse({ active = true, mode = "Idle", extra = true }).ok).toBe(false)
+        expect(schema.parse({ true, "Idle" }).ok).toBe(false)
+    end)
+
+    it("validates supported Roblox datatypes", function()
+        expect(VideState.color3().parse(Color3.new(1, 0, 0)).ok).toBe(true)
+        expect(VideState.color3().parse(UDim.new()).ok).toBe(false)
+        expect(VideState.udim().parse(UDim.new(0.5, 2)).ok).toBe(true)
+        expect(VideState.udim().parse(Color3.new()).ok).toBe(false)
+        expect(VideState.udim2().parse(UDim2.fromOffset(10, 20)).ok).toBe(true)
+        expect(VideState.udim2().parse(Vector2.new()).ok).toBe(false)
+        expect(VideState.vector2().parse(Vector2.new(1, 2)).ok).toBe(true)
+        expect(VideState.vector2().parse(UDim2.new()).ok).toBe(false)
+    end)
+
+    it("validates schema sources reactively", function()
+        local source = Vide.source(true)
+        local schema = VideState.boolean()
+        local destroy = Vide.root(function()
+            expect(schema.parse(source).ok).toBe(true)
+        end)
+
+        expect(pcall(function()
+            (source :: any)("not a boolean")
+        end)).toBe(false)
+        destroy()
+    end)
+end)
+
+return nil

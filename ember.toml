@@ -1,0 +1,24 @@
+[package]
+name = "idemandsky/VideState"
+version = "0.1.0"
+description = "A state handler specifically for Vide, allowing you to seamlessly to change GUI instances' properties seamlessly."
+authors = ["iDemandSky"]
+repository = "https://github.com/iDemandSky/VideState"
+license = "MIT"
+
+[target]
+environment = "roblox"
+main = "src/init.luau"
+
+[indices]
+Wally = "https://github.com/UpliftGames/wally-index"
+
+[dependencies]
+Vide = { name = "centau/vide", version = "0.4.1", index = "Wally" }
+Typed = { name = "typed/core", version = "^0.9.2" }
+TypedCore = { name = "typed/engine", version = "^0.1.0" }
+
+[tools]
+larvae = "larvae-luau/larvae@0.11.0"
+rojo = "rojo-rbx/rojo@7.7.0"
+lest = "lest-luau/lest@0.6.0"

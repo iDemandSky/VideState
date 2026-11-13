@@ -1,0 +1,15 @@
+{
+  "name": "VideState",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "VideState": {
+        "$path": "src"
+      },
+      "Packages": {
+        "$path": "packages"
+      }
+    }
+  }
+}

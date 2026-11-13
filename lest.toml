@@ -1,0 +1,8 @@
+[suites.schemas]
+include = ["tests/schemas/**/*.spec.luau"]
+backend = "studio"
+default = false
+
+[place]
+file = ".lest/schema-tests.rbxlx"
+rojo = "default.project.json"
