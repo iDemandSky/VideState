@@ -15,8 +15,8 @@ values those Instances bind to, and it never creates Instances itself.
   data is reported with the field that caused the problem instead of failing
   later in the UI.
 - **Reusable rules.** A rule defines the shape and named states once. Any number
-  of handlers can be created from it, and each handler keeps its own sources and
-  state.
+  of handlers can be created from it. Each handler keeps its own current state,
+  and its sources follow that state.
 - **Built-in schemas.** Developers define their rules with VideState's own schema
   builders, so they don't need a separate validation library.
 - **Clear boundaries.** VideState handles data and state changes. Vide handles

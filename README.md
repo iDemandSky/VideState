@@ -52,26 +52,27 @@ to UI properties through Vide.
 
 ## Rules and handlers
 
-A rule captures one record schema. `new` validates its named state values, then
-creates independent Vide sources for each handler. Switching state updates those
-same sources, so existing Vide bindings remain reactive. At least two states are
-required, and every state plus the initial state is validated before sources
-are created.
+A rule captures one record schema. `new` takes a dictionary of Vide sources for
+each state, keyed by state name. Each handler exposes sources that follow its
+active state, so existing Vide bindings remain reactive when the state changes.
+At least two states are required, and every state is validated against the
+schema when `new` runs.
 
 ```luau
 const VideState = require("@VideState")
+const Vide = require("@packages/Vide")
 
-local PanelRule = VideState.rule(VideState.table({
+local PanelRule = VideState.rule({
     visible = VideState.boolean(),
     order = VideState.integer({ min = 0 }),
-}))
+}, { name = "Panel", allowedStateNames = { "Idle", "Active" } })
 
-type PanelValues = VideState.Infer<typeof(PanelRule.schema)>
+type PanelValues = VideState.Infer<typeof(PanelRule._schema)>
 type PanelSources = VideState.Sources<PanelValues>
 
 local panel = PanelRule.new({
-    Idle = { visible = false, order = 0 },
-    Active = { visible = true, order = 1 },
+    Idle = { visible = Vide.source(false), order = Vide.source(0) },
+    Active = { visible = Vide.source(true), order = Vide.source(1) },
 }, "Idle")
 
 local sources: PanelSources = panel.sources
@@ -85,8 +86,8 @@ seconds by default, broadcast to every transition listener. Set the shared
 duration per handler with the optional third `new` argument:
 `PanelRule.new(states, "Idle", { transitionDuration = 0.4 })`. Both methods
 return a disconnect callback, and listeners fire only for future state changes.
-Unknown state names and invalid state values raise errors before any state-change
-source writes. Runtime and compile-time rule validation is centralized in
+Unknown state names and invalid state values raise errors before the active state
+changes. Runtime and compile-time rule validation is centralized in
 `src/Validation.luau`. State-name typing is currently checked at runtime; field
 value types are inferred from the schema. The schema type is retained by the
 rule rather than widened to an any-schema.
@@ -98,6 +99,8 @@ submodules.
 ## Development
 
 Run `serve.bat` from the repository to build the Larvae output and serve it with Rojo. If either process exits, the launcher refreshes the output and retries after five seconds. Run `embr install` first if the pinned tools are not installed. Press Ctrl+C to stop serving.
+
+Before testing in Studio, run `larvae check` for syntax and require errors and `larvae lint` for warnings such as unused variables and shadowing. Warnings in `.lest/`, `dist/`, and `packages/` come from generated or vendored code and can be ignored.
 
 ### Schema verification
 

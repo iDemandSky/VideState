@@ -22,5 +22,13 @@ export type Handler<T> = {
     onChange: (callback: OnChangeCallback<T>) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>) -> Disconnect,
 }
+export type RuleMetaData<S> = {
+    name: string,
+    description: string?,
+    --- Used for categorising the rules
+    tags: { string }?,
+    --- If none, then all state names are allowed
+    allowedStateNames: { S }?,
+}
 
 return table.freeze({})

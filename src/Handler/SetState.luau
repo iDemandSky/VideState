@@ -3,8 +3,7 @@ const Vide = require("@packages/Vide")
 const Validation = require("../Validation")
 
 return function <T>(
-    validatedStates: { [string]: T },
-    mutableSources: { [string]: unknown },
+    readState: (stateName: string) -> T,
     currentState: Vide.Source<string>,
     emitChange: (from: T, to: T) -> (),
     emitTransition: (from: T, to: T) -> ()
@@ -12,29 +11,16 @@ return function <T>(
     return function(stateName: string)
         Validation.stateName(stateName, "state name")
 
-        local nextValues = Validation.state(validatedStates, stateName, "selected") :: T
+        local nextValues = readState(stateName)
         local currentStateName = currentState()
 
         if currentStateName == stateName then
             return
         end
 
-        local currentValues = Validation.state(
-            validatedStates,
-            currentStateName,
-            "current"
-        ) :: T
+        local currentValues = readState(currentStateName)
 
-        Vide.batch(function()
-            local nextFields = nextValues :: { [string]: unknown }
-
-            for fieldName, value in nextFields do
-                local writableSource = Validation.source(mutableSources, fieldName)
-                writableSource(value)
-            end
-
-            currentState(stateName)
-        end)
+        currentState(stateName)
 
         local from = table.freeze(table.clone(currentValues :: { [string]: unknown })) :: T
         local to = table.freeze(table.clone(nextValues :: { [string]: unknown })) :: T

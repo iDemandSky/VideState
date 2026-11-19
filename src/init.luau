@@ -15,6 +15,7 @@ return table.freeze({
     enum = require("@self/Schemas/Primitives/Enum"),
     float = require("@self/Schemas/Primitives/Float"),
     integer = require("@self/Schemas/Primitives/Integer"),
+    optional = require("@self/Schemas/Primitives/Optional"),
     string = require("@self/Schemas/Primitives/String"),
     table = require("@self/Schemas/Primitives/Table"),
     record = require("@self/Schemas/Record"),
@@ -25,4 +26,7 @@ return table.freeze({
 
     -- METHODS --
     rule = require("@self/Rule"),
+
+    -- INFO --
+    info = require("@self/Info"),
 })

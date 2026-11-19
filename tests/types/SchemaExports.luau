@@ -1,7 +1,7 @@
 const VideState = require("@VideState")
 const Vide = require("@packages/Vide")
 
-local schema = VideState.table({
+local rule = VideState.rule({
     visible = VideState.boolean(),
     mode = VideState.enum("Idle", "Active"),
     transparency = VideState.float({ min = 0, max = 1, step = 0.01 }),
@@ -14,9 +14,9 @@ local schema = VideState.table({
     nested = VideState.record({
         enabled = VideState.boolean(),
     }),
-})
+}, { name = "SchemaExportsPanel", allowedStateNames = { "Idle", "Active" } })
 
-type Values = VideState.Infer<typeof(schema)>
+type Values = VideState.Infer<typeof(rule._schema)>
 local values: Values = {
     visible = true,
     mode = "Idle",
@@ -30,20 +30,30 @@ local values: Values = {
     nested = { enabled = false },
 }
 
-local rule = VideState.rule(schema)
 local panel = rule.new({
-    Idle = values,
+    Idle = {
+        visible = Vide.source(true),
+        mode = Vide.source("Idle"),
+        transparency = Vide.source(0.5),
+        order = Vide.source(1),
+        title = Vide.source("Panel"),
+        color = Vide.source(Color3.new()),
+        offset = Vide.source(UDim.new()),
+        size = Vide.source(UDim2.new()),
+        position = Vide.source(Vector2.new()),
+        nested = Vide.source({ enabled = false }),
+    },
     Active = {
-        visible = false,
-        mode = "Active",
-        transparency = 1,
-        order = 2,
-        title = "Open",
-        color = Color3.new(1, 1, 1),
-        offset = UDim.new(1, 0),
-        size = UDim2.fromOffset(100, 50),
-        position = Vector2.new(1, 2),
-        nested = { enabled = true },
+        visible = Vide.source(false),
+        mode = Vide.source("Active"),
+        transparency = Vide.source(1),
+        order = Vide.source(2),
+        title = Vide.source("Open"),
+        color = Vide.source(Color3.new(1, 1, 1)),
+        offset = Vide.source(UDim.new(1, 0)),
+        size = Vide.source(UDim2.fromOffset(100, 50)),
+        position = Vide.source(Vector2.new(1, 2)),
+        nested = Vide.source({ enabled = true }),
     },
 }, "Idle")
 

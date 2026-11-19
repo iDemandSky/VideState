@@ -12,31 +12,36 @@ type Handler<T> = Types.Handler<T>
 
 return function <S>(
     schema: S,
-    states: { [string]: TypedCore.infer<S> },
+    states: { [string]: Sources<TypedCore.infer<S>> },
     initialState: string,
-    options: Types.HandlerOptions?
+    options: Types.HandlerOptions?,
+    allowedStateNames: { string }?
 )
     type Values = TypedCore.infer<S>
 
-    local validatedStates = Validation.states(schema, states, initialState)
-    local initialValues =
-        Validation.state(validatedStates, initialState, "initial") :: TypedCore.infer<S>
+    local validatedStates = Validation.states(schema, states, initialState, allowedStateNames)
+    local initialSources =
+        Validation.state(validatedStates, initialState, "initial") :: { [string]: unknown }
 
-    local mutableSources: { [string]: unknown } = {}
-    local initialFields = initialValues :: { [string]: unknown }
+    local currentState = Vide.source(initialState)
+    local derivedSources: { [string]: unknown } = {}
 
-    for fieldName, value in initialFields do
-        mutableSources[fieldName] = Vide.source(value)
+    for fieldName in initialSources do
+        derivedSources[fieldName] = function(...)
+            local activeSources = Validation.state(validatedStates, currentState(), "current")
+            return Validation.source(activeSources :: { [string]: unknown }, fieldName)(...)
+        end
     end
 
-    local sources = table.freeze(mutableSources) :: Sources<TypedCore.infer<S>>
-    local currentState = Vide.source(initialState)
+    local sources = table.freeze(derivedSources) :: Sources<Values>
     local onChange, emitChange = OnChange<<Values>>()
     local transitionDuration = if options == nil then nil else options.transitionDuration
     local onTransition, emitTransition = OnTransition<<Values>>(transitionDuration)
     local setState = SetState<<Values>>(
-        validatedStates,
-        mutableSources,
+        function(stateName: string): Values
+            local stateSources = Validation.state(validatedStates, stateName, "selected")
+            return Validation.parseState(schema, stateName, stateSources :: Sources<Values>)
+        end,
         currentState,
         emitChange,
         emitTransition

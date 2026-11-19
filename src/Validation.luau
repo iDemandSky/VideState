@@ -40,17 +40,38 @@ function validation.stateName(stateName: unknown, context: string): string
     return stateName
 end
 
+function validation.stateSources(stateName: string, sources: unknown): { [string]: unknown }
+    if type(sources) ~= "table" then
+        error(`state "{stateName}" must be a table of sources`, 2)
+    end
+
+    local record = sources :: { [string]: unknown }
+    for fieldName, source in record do
+        if type(source) ~= "function" then
+            error(`state "{stateName}" field "{fieldName}" must be a Vide source`, 2)
+        end
+    end
+
+    return record
+end
+
 function validation.parseState<S>(
     schema: S,
     stateName: string,
-    values: TypedCore.infer<S>
+    sources: Sources<TypedCore.infer<S>>
 ): TypedCore.infer<S>
     local validator = validation.schema(schema)
-    local destroy, result = Vide.root(function()
-        return validator.parse(values)
+
+    -- pcall keeps the error inside root, which otherwise rethrows it without the state name
+    local destroy, ok, result = Vide.root(function()
+        return pcall(validator.parse, sources)
     end)
 
     destroy()
+
+    if not ok then
+        error(`Invalid state "{stateName}":\n{result}`, 3)
+    end
 
     if not result.ok then
         local issues = if #result.issues > 0
@@ -69,21 +90,28 @@ end
 
 function validation.states<S>(
     schema: S,
-    states: { [string]: TypedCore.infer<S> },
-    initialState: string
-): { [string]: TypedCore.infer<S> }
+    states: { [string]: Sources<TypedCore.infer<S>> },
+    initialState: string,
+    allowedStateNames: { string }?
+): { [string]: Sources<TypedCore.infer<S>> }
     if type(states) ~= "table" then
         error("rule states must be a table", 2)
     end
 
     validation.stateName(initialState, "initial state name")
 
-    local validatedStates: { [string]: TypedCore.infer<S> } = {}
+    local validatedStates: { [string]: Sources<TypedCore.infer<S>> } = {}
     local stateCount = 0
 
-    for stateName, values in states do
+    for stateName, sources in states do
         validation.stateName(stateName, "state name")
-        validatedStates[stateName] = validation.parseState(schema, stateName, values)
+
+        if allowedStateNames ~= nil and not table.find(allowedStateNames, stateName) then
+            error(`state "{stateName}" is not in allowedStateNames`, 2)
+        end
+
+        local stateSources = validation.stateSources(stateName, sources)
+        validatedStates[stateName] = table.freeze(table.clone(stateSources)) :: Sources<TypedCore.infer<S>>
         stateCount += 1
     end
 
@@ -91,7 +119,22 @@ function validation.states<S>(
         error(`rule requires at least {Constants.MIN_STATES} states`, 2)
     end
 
-    validation.state(validatedStates, initialState, "initial")
+    local initialSources =
+        validation.state(validatedStates, initialState, "initial") :: { [string]: unknown }
+
+    for stateName, sources in validatedStates do
+        local fields = sources :: { [string]: unknown }
+
+        for fieldName in initialSources do
+            if fields[fieldName] == nil then
+                error(`state "{stateName}" is missing source for field "{fieldName}"`, 2)
+            end
+        end
+    end
+
+    for stateName, sources in validatedStates do
+        validation.parseState(schema, stateName, sources)
+    end
 
     return validatedStates
 end

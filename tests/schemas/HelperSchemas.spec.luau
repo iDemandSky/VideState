@@ -93,6 +93,28 @@ describe("centralized schema validators", function()
         expect(schema.parse({ true, "Idle" }).ok).toBe(false)
     end)
 
+    it("accepts nil and nil-valued sources for optional schemas", function()
+        local schema = VideState.optional(VideState.boolean())
+        expect(schema.parse(nil).ok).toBe(true)
+        expect(schema.parse(true).ok).toBe(true)
+        expect(schema.parse("true").ok).toBe(false)
+
+        local source = Vide.source(nil :: boolean?)
+        local destroy = Vide.root(function()
+            expect(schema.parse(source).ok).toBe(true)
+        end)
+        destroy()
+    end)
+
+    it("allows optional record fields to be missing", function()
+        local schema = VideState.table({
+            label = VideState.optional(VideState.string()),
+        })
+        expect(schema.parse({}).ok).toBe(true)
+        expect(schema.parse({ label = "Panel" }).ok).toBe(true)
+        expect(schema.parse({ label = 1 }).ok).toBe(false)
+    end)
+
     it("validates supported Roblox datatypes", function()
         expect(VideState.color3().parse(Color3.new(1, 0, 0)).ok).toBe(true)
         expect(VideState.color3().parse(UDim.new()).ok).toBe(false)

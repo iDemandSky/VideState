@@ -10,8 +10,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction' },
-      { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'Miscellaneous', link: '/miscellaneous/development' }
+      { text: 'Guide', link: '/guide/getting-started' }
     ],
 
     sidebar: [
@@ -25,17 +24,11 @@ export default defineConfig({
         text: 'Guide',
         items: [
           { text: 'Getting started', link: '/guide/getting-started' },
-          { text: 'Schemas', link: '/guide/schemas' },
+          { text: 'Schemas', link: '/guide/rule-and-schemas' },
           { text: 'Rules and handlers', link: '/guide/rules-and-handlers' },
           { text: 'Transitions', link: '/guide/transitions' }
         ]
       },
-      {
-        text: 'Miscellaneous',
-        items: [
-          { text: 'Development', link: '/miscellaneous/development' }
-        ]
-      }
     ],
 
     socialLinks: [
