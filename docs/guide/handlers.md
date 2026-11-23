@@ -6,7 +6,7 @@ outline: [2, 3]
 
 # Handlers
 
-A handler is created from a [rule](/guide/rules) with [`new`](/guide/rules#new). Each handler owns its
+A handler is created by calling [`new`](/guide/rules#new) on a [rule](/guide/rules#rule), so create the rule first. Each handler owns its
 own current state, sources, and cleanup. Handlers do not share state, so changing one does not affect
 another, and different handlers may use different state names.
 

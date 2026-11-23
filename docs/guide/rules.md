@@ -10,7 +10,15 @@ A rule describes what [handlers](/guide/handlers) receive, so every handler crea
 the same fields. A rule is built from [schemas](/guide/schemas) and a metadata table. One rule can
 create many handlers, and the handlers do not affect each other.
 
-## Functions
+Using a rule takes two steps, and the order matters:
+
+1. Create the rule once with [`VideState.rule`](#rule).
+2. Call [`new`](#new) on the rule it returns, once for each handler you need.
+
+`rule` is a function on `VideState`. `new` is a method of the rule that `rule` returns, so it
+does not exist until a rule has been created.
+
+## Creating a rule
 
 ### rule
 
@@ -41,7 +49,11 @@ Creates a rule and registers its metadata under `metadata.name`.
 - `Duplicate rule name: <name>` when a rule with the same `metadata.name` already exists.
 - An error when a field is not a schema.
 
+## Creating handlers from a rule
+
 ### new
+
+Call `new` on a rule that [`rule`](#rule) has already returned. It is not a function of `VideState`.
 
 ```luau
 Rule.new(
