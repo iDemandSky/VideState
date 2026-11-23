@@ -18,3 +18,9 @@ Whenever you add, edit, or delete a feature, update the documentation in the sam
 - Public type changes in `src/Types.luau` go in the doc of the class they belong to.
 - Removed features must be removed from the docs too, not left as stale references.
 - Commit the docs together with the code they describe.
+
+## Testing
+
+- Run tests with `lest schemas` (suite and backend are set in `lest.toml`). Use `lest schemas -t "<text>"` to run only tests whose name contains the text.
+- The suite needs the `studio` backend because Vide and Ripple only load inside Roblox. The `native` backend fails at `require` of Vide, so it can't run these tests.
+- If Studio fails to launch (e.g. exit code `0xc0000135`), report the change as unverified.
