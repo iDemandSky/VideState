@@ -34,7 +34,7 @@ Creates a rule and registers its metadata under `metadata.name`.
 
 | Type | Description |
 | --- | --- |
-| `Rule<Fields>` | A frozen table with the [`new`](#new) constructor and the `_schema` built from `fields`. |
+| [`Rule`](#rule-1)`<Fields>` | A frozen table with the [`new`](#new) constructor and the `_schema` built from `fields`. |
 
 **Errors**
 
@@ -59,7 +59,7 @@ two states.
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `states` | `{ [string]: Sources<T> }` | A dictionary of states. Each value is a record of Vide sources with one source per field. When `metadata.allowedStateNames` is set, every key must be in that list. |
+| `states` | `{ [string]: `[`Sources`](/guide/handlers#sources-1)`<T> }` | A dictionary of states. Each value is a record of Vide sources with one source per field. When `metadata.allowedStateNames` is set, every key must be in that list. |
 | `initialState` | `string` | The name of the state the handler starts in. Must be a key of `states`. |
 | `options` | [`HandlerOptions`](/guide/handlers#handleroptions)`?` | Optional. Settings for the handler. `onTransition` sets the easing, duration, and speed shared by its transition listeners. |
 
@@ -67,7 +67,7 @@ two states.
 
 | Type | Description |
 | --- | --- |
-| `Handler<T>` | A new handler with its own state, sources, and cleanup. |
+| [`Handler`](/guide/handlers#handler)`<T>` | A new handler with its own state, sources, and cleanup. |
 
 **Errors**
 
@@ -129,3 +129,19 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 | Name | Type | Description |
 | --- | --- | --- |
 | `R` | `typeof(rule)` | The rule to read the value type from. |
+
+### Rule
+
+```luau
+type Rule<Fields> = {
+    _schema: Schema<Fields>, -- The schema built from the fields
+    new: (states: { [string]: Sources<T> }, initialState: string, options: HandlerOptions?) -> Handler<T>,
+}
+```
+
+A rule returned by [`rule`](#rule). It is frozen, so it cannot be changed after creation.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `_schema` | [`Schema`](/guide/schemas#schema)`<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
+| `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#new). |
