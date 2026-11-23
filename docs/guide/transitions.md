@@ -51,8 +51,8 @@ Behavior to know:
 
 ## Tweens
 
-`onTransition` takes an optional second argument, `TweenMetadata`. The `ripple` field
-sets the [Ripple](https://github.com/littensy/ripple) easing and, optionally, the duration
+`onTransition` takes an optional second argument, `TweenMetadata`. Its `easing` and `duration` fields
+set the [Ripple](https://github.com/littensy/ripple) easing and, optionally, the duration
 used to tween each animatable field, so the value your callback receives is already eased.
 Without it, fields are tweened linearly over the handler's `transitionDuration`. Metadata
 applies per listener, so two listeners on the same handler can use different easings and
@@ -62,11 +62,14 @@ durations.
 local stop = panel.onTransition(function(from, to, current)
     -- current.backgroundColor already follows the quadOut curve
 end, {
-    ripple = { easing = "quadOut", duration = 0.1 },
+    easing = "quadOut",
+    duration = 0.1,
 })
 ```
 
-`ripple.duration` is in seconds and must be finite and non-negative. A listener with its
+`speed` is an optional Vide source that scales how fast the tween advances (1 is normal, 0 pauses). Values that aren't finite non-negative numbers are treated as 1.
+
+`duration` is in seconds and must be finite and non-negative. A listener with its
 own duration stops receiving updates once that duration ends, while listeners on the
 default duration keep going. Each listener creates one tween per animatable field, so
 its duration doesn't change how many tweens run.

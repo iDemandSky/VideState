@@ -42,12 +42,12 @@ export type TweenName =
     | "elasticIn" | "elasticOut" | "elasticInOut"
 --- Options for `onTransition`. `ripple` configures the Ripple tween applied to animatable fields. Without a `duration`, the listener uses the handler's transition duration.
 export type TweenMetadata = {
-    ripple: {
-        --- The Ripple easing applied to animatable fields. Defaults to linear.
-        easing: TweenName?,
-        --- The duration in seconds for this listener. Must be finite and non-negative. Defaults to the handler's transition duration.
-        duration: number?,
-    }?,
+    --- The Ripple easing applied to animatable fields. Defaults to linear.
+    easing: TweenName?,
+    --- The duration in seconds for this listener. Must be finite and non-negative. Defaults to the handler's transition duration.
+    duration: number?,
+    --- The speed applied to animatable fields. Optional, defaults to 1.
+    speed: Source<number>?,
 }
 --- Called during a transition with the previous value, the new value, and the current value. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T) -> ()

@@ -42,7 +42,7 @@ affect another. Different handlers may use different state names.
 | `currentState()` | Returns the name of the active state. |
 | `setState(name)` | Switches to a state. Later reads and writes use that state's sources. |
 | `onChange(callback)` | Runs when the state changes. See [Transitions](/guide/transitions). |
-| `onTransition(callback, metadata?)` | Runs with the current value over time, with fields eased by an optional Ripple easing in `metadata.ripple`. See [Transitions](/guide/transitions). |
+| `onTransition(callback, metadata?)` | Runs with the current value over time, with fields eased by an optional Ripple easing in `metadata.easing`. See [Transitions](/guide/transitions). |
 
 `currentState` is a function, so call it to read the state name:
 
