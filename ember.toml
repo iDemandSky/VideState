@@ -1,14 +1,20 @@
 [package]
-name = "idemandsky/VideState"
+name = "idemandsky/videstate"
 version = "0.1.0"
-description = "A state handler specifically for Vide, allowing you to seamlessly to change GUI instances' properties seamlessly."
+description = "A state handler for Vide that lets you build UI components with states, and change their properties as the state changes."
 authors = ["iDemandSky"]
 repository = "https://github.com/iDemandSky/VideState"
+homepage = "https://idemandsky.github.io/VideState/"
 license = "MIT"
 
 [target]
 environment = "roblox"
 main = "src/init.luau"
+includes = [
+    "src",
+    "LICENSE",
+    "README.md",
+]
 
 [indices]
 Wally = "https://github.com/UpliftGames/wally-index"
