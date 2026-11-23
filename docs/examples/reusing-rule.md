@@ -64,7 +64,11 @@ local settings = PanelRule.new({
 local shop = PanelRule.new({
     Closed = panelStates(false, 0.7),
     Open = panelStates(true, 0.7),
-}, "Closed", { transitionDuration = 0.4 })
+}, "Closed", {
+    onTransition = {
+        duration = 0.4,
+    },
+})
 
 const function createPanel(name: string, handler: PanelHandler)
     return Vide.create "Frame" {
@@ -111,5 +115,5 @@ end, player:WaitForChild("PlayerGui"))
 ## What to notice
 
 - `Settings` uses `Hidden` and `Shown`. `Shop` uses `Closed` and `Open`. The rule doesn't depend on the names.
-- `Shop` sets `transitionDuration = 0.4`. `Settings` uses the 0.25 second default.
+- `Shop` sets `onTransition.duration = 0.4`. `Settings` uses the 0.25 second default.
 - Each `panelStates` call creates new sources, so the two handlers don't share state.

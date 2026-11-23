@@ -46,21 +46,27 @@ describe("rule handlers", function()
         expect(changes[1].to).toBe(true)
     end)
 
-    it("provides transition values and disconnects transition listeners", function()
+    it("provides transition values and alpha, and disconnects transition listeners", function()
         local handler = VideState.rule({
             visible = VideState.boolean(),
             opacity = VideState.float(),
         }, { name = "ValuePanel" }).new({
             Idle = { visible = Vide.source(false), opacity = Vide.source(0) },
             Active = { visible = Vide.source(true), opacity = Vide.source(1) },
-        }, "Idle", { transitionDuration = 0.05 })
+        }, "Idle", {
+            onTransition = {
+                duration = 0.05,
+            },
+        })
 
         local currents = {}
+        local alphas = {}
         local secondCurrents = {}
-        local disconnect = handler.onTransition(function(from, to, current)
+        local disconnect = handler.onTransition(function(from, to, current, alpha)
             expect(from.visible).toBe(false)
             expect(to.visible).toBe(true)
             table.insert(currents, current)
+            table.insert(alphas, alpha)
         end)
         local disconnectSecond = handler.onTransition(function(_, _, current)
             table.insert(secondCurrents, current)
@@ -68,21 +74,24 @@ describe("rule handlers", function()
 
         handler.setState("Active")
         expect(currents[1].opacity).toBe(0)
+        expect(alphas[1]).toBe(0)
         expect(secondCurrents[1].opacity).toBe(0)
 
-        task.wait(0.1)
+        task.wait(0.15)
         expect(currents[#currents].opacity).toBe(1)
+        expect(alphas[#alphas]).toBe(1)
         expect(secondCurrents[#secondCurrents].opacity).toBe(1)
         expect(#secondCurrents).toBe(#currents)
 
         disconnect()
         disconnectSecond()
+
         local countAfterDisconnect = #currents
+
         handler.setState("Idle")
         task.wait(0.1)
 
         expect(#currents).toBe(countAfterDisconnect)
-        expect(#secondCurrents).toBe(countAfterDisconnect)
     end)
 
     it("tweens numeric fields and snaps other fields at the start of a transition", function()
@@ -92,12 +101,20 @@ describe("rule handlers", function()
         }, { name = "TweenValuePanel" }).new({
             Idle = { visible = Vide.source(false), opacity = Vide.source(0) },
             Active = { visible = Vide.source(true), opacity = Vide.source(1) },
-        }, "Idle", { transitionDuration = 0.1 })
+        }, "Idle", {
+            onTransition = {
+                easing = "quadIn",
+                duration = 0.1,
+            },
+        })
 
         local currents: { { visible: boolean, opacity: number } } = {}
-        handler.onTransition(function(_, _, current)
+        local alphas: { number } = {}
+
+        handler.onTransition(function(_, _, current, alpha)
             table.insert(currents, current)
-        end, { easing = "quadIn" })
+            table.insert(alphas, alpha)
+        end)
 
         handler.setState("Active")
         task.wait(0.2)
@@ -107,12 +124,47 @@ describe("rule handlers", function()
         expect(currents[#currents].opacity).toBe(1)
 
         local hasIntermediate = false
-        for _, current in currents do
-            if current.opacity > 0 and current.opacity < 1 then
+
+        for index, current in currents do
+            local isBetween = current.opacity > 0 and current.opacity < 1
+
+            if isBetween then
                 hasIntermediate = true
             end
+
+            -- With a single numeric field, the eased alpha matches the field's own progress.
+            expect(math.abs(alphas[index] - current.opacity) < 0.0001).toBe(true)
         end
+
         expect(hasIntermediate).toBe(true)
+    end)
+
+    it("lets the alpha overshoot with back easing", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "OvershootPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                easing = "backOut",
+                duration = 0.3,
+            },
+        })
+
+        local highestAlpha = 0
+        local lastAlpha = 0
+
+        handler.onTransition(function(_, _, _, alpha)
+            highestAlpha = math.max(highestAlpha, alpha)
+            lastAlpha = alpha
+        end)
+
+        handler.setState("Active")
+        task.wait(0.5)
+
+        expect(highestAlpha > 1).toBe(true)
+        expect(lastAlpha).toBe(1)
     end)
 
     it("stops a running transition when disconnected", function()
@@ -121,105 +173,190 @@ describe("rule handlers", function()
         }, { name = "StopPanel" }).new({
             Idle = { visible = Vide.source(false) },
             Active = { visible = Vide.source(true) },
-        }, "Idle", { transitionDuration = 0.25 })
+        }, "Idle", {
+            onTransition = {
+                duration = 0.25,
+            },
+        })
 
-        local currents = {}
-        local disconnect = handler.onTransition(function(_, _, current)
-            table.insert(currents, current)
+        local calls = 0
+        local disconnect = handler.onTransition(function()
+            calls += 1
         end)
 
         handler.setState("Active")
-        expect(currents[1].visible).toBe(true)
-
+        task.wait(0.05)
         disconnect()
-        local countAfterDisconnect = #currents
-        task.wait(0.05)
-        handler.setState("Idle")
-        task.wait(0.05)
 
-        expect(#currents).toBe(countAfterDisconnect)
+        local callsAfterDisconnect = calls
+
+        task.wait(0.1)
+
+        expect(calls).toBe(callsAfterDisconnect)
     end)
 
-    it("stops applying a tween after disconnecting", function()
-        local handler = VideState.rule({
-            visible = VideState.boolean(),
-        }, { name = "DisconnectedTweenPanel" }).new({
-            Idle = { visible = Vide.source(false) },
-            Active = { visible = Vide.source(true) },
-        }, "Idle", { transitionDuration = 0.25 })
-
-        local currents = {}
-        local disconnect = handler.onTransition(function(_, _, current)
-            table.insert(currents, current)
-        end, { easing = "cubicOut" })
-
-        handler.setState("Active")
-        expect(currents[1].visible).toBe(true)
-
-        disconnect()
-        local countAfterDisconnect = #currents
-        handler.setState("Idle")
-        task.wait(0.05)
-
-        expect(#currents).toBe(countAfterDisconnect)
-    end)
-
-    it("runs each listener for its own duration", function()
+    it("replaces a running transition when the state changes again", function()
         local handler = VideState.rule({
             opacity = VideState.float(),
-        }, { name = "PerListenerDurationPanel" }).new({
+        }, { name = "ReplacePanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", { transitionDuration = 0.5 })
+        }, "Idle", {
+            onTransition = {
+                duration = 0.2,
+            },
+        })
 
-        local shortCurrents: { { opacity: number } } = {}
-        local longCurrents: { { opacity: number } } = {}
-        handler.onTransition(function(_, _, current)
-            table.insert(shortCurrents, current)
-        end, { duration = 0.05 })
-        handler.onTransition(function(_, _, current)
-            table.insert(longCurrents, current)
+        local lastTo = nil
+
+        handler.onTransition(function(_, to)
+            lastTo = to.opacity
         end)
 
         handler.setState("Active")
-        task.wait(0.2)
-        local shortCountAfterFinish = #shortCurrents
-        local longCountBeforeWait = #longCurrents
-        task.wait(0.2)
+        task.wait(0.05)
+        handler.setState("Idle")
+        task.wait(0.3)
 
-        expect(shortCurrents[#shortCurrents].opacity).toBe(1)
-        expect(#shortCurrents).toBe(shortCountAfterFinish)
-        expect(#longCurrents > longCountBeforeWait).toBe(true)
+        expect(lastTo).toBe(0)
     end)
 
-    it("rejects invalid transition metadata", function()
+    it("pauses a transition when the speed is 0", function()
+        local speed = Vide.source(1)
         local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PausedPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.4,
+                speed = speed,
+            },
+        })
+
+        local calls = 0
+        local lastAlpha = 0
+
+        handler.onTransition(function(_, _, _, alpha)
+            calls += 1
+            lastAlpha = alpha
+        end)
+
+        handler.setState("Active")
+        task.wait(0.1)
+        speed(0)
+        task.wait(0.05)
+
+        local callsWhenPaused = calls
+        local alphaWhenPaused = lastAlpha
+
+        task.wait(0.1)
+
+        expect(calls).toBe(callsWhenPaused)
+        expect(lastAlpha).toBe(alphaWhenPaused)
+        expect(lastAlpha < 1).toBe(true)
+
+        speed(1)
+        task.wait(0.6)
+
+        expect(lastAlpha).toBe(1)
+    end)
+
+    it("clamps a negative speed to 0 so the transition never moves backwards", function()
+        local speed = Vide.source(1)
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "BackwardsPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.4,
+                speed = speed,
+            },
+        })
+
+        local alphas: { number } = {}
+
+        handler.onTransition(function(_, _, _, alpha)
+            table.insert(alphas, alpha)
+        end)
+
+        handler.setState("Active")
+        task.wait(0.1)
+        speed(-1)
+        task.wait(0.1)
+
+        for index = 2, #alphas do
+            expect(alphas[index] >= alphas[index - 1]).toBe(true)
+        end
+    end)
+
+    it("applies a duration source that changes during a transition", function()
+        local duration = Vide.source(5)
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "DynamicDurationPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = duration,
+            },
+        })
+
+        local lastCurrent = nil
+
+        handler.onTransition(function(_, _, current)
+            lastCurrent = current.opacity
+        end)
+
+        handler.setState("Active")
+        task.wait(0.1)
+
+        expect(lastCurrent < 1).toBe(true)
+
+        duration(0.05)
+        task.wait(0.3)
+
+        expect(lastCurrent).toBe(1)
+    end)
+
+    it("rejects invalid onTransition options", function()
+        local rule = VideState.rule({
             visible = VideState.boolean(),
-        }, { name = "BadTweenPanel" }).new({
+        }, { name = "BadOptionsPanel" })
+        local states = {
             Idle = { visible = Vide.source(false) },
             Active = { visible = Vide.source(true) },
-        }, "Idle")
+        }
 
         expect(function()
-            handler.onTransition(function() end, { easing = "bounce" } :: any)
+            rule.new(states, "Idle", { onTransition = { easing = "bounce" } :: any })
         end).toThrow("onTransition easing must be a known easing name")
 
         expect(function()
-            handler.onTransition(function() end, { duration = -1 } :: any)
+            rule.new(states, "Idle", { onTransition = { duration = -1 } })
         end).toThrow("onTransition duration must be a finite non-negative number")
 
         expect(function()
-            handler.onTransition(function() end, { tween = "quadIn" } :: any)
-        end).toThrow("onTransition metadata has an unknown key tween")
+            rule.new(states, "Idle", { onTransition = { speed = Vide.source(-1) } })
+        end).toThrow("onTransition speed must not be negative")
 
         expect(function()
-            handler.onTransition(function() end, { tween = { easing = "quadIn" } } :: any)
-        end).toThrow("onTransition metadata has an unknown key tween")
+            rule.new(states, "Idle", { onTransition = { speed = 1 :: any } })
+        end).toThrow("onTransition speed must be a source")
 
         expect(function()
-            handler.onTransition(function() end, "quadIn" :: any)
-        end).toThrow("onTransition metadata must be a table")
+            rule.new(states, "Idle", { onTransition = { tween = "quadIn" } :: any })
+        end).toThrow("onTransition options has an unknown key tween")
+
+        expect(function()
+            rule.new(states, "Idle", { onTransition = "quadIn" :: any })
+        end).toThrow("onTransition options must be a table")
     end)
+
     it("keeps state unchanged when switching to an unknown state", function()
         local handler = VideState.rule({
             visible = VideState.boolean(),

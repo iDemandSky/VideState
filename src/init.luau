@@ -10,7 +10,7 @@ export type OnTransitionCallback<T> = Types.OnTransitionCallback<T>
 export type HandlerOptions = Types.HandlerOptions
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
-export type TweenMetadata = Types.TweenMetadata
+export type TransitionOptions = Types.TransitionOptions
 
 return table.freeze({
     -- PRIMITIVE SCHEMAS --

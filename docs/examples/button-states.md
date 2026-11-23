@@ -22,7 +22,11 @@ const ButtonRule = VideState.rule({
 })
 
 -- Every button shares these options, so all of them fade over the same duration.
-const TRANSITION_OPTIONS = { transitionDuration = 0.15 }
+const TRANSITION_OPTIONS = {
+    onTransition = {
+        duration = 0.15,
+    },
+}
 
 const function buttonStates(backgroundColor: Color3, textSize: number)
     return {

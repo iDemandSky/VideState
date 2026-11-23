@@ -40,22 +40,22 @@ export type TweenName =
     | "expoIn" | "expoOut" | "expoInOut"
     | "backIn" | "backOut" | "backInOut"
     | "elasticIn" | "elasticOut" | "elasticInOut"
---- Options for `onTransition`. `ripple` configures the Ripple tween applied to animatable fields. Without a `duration`, the listener uses the handler's transition duration.
-export type TweenMetadata = {
-    --- The Ripple easing applied to animatable fields. Defaults to linear.
-    easing: TweenName?,
-    --- The duration in seconds for this listener. Must be finite and non-negative. Defaults to the handler's transition duration.
-    duration: number?,
-    --- The speed applied to animatable fields. Optional, defaults to 1.
+--- Settings for how `onTransition` animates between states. Each field accepts a plain value or a Vide source. A source is read every frame, so changing it affects the running transition and later ones.
+export type TransitionOptions = {
+    --- The Ripple easing applied to animatable fields and to `alpha`. Defaults to linear.
+    easing: (TweenName | Source<TweenName>)?,
+    --- The duration in seconds. Must be finite and non-negative. Defaults to 0.25.
+    duration: (number | Source<number>)?,
+    --- How fast the transition advances. Must never be negative, so a transition never moves backwards. Defaults to 1, and 0 pauses.
     speed: Source<number>?,
 }
---- Called during a transition with the previous value, the new value, and the current value. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start.
-export type OnTransitionCallback<T> = (from: T, to: T, current: T) -> ()
+--- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
+export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
---- Options for creating a handler. `transitionDuration` is in seconds and defaults to 0.25.
+--- Options for creating a handler. `onTransition` sets the tween settings shared by every `onTransition` listener of the handler.
 export type HandlerOptions = {
-    transitionDuration: number?,
+    onTransition: TransitionOptions?,
 }
 --- A handler created from a rule. Each handler owns its state, sources, and cleanup.
 export type Handler<T> = {
@@ -63,7 +63,7 @@ export type Handler<T> = {
     read currentState: () -> string,
     read setState: (stateName: string) -> (),
     read onChange: (callback: OnChangeCallback<T>) -> Disconnect,
-    read onTransition: (callback: OnTransitionCallback<T>, tweenMetadata: TweenMetadata?) -> Disconnect,
+    read onTransition: (callback: OnTransitionCallback<T>) -> Disconnect,
 }
 --- Metadata passed to `VideState.rule`. `name` must be unique across all rules.
 export type RuleMetadata<S> = {

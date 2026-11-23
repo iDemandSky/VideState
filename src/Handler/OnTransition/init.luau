@@ -1,41 +1,31 @@
 const Types = require("@VideState/Types")
-const Constants = require("@VideState/Handler/OnTransition/Config/Constants")
-const Metadata = require("@VideState/Handler/OnTransition/Config/Metadata")
-const FieldTweens = require("@VideState/Handler/OnTransition/Tween/FieldTweens")
-const Run = require("@VideState/Handler/OnTransition/Playback/Run")
+const Options = require("@VideState/Handler/OnTransition/Config/Options")
+const Group = require("@VideState/Handler/OnTransition/Tween/Group")
 const Scheduler = require("@VideState/Handler/OnTransition/Playback/Scheduler")
 
 type Callback<T> = Types.OnTransitionCallback<T>
 type Disconnect = Types.Disconnect
 
-return function <T>(duration: number?)
-    local transitionDuration = if duration == nil then Constants.DEFAULT_DURATION else duration
+return function <T>(options: Types.TransitionOptions?)
+    local settings = Options.parse(options)
 
-    if not Metadata.isValidDuration(transitionDuration) then
-        error("transition duration must be a finite non-negative number", 2)
-    end
-
-    local listeners: { [number]: Run.Listener<T> } = {}
+    local listeners: { [number]: Callback<T> } = {}
     local nextId = 0
     local generation = 0
 
-    return function(callback: Callback<T>, tweenMetadata: Types.TweenMetadata?): Disconnect
+    return function(callback: Callback<T>): Disconnect
         if typeof(callback) ~= "function" then
             error("onTransition callback must be a function", 2)
         end
 
-        local settings = Metadata.parse(tweenMetadata, transitionDuration)
-
         nextId += 1
+
         local id = nextId
-        listeners[id] = {
-            callback = callback,
-            easing = settings.easing,
-            duration = settings.duration,
-            speed = settings.speed,
-        }
+
+        listeners[id] = callback
 
         local connected = true
+
         return function()
             if not connected then
                 return
@@ -46,22 +36,35 @@ return function <T>(duration: number?)
         end
     end, function(from: T, to: T)
         generation += 1
+
         local currentGeneration = generation
 
-        local runs: { Run.Run<T> } = {}
+        -- A listener added during a transition receives updates from the next transition.
+        local ids: { number } = {}
 
-        for id, listener in listeners do
-            table.insert(runs, Run(id, listener, from, to))
+        for id in listeners do
+            table.insert(ids, id)
         end
 
-        if #runs == 0 then
+        if #ids == 0 then
             return
         end
 
-        Scheduler(runs, function(run, deltaTime)
-            if listeners[run.id] ~= nil then
-                run.callback(from, to, FieldTweens.frame(to, run.tweens, deltaTime))
+        local group = Group.create(from, to, settings.getEasing(), settings.getDuration())
+
+        Scheduler(group, settings, function(current: T, alpha: number): number
+            local remaining = 0
+
+            for _, id in ids do
+                local callback = listeners[id]
+
+                if callback ~= nil then
+                    remaining += 1
+                    callback(from, to, current, alpha)
+                end
             end
+
+            return remaining
         end, function()
             return generation ~= currentGeneration
         end)

@@ -81,11 +81,11 @@ panel.setState("Active")
 
 Handlers expose `sources`, a reactive `currentState` source, and `setState`.
 `onChange` registers a callback receiving the previous and next state values;
-`onTransition` receives the previous value, the next value, and `current`, the eased
-value to render, over 0.25 seconds by default. Each handler tweens its animatable
-fields with an optional Ripple easing in `metadata.easing`, and broadcasts to every transition listener. Set the shared
-duration per handler with the optional third `new` argument:
-`PanelRule.new(states, "Idle", { transitionDuration = 0.4 })`. Both methods
+`onTransition` receives the previous value, the next value, `current`, the eased
+value to render, and `alpha`, the eased progress from 0 to 1, over 0.25 seconds by default.
+Each handler tweens its animatable fields once and broadcasts the result to every transition
+listener. Set the shared easing, duration, and speed per handler with the optional third `new`
+argument: `PanelRule.new(states, "Idle", { onTransition = { duration = 0.4 } })`. Both methods
 return a disconnect callback, and listeners fire only for future state changes.
 Unknown state names and invalid state values raise errors before the active state
 changes. Runtime and compile-time rule validation is centralized in

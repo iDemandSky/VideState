@@ -35,8 +35,8 @@ return function <S>(
 
     local sources = table.freeze(derivedSources) :: Sources<Values>
     local onChange, emitChange = OnChange<<Values>>()
-    local transitionDuration = if options == nil then nil else options.transitionDuration
-    local onTransition, emitTransition = OnTransition<<Values>>(transitionDuration)
+    local transitionOptions = if options == nil then nil else options.onTransition
+    local onTransition, emitTransition = OnTransition<<Values>>(transitionOptions)
     local setState = SetState<<Values>>(
         function(stateName: string): Values
             local stateSources = Validation.state(validatedStates, stateName, "selected")

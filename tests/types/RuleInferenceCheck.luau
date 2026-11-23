@@ -16,7 +16,13 @@ local panel = rule.new(
         Active = { visible = Vide.source(false), count = Vide.source(0) },
     },
     "Idle",
-    { transitionDuration = 0.25 }
+    {
+        onTransition = {
+            easing = "quadOut",
+            duration = 0.25,
+            speed = Vide.source(1),
+        },
+    }
 )
 local sources: Sources = panel.sources
 local visibleSource: Vide.Source<boolean> = panel.sources.visible
@@ -32,10 +38,11 @@ local disconnectChange: () -> () = panel.onChange(function(from, to)
     local _toCount: number = to.count
 end)
 
-local disconnectTransition: () -> () = panel.onTransition(function(from, to, current)
+local disconnectTransition: () -> () = panel.onTransition(function(from, to, current, alpha)
     local _fromVisible: boolean = from.visible
     local _toVisible: boolean = to.visible
     local _currentVisible: boolean = current.visible
+    local _alpha: number = alpha
 end)
 
 disconnectChange()

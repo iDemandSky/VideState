@@ -98,23 +98,24 @@ Handler.onTransition(
     callback: (
         from: T, -- The previous state's values
         to: T, -- The next state's values
-        current: T -- The values to render on this frame
-    ) -> (),
-    tweenMetadata: TweenMetadata? -- Easing, duration, and speed for this listener
+        current: T, -- The values to render on this frame
+        alpha: number -- The eased progress, from 0 to 1
+    ) -> ()
 ) -> Disconnect
 ```
 
-Runs `callback` with a `current` value that moves from the previous state to the next one. Each
-animatable field is tweened with [Ripple](https://github.com/littensy/ripple). Fields that cannot be
-tweened, such as booleans, strings, and enums, switch to their next value at the start of the
-transition. See [Transitions](/guide/transitions) for the full behavior.
+Runs `callback` with a `current` value that moves from the previous state to the next one, and the
+`alpha` that shows how far along it is. Each animatable field is tweened with
+[Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as booleans,
+strings, and enums, switch to their next value at the start of the transition. The tween settings
+come from the handler's [`onTransition` option](#handleroptions), so every listener of a handler
+sees the same values at the same time. See [Transitions](/guide/transitions) for the full behavior.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `callback` | `(from: T, to: T, current: T) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
-| `tweenMetadata` | [`TweenMetadata`](/guide/transitions#tweenmetadata)`?` | Optional. Settings for this listener. Without it, fields tween linearly over the handler's `transitionDuration`. |
+| `callback` | `(from: T, to: T, current: T, alpha: number) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
 
 **Returns**
 
@@ -125,7 +126,6 @@ transition. See [Transitions](/guide/transitions) for the full behavior.
 **Errors**
 
 - `callback` is not a function.
-- `tweenMetadata` is not a table, has an unknown key, or has an invalid `easing`, `duration`, or `speed`.
 
 ## Types
 
@@ -133,13 +133,13 @@ transition. See [Transitions](/guide/transitions) for the full behavior.
 
 ```luau
 type HandlerOptions = {
-    transitionDuration: number?, -- Default tween duration in seconds
+    onTransition: TransitionOptions? -- Tween settings shared by every onTransition listener
 }
 ```
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `transitionDuration` | `number` | No | `0.25` | The tween duration in seconds for listeners that do not set their own `duration`. Must be finite and non-negative. |
+| `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1` | The easing, duration, and speed of the handler's transitions. An invalid value raises an error when the handler is created. |
 
 ### Handler
 
@@ -149,7 +149,7 @@ type Handler<T> = {
     currentState: () -> string,
     setState: (stateName: string) -> (),
     onChange: (callback: OnChangeCallback<T>) -> Disconnect,
-    onTransition: (callback: OnTransitionCallback<T>, tweenMetadata: TweenMetadata?) -> Disconnect,
+    onTransition: (callback: OnTransitionCallback<T>) -> Disconnect,
 }
 ```
 
@@ -179,8 +179,15 @@ type OnChangeCallback<T> = (from: T, to: T) -> ()
 ### OnTransitionCallback
 
 ```luau
-type OnTransitionCallback<T> = (from: T, to: T, current: T) -> ()
+type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 ```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `from` | `T` | The previous state's values. |
+| `to` | `T` | The next state's values. |
+| `current` | `T` | The values to render on this frame. |
+| `alpha` | `number` | The eased progress, from 0 to 1. With `back` and `elastic` easings it can go below 0 or above 1. See [alpha](/guide/transitions#alpha). |
 
 ### Disconnect
 

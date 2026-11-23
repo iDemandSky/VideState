@@ -61,7 +61,7 @@ two states.
 | --- | --- | --- |
 | `states` | `{ [string]: Sources<T> }` | A dictionary of states. Each value is a record of Vide sources with one source per field. When `metadata.allowedStateNames` is set, every key must be in that list. |
 | `initialState` | `string` | The name of the state the handler starts in. Must be a key of `states`. |
-| `options` | [`HandlerOptions`](/guide/handlers#handleroptions)`?` | Optional. Settings for the handler, such as the default transition duration. |
+| `options` | [`HandlerOptions`](/guide/handlers#handleroptions)`?` | Optional. Settings for the handler. `onTransition` sets the easing, duration, and speed shared by its transition listeners. |
 
 **Returns**
 

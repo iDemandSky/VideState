@@ -17,6 +17,6 @@ features:
   - title: Reusable rules
     details: Define a rule once with named states, each holding Vide sources. Handlers follow their active state, so existing Vide bindings stay reactive.
   - title: State transitions
-    details: Register onChange callbacks, or onTransition callbacks that receive the current eased value of each field over a configurable duration (0.25 seconds by default).
+    details: Register onChange callbacks, or onTransition callbacks that receive the current eased value of each field and the alpha over a configurable duration (0.25 seconds by default).
 ---
 

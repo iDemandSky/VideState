@@ -35,7 +35,11 @@ const health = HealthRule.new({
     Full = levelStates(100, Color3.fromRGB(80, 200, 110)),
     Hurt = levelStates(60, Color3.fromRGB(230, 180, 60)),
     Critical = levelStates(20, Color3.fromRGB(220, 60, 60)),
-}, "Full", { transitionDuration = 0.4 })
+}, "Full", {
+    onTransition = {
+        duration = 0.4,
+    },
+})
 
 -- The bar reads these display sources, so the fill moves smoothly instead of jumping to the new state.
 const shownRatio = Vide.source(1)
@@ -103,4 +107,4 @@ end, player:WaitForChild("PlayerGui"))
 
 - `health` is an `integer` with bounds, so invalid levels are rejected.
 - The `fillRatio` and `fillColor` sources hold the target values. `shownRatio` and `shownColor` hold what the bar draws.
-- Use `transitionDuration` to control how quickly the bar moves.
+- Use `onTransition.duration` to control how quickly the bar moves.

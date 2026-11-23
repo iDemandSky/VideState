@@ -20,8 +20,8 @@ const TWEEN_NAMES: { [string]: boolean } = {
     elasticInOut = true,
 }
 
--- Keys allowed in the metadata passed to `onTransition`.
-const METADATA_KEYS: { [string]: boolean } = {
+-- Keys allowed in the `onTransition` handler options.
+const OPTION_KEYS: { [string]: boolean } = {
     easing = true,
     duration = true,
     speed = true,
@@ -42,7 +42,9 @@ const ANIMATABLE_TYPES: { [string]: boolean } = {
 
 return table.freeze({
     DEFAULT_DURATION = 0.25,
+    DEFAULT_EASING = "linear",
+    DEFAULT_SPEED = 1,
     TWEEN_NAMES = table.freeze(TWEEN_NAMES),
-    METADATA_KEYS = table.freeze(METADATA_KEYS),
+    OPTION_KEYS = table.freeze(OPTION_KEYS),
     ANIMATABLE_TYPES = table.freeze(ANIMATABLE_TYPES),
 })

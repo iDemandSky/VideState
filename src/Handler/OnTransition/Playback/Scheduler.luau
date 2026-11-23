@@ -1,72 +1,42 @@
-const Run = require("@VideState/Handler/OnTransition/Playback/Run")
+const Options = require("@VideState/Handler/OnTransition/Config/Options")
+const Group = require("@VideState/Handler/OnTransition/Tween/Group")
 
-type Run<T> = Run.Run<T>
-
--- A source that returns something other than a finite non-negative number plays at normal speed.
-const function readSpeed<T>(run: Run<T>): number
-    local source = run.speed
-
-    if source == nil then
-        return 1
-    end
-
-    local value = source()
-    local isNumber = type(value) == "number"
-    local isNaN = value ~= value
-    local isNegative = isNumber and value < 0
-    local isInfinite = value == math.huge
-
-    if not isNumber or isNaN or isNegative or isInfinite then
-        return 1
-    end
-
-    return value
-end
-
--- Fires every run once at the start, then steps the runs with a duration every frame until they finish.
+-- Calls `emit` with the first frame, then steps the group every frame until it is done.
+-- `emit` returns how many listeners are still connected, and the loop stops when none are.
 -- Stops as soon as `isStale` reports that a newer transition replaced this one.
-return function <T>(runs: { Run<T> }, fire: (run: Run<T>, deltaTime: number) -> (), isStale: () -> boolean)
-    for _, run in runs do
-        fire(run, 0)
-    end
+return function <T>(
+    group: Group.Group<T>,
+    settings: Options.Settings,
+    emit: (current: T, alpha: number) -> number,
+    isStale: () -> boolean
+)
+    local current, alpha = Group.step(group, 0)
+    local remaining = emit(current, alpha)
 
-    if isStale() then
-        return
-    end
-
-    local pending: { Run<T> } = {}
-
-    for _, run in runs do
-        if run.duration > 0 then
-            table.insert(pending, run)
-        end
-    end
-
-    if #pending == 0 then
+    if isStale() or remaining == 0 or Group.isDone(group) then
         return
     end
 
     task.spawn(function()
-        while #pending > 0 do
+        while not Group.isDone(group) do
             local deltaTime = task.wait()
 
             if isStale() then
                 return
             end
 
-            local stillRunning: { Run<T> } = {}
+            local scaledDelta = deltaTime * settings.getSpeed()
 
-            for _, run in pending do
-                local scaled = deltaTime * readSpeed(run)
-                run.elapsed += scaled
-                fire(run, scaled)
+            -- A paused transition keeps its values, so the listeners are not called again.
+            if scaledDelta > 0 then
+                Group.configure(group, settings.getEasing(), settings.getDuration())
 
-                if run.elapsed < run.duration then
-                    table.insert(stillRunning, run)
+                local frameCurrent, frameAlpha = Group.step(group, scaledDelta)
+
+                if emit(frameCurrent, frameAlpha) == 0 then
+                    return
                 end
             end
-
-            pending = stillRunning
         end
     end)
 end
