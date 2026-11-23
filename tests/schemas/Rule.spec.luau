@@ -197,6 +197,7 @@ describe("rule handlers", function()
             visible = VideState.boolean(),
         }, { name = "BadTweenPanel" }).new({
             Idle = { visible = Vide.source(false) },
+            Active = { visible = Vide.source(true) },
         }, "Idle")
 
         expect(function()
