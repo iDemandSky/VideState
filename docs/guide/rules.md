@@ -6,54 +6,126 @@ outline: [2, 3]
 
 # Rules
 
-A rule describes what handlers should receive, so every handler created from it shares the same
-fields. A rule takes a plain record of [schema builders](/guide/schemas) and a metadata table.
+A rule describes what [handlers](/guide/handlers) receive, so every handler created from it shares
+the same fields. A rule is built from [schemas](/guide/schemas) and a metadata table. One rule can
+create many handlers, and the handlers do not affect each other.
+
+## Functions
+
+### rule
 
 ```luau
-const VideState = require("@VideState")
-
-local PanelRule = VideState.rule({
-    visible = VideState.boolean(),
-    order = VideState.integer({ min = 0 }),
-    text = VideState.string({ maxLength = 100 }),
-    alignment = VideState.enum("Left", "Center", "Right"),
-}, { name = "Panel", allowedStateNames = { "Idle", "Active" } })
+VideState.rule<Fields>(
+    fields: Fields, -- A record of schema builders, keyed by field name
+    metadata: RuleMetadata -- Describes the rule and restricts its state names
+) -> Rule<Fields>
 ```
 
-## Metadata
+Creates a rule and registers its metadata under `metadata.name`.
 
-`VideState.rule(fields, metadata)` accepts these fields in the metadata table:
+**Parameters**
 
-- `name`: required. Must be unique across all rules, because a duplicate name raises an error.
-- `description`: optional text describing the rule.
-- `tags`: optional array of strings for grouping rules.
-- `allowedStateNames`: optional array of state names. When set, [handlers](/guide/handlers) reject any other state name.
+| Name | Type | Description |
+| --- | --- | --- |
+| `fields` | `{ [string]: Schema<any> }` | One [schema](/guide/schemas) per field. The rule's value type is inferred from these schemas. |
+| `metadata` | [`RuleMetadata`](#rulemetadata) | The rule's name and optional details. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `Rule<Fields>` | A frozen table with the [`new`](#new) constructor and the `_schema` built from `fields`. |
+
+**Errors**
+
+- `Duplicate rule name: <name>` when a rule with the same `metadata.name` already exists.
+- An error when a field is not a schema.
+
+### new
 
 ```luau
-local PanelRule = VideState.rule({
-    visible = VideState.boolean(),
-}, {
-    name = "Panel",
-    description = "A panel that can be shown or hidden",
-    tags = { "ui" },
-    allowedStateNames = { "Idle", "Active" },
-})
+Rule.new(
+    states: { [string]: Sources<T> }, -- Vide sources for each state, keyed by state name
+    initialState: string, -- The state the handler starts in
+    options: HandlerOptions? -- Optional handler settings
+) -> Handler<T>
 ```
 
-## Creating handlers
+Creates a [handler](/guide/handlers) from the rule. Every state must provide a Vide source for each
+field in the rule, and each state's values are validated when `new` runs. A rule needs at least
+two states.
 
-A rule holds shared definitions only. Call `PanelRule.new(states, initialState)` to create a
-[handler](/guide/handlers). Each handler owns its own state, so one rule can create many handlers
-that do not affect each other.
+**Parameters**
 
-## Typing a rule
+| Name | Type | Description |
+| --- | --- | --- |
+| `states` | `{ [string]: Sources<T> }` | A dictionary of states. Each value is a record of Vide sources with one source per field. When `metadata.allowedStateNames` is set, every key must be in that list. |
+| `initialState` | `string` | The name of the state the handler starts in. Must be a key of `states`. |
+| `options` | [`HandlerOptions`](/guide/handlers#handleroptions)`?` | Optional. Settings for the handler, such as the default transition duration. |
 
-`VideState.InferRule<rule>` gives the value type of a rule. Use it instead of reaching into `_schema`.
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `Handler<T>` | A new handler with its own state, sources, and cleanup. |
+
+**Errors**
+
+- A state is not a table of Vide sources.
+- A field is missing from a state, or a state's values do not match the schema. The message names the state and the field.
+- There are fewer than two states, or a state name is not in `allowedStateNames`.
+
+### info.get
 
 ```luau
-type PanelValues = VideState.InferRule<typeof(PanelRule)>
--- { visible: boolean, order: number, text: string, alignment: string }
+VideState.info.get(
+    name: string -- The name the rule was registered with
+) -> RuleMetadata?
 ```
 
-Pass the result to `VideState.Handler` to type a handler. See
-[Typing a handler](/guide/handlers#typing-a-handler).
+Looks up the metadata of a registered rule. Returns `nil` when no rule has that name.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | The `name` given in the rule's metadata. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `RuleMetadata?` | A frozen copy of the metadata, or `nil` when no rule is registered under `name`. |
+
+## Types
+
+### RuleMetadata
+
+```luau
+type RuleMetadata = {
+    name: string, -- Unique name of the rule
+    description: string?, -- Describes what the rule is for
+    tags: { string }?, -- Groups rules together
+    allowedStateNames: { string }?, -- Restricts the state names handlers may use
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes | Must be unique across all rules. A duplicate raises an error. |
+| `description` | `string` | No | Text describing the rule. |
+| `tags` | `{ string }` | No | Strings for grouping rules. |
+| `allowedStateNames` | `{ string }` | No | When set, [handlers](/guide/handlers) reject any other state name. When omitted, every state name is allowed. |
+
+### InferRule
+
+```luau
+type InferRule<R> = -- The value type of the rule R
+```
+
+Gives the value type of a rule. Use it instead of reading `_schema` directly, and pass the result to
+[`VideState.Handler`](/guide/handlers#handler) to type a handler.
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `R` | `typeof(rule)` | The rule to read the value type from. |
