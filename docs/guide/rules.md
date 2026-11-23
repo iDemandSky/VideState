@@ -44,8 +44,10 @@ Creates a rule and registers its metadata under `metadata.name`.
 
 **Errors**
 
-- `Duplicate rule name: <name>` when a rule with the same `metadata.name` already exists.
-- An error when a field is not a schema.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | A rule with the same `metadata.name` already exists | `Duplicate rule name: <name>` |
+| <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
 
 ## Creating handlers from a rule
 
@@ -79,9 +81,23 @@ two states.
 
 **Errors**
 
-- A state is not a table of Vide sources.
-- A field is missing from a state, or a state's values do not match the schema. The message names the state and the field.
-- There are fewer than two states, or a state name is not in `allowedStateNames`.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `states` is not a table | `rule states must be a table` |
+| <Badge type="danger" text="Error" /> | A state is not a table of Vide sources | `state "<state>" must be a table of sources` |
+| <Badge type="danger" text="Error" /> | A field of a state is not a Vide source | `state "<state>" field "<field>" must be a Vide source` |
+| <Badge type="danger" text="Error" /> | A state is missing a field | `state "<state>" is missing source for field "<field>"` |
+| <Badge type="danger" text="Error" /> | A state's values do not match the schema | `Invalid state "<state>":` followed by the schema issues |
+| <Badge type="danger" text="Error" /> | Fewer than two states | `rule requires at least 2 states` |
+| <Badge type="danger" text="Error" /> | A state name is not in `allowedStateNames` | `state "<state>" is not in allowedStateNames` |
+| <Badge type="danger" text="Error" /> | `initialState` is not one of the states | `unknown initial state "<state>"` |
+| <Badge type="danger" text="Error" /> | `onTransition` is not a table | `onTransition options must be a table` |
+| <Badge type="danger" text="Error" /> | `onTransition` has an unknown key | `onTransition options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | `onTransition.easing` is not a known easing name | `onTransition easing must be a known easing name` |
+| <Badge type="danger" text="Error" /> | `onTransition.duration` is not a finite, non-negative number | `onTransition duration must be a finite non-negative number` |
+| <Badge type="danger" text="Error" /> | `onTransition.speed` is not a source | `onTransition speed must be a source` |
+| <Badge type="danger" text="Error" /> | `onTransition.speed` is negative | `onTransition speed must not be negative` |
+| <Badge type="danger" text="Error" /> | `onTransition.speed` is not finite | `onTransition speed must be a finite non-negative number` |
 
 ## Types
 

@@ -60,8 +60,11 @@ Switches to a state. Later reads and writes of [`sources`](#sources) use that st
 
 **Errors**
 
-- The state name is unknown.
-- The state's values no longer match the schema.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `stateName` is not a string | `state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | The state name is unknown | `unknown state "<state>"` |
+| <Badge type="danger" text="Error" /> | The state's values no longer match the schema | `Invalid state "<state>":` followed by the schema issues |
 
 A failed `setState` leaves the handler unchanged.
 
@@ -125,7 +128,9 @@ sees the same values at the same time. See [Transitions](/guide/transitions) for
 
 **Errors**
 
-- `callback` is not a function.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `callback` is not a function | `onTransition callback must be a function` |
 
 ## Types
 

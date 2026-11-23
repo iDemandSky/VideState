@@ -55,7 +55,12 @@ Accepts finite whole numbers.
 
 **Errors**
 
-- `min` or `max` is not an integer, or `min` is greater than `max`.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `expected Integer options to be a table` |
+| <Badge type="danger" text="Error" /> | `min` is not an integer | `Integer minimum must be a finite integer` |
+| <Badge type="danger" text="Error" /> | `max` is not an integer | `Integer maximum must be a finite integer` |
+| <Badge type="danger" text="Error" /> | `min` is greater than `max` | `Integer minimum must not exceed maximum` |
 
 ### float
 
@@ -88,7 +93,14 @@ Accepts finite numbers, including whole numbers.
 
 **Errors**
 
-- `step` is not a positive, finite number, or `min` is greater than `max`.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `expected Float options to be a table` |
+| <Badge type="danger" text="Error" /> | `min` is not finite | `Float minimum must be finite` |
+| <Badge type="danger" text="Error" /> | `max` is not finite | `Float maximum must be finite` |
+| <Badge type="danger" text="Error" /> | `step` is not a positive, finite number | `Float step must be positive and finite` |
+| <Badge type="danger" text="Error" /> | `step` has too many decimal places to validate | `Float step precision is too small to validate` |
+| <Badge type="danger" text="Error" /> | `min` is greater than `max` | `Float minimum must not exceed maximum` |
 
 ### string
 
@@ -117,6 +129,14 @@ Accepts strings.
 | --- | --- |
 | [`Schema`](#schema)`<string>` | A schema for strings. |
 
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `expected String options to be a table` |
+| <Badge type="danger" text="Error" /> | `maxLength` is not a non-negative integer | `String maxLength must be a finite integer greater than or equal to 0` |
+| <Badge type="danger" text="Error" /> | `truncate` is not a boolean | `String truncate must be a boolean` |
+
 ### enum
 
 ```luau
@@ -141,7 +161,10 @@ Accepts only the strings passed as arguments. Matching is case-sensitive.
 
 **Errors**
 
-- No values are given, or an argument is not a string.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No values are given | `Enum requires at least one string value` |
+| <Badge type="danger" text="Error" /> | An argument is not a string | `expected Enum argument <n> to be String, got <type>` |
 
 ### optional
 
@@ -189,6 +212,12 @@ inferred from the field schemas, so [`Infer`](#infer) returns a table with the s
 | --- | --- |
 | [`Schema`](#schema)`<{ [string]: any }>` | A schema for tables with exactly these fields. |
 
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
+
 ### record
 
 ```luau
@@ -215,7 +244,11 @@ can be any schema, including another record.
 
 **Errors**
 
-- A field is not a schema.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of field schemas` |
+| <Badge type="danger" text="Error" /> | A field name is not a string | `expected a string field name, got <type>` |
+| <Badge type="danger" text="Error" /> | A field is not a schema | `expected a schema for field "<field>"` |
 
 ## Roblox datatypes
 

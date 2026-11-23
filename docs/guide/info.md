@@ -70,8 +70,10 @@ written.
 
 **Errors**
 
-- No tags are given.
-- An argument is not a string.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No tags are given | `getAllRulesWithTags requires at least one tag` |
+| <Badge type="danger" text="Error" /> | A tag is not a string | `Tag <n> must be a string, got <type>` |
 
 ### getAllTags
 
@@ -113,7 +115,10 @@ Checks whether a rule has a tag. The tag is matched exactly as written.
 
 **Errors**
 
-- `ruleName` or `tag` is not a string.
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `ruleName` is not a string | `Rule name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `tag` is not a string | `Tag must be a string, got <type>` |
 
 ## Registration
 
