@@ -92,7 +92,7 @@ type RuleMetadata = {
 | --- | --- | --- | --- |
 | `name` | `string` | Yes | Must be unique across all rules. A duplicate raises an error. |
 | `description` | `string` | No | Text describing the rule. |
-| `tags` | `{ string }` | No | Strings for grouping rules. |
+| `tags` | `{ string }` | No | Strings for grouping rules. Tags are never formatted, so keep them consistent. Look them up with [`info`](/guide/info). |
 | `allowedStateNames` | `{ string }` | No | When set, [handlers](/guide/handlers) reject any other state name. When omitted, every state name is allowed. |
 
 ### InferRule

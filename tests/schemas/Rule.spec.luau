@@ -450,6 +450,86 @@ describe("rule handlers", function()
         expect(Info.get("UnregisteredPanel")).toBe(nil)
     end)
 
+    it("finds rules by tags, lists tags, and checks a rule's tags", function()
+        VideState.rule({ visible = VideState.boolean() }, {
+            name = "TagPanelA",
+            tags = { "infoTagMenu", "infoTagShared" },
+        })
+        VideState.rule({ visible = VideState.boolean() }, {
+            name = "TagPanelB",
+            tags = { "infoTagHud", "infoTagShared" },
+        })
+        VideState.rule({ visible = VideState.boolean() }, {
+            name = "TagPanelC",
+        })
+
+        local shared = Info.getAllRulesWithTags("infoTagShared")
+        local sharedNames = {}
+
+        for _, rule in shared do
+            table.insert(sharedNames, rule.name)
+        end
+
+        expect(table.concat(sharedNames, ",")).toBe("TagPanelA,TagPanelB")
+
+        local both = Info.getAllRulesWithTags("infoTagShared", "infoTagMenu")
+
+        expect(#both).toBe(1)
+        expect(both[1].name).toBe("TagPanelA")
+        expect(#Info.getAllRulesWithTags("infoTagMissing")).toBe(0)
+
+        local tags = Info.getAllTags()
+
+        expect(table.find(tags, "infoTagMenu") ~= nil).toBe(true)
+        expect(table.find(tags, "infoTagHud") ~= nil).toBe(true)
+        expect(table.find(tags, "infoTagShared") ~= nil).toBe(true)
+
+        local sharedCount = 0
+
+        for _, tag in tags do
+            if tag == "infoTagShared" then
+                sharedCount += 1
+            end
+        end
+
+        expect(sharedCount).toBe(1)
+
+        expect(Info.ruleHasTag("TagPanelA", "infoTagMenu")).toBe(true)
+        expect(Info.ruleHasTag("TagPanelA", "infoTagHud")).toBe(false)
+        expect(Info.ruleHasTag("TagPanelC", "infoTagMenu")).toBe(false)
+        expect(Info.ruleHasTag("UnregisteredTagPanel", "infoTagMenu")).toBe(false)
+    end)
+
+    it("compares tags exactly without formatting them", function()
+        VideState.rule({ visible = VideState.boolean() }, {
+            name = "ExactTagPanel",
+            tags = { "ExactTag", " spaced " },
+        })
+
+        expect(Info.ruleHasTag("ExactTagPanel", "ExactTag")).toBe(true)
+        expect(Info.ruleHasTag("ExactTagPanel", "exacttag")).toBe(false)
+        expect(Info.ruleHasTag("ExactTagPanel", "spaced")).toBe(false)
+        expect(Info.ruleHasTag("ExactTagPanel", " spaced ")).toBe(true)
+    end)
+
+    it("rejects invalid arguments for tag lookups", function()
+        expect(function()
+            Info.getAllRulesWithTags()
+        end).toThrow("requires at least one tag")
+
+        expect(function()
+            Info.getAllRulesWithTags(1 :: any)
+        end).toThrow("must be a string")
+
+        expect(function()
+            Info.ruleHasTag(1 :: any, "tag")
+        end).toThrow("Rule name must be a string")
+
+        expect(function()
+            Info.ruleHasTag("TagPanelA", nil :: any)
+        end).toThrow("Tag must be a string")
+    end)
+
     it("rejects states outside allowedStateNames", function()
         local handler = VideState.rule({ visible = VideState.boolean() }, {
             name = "AllowedPanel",
