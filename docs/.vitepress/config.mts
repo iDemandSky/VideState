@@ -35,12 +35,8 @@ export default defineConfig({
       {
         text: 'Examples',
         items: [
-          { text: 'Reusing a rule', link: '/examples/reusing-rule' },
-          { text: 'Button states', link: '/examples/button-states' },
-          { text: 'Inheritance', link: '/examples/inheritance-class' },
-          { text: 'Form validation', link: '/examples/form-validation' },
-          { text: 'Settings toggles', link: '/examples/settings-toggles' },
-          { text: 'Health bar', link: '/examples/health-bar' }
+          { text: 'Components', link: '/examples/components' },
+          { text: 'Inheritance', link: '/examples/inheritance' }
         ]
       },
     ],
