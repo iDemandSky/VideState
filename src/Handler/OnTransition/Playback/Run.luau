@@ -20,6 +20,7 @@ export type Run<T> = {
 -- One listener's playback of a single transition.
 return function <T>(id: number, listener: Listener<T>, from: T, to: T): Run<T>
     local tweens: FieldTweens.FieldTweens = {}
+
     if listener.duration > 0 then
         tweens = FieldTweens.create(from, to, listener.easing, listener.duration)
     end

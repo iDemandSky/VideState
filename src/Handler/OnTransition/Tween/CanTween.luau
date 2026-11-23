@@ -8,6 +8,7 @@ end
 -- Tables are only tweened when every component is a number or vector with the same key set.
 return function(from: unknown, to: unknown): boolean
     local valueType = typeof(from)
+
     if valueType ~= typeof(to) then
         return false
     end

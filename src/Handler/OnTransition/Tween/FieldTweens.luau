@@ -11,6 +11,7 @@ const function create<T>(from: T, to: T, easing: Types.TweenName?, duration: num
 
     for key, toValue in toFields do
         local fromValue = fromFields[key]
+
         if CanTween(fromValue, toValue) then
             local tween = Ripple.createTween(fromValue, {
                 easing = easing,

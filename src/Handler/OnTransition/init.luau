@@ -10,6 +10,7 @@ type Disconnect = Types.Disconnect
 
 return function <T>(duration: number?)
     local transitionDuration = if duration == nil then Constants.DEFAULT_DURATION else duration
+
     if not Metadata.isValidDuration(transitionDuration) then
         error("transition duration must be a finite non-negative number", 2)
     end

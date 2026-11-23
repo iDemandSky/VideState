@@ -5,10 +5,13 @@ type Run<T> = Run.Run<T>
 -- A source that returns something other than a finite non-negative number plays at normal speed.
 const function readSpeed<T>(run: Run<T>): number
     local source = run.speed
+
     if source == nil then
         return 1
     end
+
     local value = source()
+
     if type(value) ~= "number" or value ~= value or value < 0 or value == math.huge then
         return 1
     end
@@ -38,6 +41,7 @@ return function <T>(runs: { Run<T> }, fire: (run: Run<T>, deltaTime: number) -> 
     task.spawn(function()
         while #pending > 0 do
             local deltaTime = task.wait()
+
             if isStale() then
                 return
             end
