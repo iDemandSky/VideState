@@ -11,8 +11,12 @@ const function readSpeed<T>(run: Run<T>): number
     end
 
     local value = source()
+    local isNumber = type(value) == "number"
+    local isNaN = value ~= value
+    local isNegative = isNumber and value < 0
+    local isInfinite = value == math.huge
 
-    if type(value) ~= "number" or value ~= value or value < 0 or value == math.huge then
+    if not isNumber or isNaN or isNegative or isInfinite then
         return 1
     end
 

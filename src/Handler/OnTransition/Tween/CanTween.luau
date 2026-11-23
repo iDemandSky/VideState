@@ -21,7 +21,10 @@ return function(from: unknown, to: unknown): boolean
     local toTable = to :: { [any]: unknown }
 
     for key, value in toTable do
-        if not isAnimatablePrimitive(value) or typeof(fromTable[key]) ~= typeof(value) then
+        local isAnimatable = isAnimatablePrimitive(value)
+        local isSameType = typeof(fromTable[key]) == typeof(value)
+
+        if not isAnimatable or not isSameType then
             return false
         end
     end
