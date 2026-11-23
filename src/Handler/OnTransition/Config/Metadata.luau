@@ -18,6 +18,7 @@ const function checkKeys(value: unknown)
     end
 
     local fields = value :: { [any]: unknown }
+
     for key in fields do
         if Constants.METADATA_KEYS[key :: any] ~= true then
             error("onTransition metadata has an unknown key " .. tostring(key), 4)
@@ -32,6 +33,7 @@ const function parse(metadata: Types.TweenMetadata?, defaultDuration: number): S
         duration = defaultDuration,
         speed = nil,
     }
+
     if metadata == nil then
         return settings
     end
@@ -44,6 +46,7 @@ const function parse(metadata: Types.TweenMetadata?, defaultDuration: number): S
         if Constants.TWEEN_NAMES[easing] ~= true then
             error("onTransition easing must be a known easing name", 3)
         end
+
         settings.easing = easing
     end
 
@@ -53,6 +56,7 @@ const function parse(metadata: Types.TweenMetadata?, defaultDuration: number): S
         if not isValidDuration(duration) then
             error("onTransition duration must be a finite non-negative number", 3)
         end
+
         settings.duration = duration
     end
 
@@ -62,6 +66,7 @@ const function parse(metadata: Types.TweenMetadata?, defaultDuration: number): S
         if typeof(speed) ~= "function" then
             error("onTransition speed must be a source", 3)
         end
+
         settings.speed = speed
     end
 

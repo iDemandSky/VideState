@@ -49,9 +49,11 @@ return function <T>(duration: number?)
         local currentGeneration = generation
 
         local runs: { Run.Run<T> } = {}
+
         for id, listener in listeners do
             table.insert(runs, Run(id, listener, from, to))
         end
+
         if #runs == 0 then
             return
         end

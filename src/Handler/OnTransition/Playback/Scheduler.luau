@@ -15,6 +15,7 @@ const function readSpeed<T>(run: Run<T>): number
     if type(value) ~= "number" or value ~= value or value < 0 or value == math.huge then
         return 1
     end
+
     return value
 end
 
@@ -24,16 +25,19 @@ return function <T>(runs: { Run<T> }, fire: (run: Run<T>, deltaTime: number) -> 
     for _, run in runs do
         fire(run, 0)
     end
+
     if isStale() then
         return
     end
 
     local pending: { Run<T> } = {}
+
     for _, run in runs do
         if run.duration > 0 then
             table.insert(pending, run)
         end
     end
+
     if #pending == 0 then
         return
     end
@@ -47,14 +51,17 @@ return function <T>(runs: { Run<T> }, fire: (run: Run<T>, deltaTime: number) -> 
             end
 
             local stillRunning: { Run<T> } = {}
+
             for _, run in pending do
                 local scaled = deltaTime * readSpeed(run)
                 run.elapsed += scaled
                 fire(run, scaled)
+
                 if run.elapsed < run.duration then
                     table.insert(stillRunning, run)
                 end
             end
+
             pending = stillRunning
         end
     end)

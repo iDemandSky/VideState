@@ -28,9 +28,11 @@ end
 -- Fields that can't be tweened keep their target value, so they switch at the start of the transition.
 const function frame<T>(to: T, tweens: FieldTweens, deltaTime: number): T
     local current = table.clone(to :: any)
+
     for key, tween in tweens do
         current[key] = tween:step(deltaTime)
     end
+
     return table.freeze(current)
 end
 

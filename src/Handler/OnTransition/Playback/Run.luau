@@ -24,6 +24,7 @@ return function <T>(id: number, listener: Listener<T>, from: T, to: T): Run<T>
     if listener.duration > 0 then
         tweens = FieldTweens.create(from, to, listener.easing, listener.duration)
     end
+
     return {
         id = id,
         callback = listener.callback,
