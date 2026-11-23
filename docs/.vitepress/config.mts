@@ -9,7 +9,7 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Introduction', link: '/introduction' },
+      { text: 'About', link: '/introduction/about' },
       { text: 'Guide', link: '/guide/getting-started' }
     ],
 
@@ -17,16 +17,29 @@ export default defineConfig({
       {
         text: 'Introduction',
         items: [
-          { text: 'Why VideState', link: '/introduction' }
+          { text: 'About', link: '/introduction/about' },
+          { text: 'Why VideState', link: '/introduction/why' }
         ]
       },
       {
         text: 'Guide',
         items: [
           { text: 'Getting started', link: '/guide/getting-started' },
-          { text: 'Schemas', link: '/guide/rule-and-schemas' },
-          { text: 'Rules and handlers', link: '/guide/rules-and-handlers' },
+          { text: 'Schemas', link: '/guide/schemas' },
+          { text: 'Rules', link: '/guide/rules' },
+          { text: 'Handlers', link: '/guide/handlers' },
           { text: 'Transitions', link: '/guide/transitions' }
+        ]
+      },
+      {
+        text: 'Examples',
+        items: [
+          { text: 'Reusing a rule', link: '/examples/reusing-rule' },
+          { text: 'Button states', link: '/examples/button-states' },
+          { text: 'Inheritance', link: '/examples/inheritance-class' },
+          { text: 'Form validation', link: '/examples/form-validation' },
+          { text: 'Settings toggles', link: '/examples/settings-toggles' },
+          { text: 'Health bar', link: '/examples/health-bar' }
         ]
       },
     ],

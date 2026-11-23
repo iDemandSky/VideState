@@ -1,7 +1,7 @@
 const TypedCore = require("@luau-packages/TypedCore")
 const Helper = require("../Helper")
 
-const function boolean(): TypedCore.Schema<boolean>
+return function(): TypedCore.Schema<boolean>
     return Helper.createSchemaWithSource(
         "Boolean",
         function(value: unknown): TypedCore.ParseResult<boolean>
@@ -12,4 +12,3 @@ const function boolean(): TypedCore.Schema<boolean>
     )
 end
 
-return boolean

@@ -4,44 +4,19 @@ description: Build and validate values with VideState schema builders.
 outline: [2, 3]
 ---
 
-# Rule
-
-Rules describe what handlers should receive. This is to make the state sources consistent.
-A rule takes a plain record of schema builders and a metadata table. `name` is required
-and must be unique across all rules; `allowedStateNames` is optional.
-
-```luau
-const VideState = require("@VideState")
-
-const rule = VideState.rule({
-    visible = VideState.boolean(),
-}, { name = "Panel", allowedStateNames = { "Idle", "Active" } })
-```
-
-## Usage
-
-```luau
-const VideState = require("@VideState")
-
-local panelFields = {
-    size = VideState.udim2(),
-    color = VideState.color3(),
-    visible = VideState.boolean(),
-    transparency = VideState.float({ min = 0, max = 1 }),
-    order = VideState.integer(),
-    text = VideState.string({ maxLength = 100 }),
-    alignment = VideState.enum("Left", "Center", "Right"),
-}
-local PanelRule = VideState.rule(panelFields, { name = "PanelUsage" })
-```
-
-## Schemas
+# Schemas
 
 Schema builders describe the shape of a value. Every builder returns a schema for a Luau type `T`.
 Call `parse(value)` on any schema to check a value. The result's `ok` field is `true` when the
-value is valid.
+value is valid. Schemas are the field definitions that a [rule](/guide/rules) combines.
 
-### boolean
+```luau
+const VideState = require("@VideState")
+
+local schema = VideState.integer({ min = 0 })
+```
+
+## boolean
 
 ```luau
 VideState.boolean(): Schema<boolean>
@@ -56,7 +31,7 @@ schema.parse(true).ok -- true
 schema.parse("true").ok -- false
 ```
 
-### integer
+## integer
 
 ```luau
 VideState.integer(options: { min: number?, max: number? }?): Schema<number>
@@ -76,7 +51,7 @@ schema.parse(5.5).ok -- false
 schema.parse(11).ok -- false
 ```
 
-### float
+## float
 
 ```luau
 VideState.float(options: { min: number?, max: number?, step: number? }?): Schema<number>
@@ -97,7 +72,7 @@ schema.parse(0.125).ok -- false
 schema.parse(1.5).ok -- false
 ```
 
-### string
+## string
 
 ```luau
 VideState.string(options: { maxLength: number?, truncate: boolean? }?): Schema<string>
@@ -118,7 +93,7 @@ schema.parse("hello world").ok -- false
 truncated.parse("hello world").value -- "hello"
 ```
 
-### enum
+## enum
 
 ```luau
 VideState.enum(...: string): Schema<string>
@@ -133,7 +108,7 @@ schema.parse("Center").ok -- true
 schema.parse("center").ok -- false
 ```
 
-### optional
+## optional
 
 ```luau
 VideState.optional(schema: Schema<T>): Schema<T?>
@@ -149,7 +124,7 @@ schema.parse(nil).ok -- true
 schema.parse(123).ok -- false
 ```
 
-### table
+## table
 
 ```luau
 VideState.table(fields: { [string]: Schema<any> }): Schema<...>
@@ -171,7 +146,7 @@ schema.parse({ name = "John", lastName = "Doe" }).ok -- false
 schema.parse({ age = 30 }).ok -- false
 ```
 
-### record
+## record
 
 ```luau
 VideState.record(fields: { [string]: Schema<any> }): Schema<...>
@@ -193,7 +168,7 @@ schema.parse({ position = { x = 1, y = 2 } }).ok -- true
 schema.parse({ position = { x = 1 } }).ok -- false
 ```
 
-### color3
+## color3
 
 ```luau
 VideState.color3(): Schema<Color3>
@@ -208,7 +183,7 @@ schema.parse(Color3.new(1, 0, 0)).ok -- true
 schema.parse("red").ok -- false
 ```
 
-### udim
+## udim
 
 ```luau
 VideState.udim(): Schema<UDim>
@@ -223,7 +198,7 @@ schema.parse(UDim.new(0, 10)).ok -- true
 schema.parse(10).ok -- false
 ```
 
-### udim2
+## udim2
 
 ```luau
 VideState.udim2(): Schema<UDim2>
@@ -238,7 +213,7 @@ schema.parse(UDim2.fromOffset(100, 50)).ok -- true
 schema.parse(Vector2.new(100, 50)).ok -- false
 ```
 
-### vector2
+## vector2
 
 ```luau
 VideState.vector2(): Schema<Vector2>

@@ -11,7 +11,7 @@ When using VideState, the developer must create a rule first before creating an 
 
 After creating the rule, developers can create an independent handler for each UI component's sources. They must choose the initial state before declaring the UI through Vide.
 
-Once the developers have created a new handler, developers can use this to create instructions on modifying the  whenever the state gets changed.
+Once the developers have created a new handler, developers can use this to create instructions on modifying the values whenever the state gets changed.
 
 ## Usage Steps
 

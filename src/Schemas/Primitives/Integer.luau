@@ -6,7 +6,7 @@ export type IntegerOptions = {
     read max: number?,
 }
 
-const function integer(options: IntegerOptions?): TypedCore.Schema<number>
+return function(options: IntegerOptions?): TypedCore.Schema<number>
     Helper.assertOptionsTable(options, "Integer")
 
     local min = if options then options.min else nil
@@ -50,4 +50,3 @@ const function integer(options: IntegerOptions?): TypedCore.Schema<number>
     )
 end
 
-return integer

@@ -1,7 +1,7 @@
 const TypedCore = require("@luau-packages/TypedCore")
 const Helper = require("../Helper")
 
-const function udim2(): TypedCore.Schema<UDim2>
+return function(): TypedCore.Schema<UDim2>
     return Helper.createSchemaWithSource(
         "UDim2",
         function(value: unknown): TypedCore.ParseResult<UDim2>
@@ -12,4 +12,3 @@ const function udim2(): TypedCore.Schema<UDim2>
     )
 end
 
-return udim2

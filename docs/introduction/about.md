@@ -1,9 +1,9 @@
 ---
-title: Introduction
+title: VideState
 description: Why VideState exists and how it fits with Vide.
 ---
 
-# Introduction
+# VideState
 
 VideState is a state handler for [Vide](https://github.com/centau/vide) sources.
 Vide creates the UI Instances. VideState manages the state changes of the source

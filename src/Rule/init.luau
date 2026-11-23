@@ -7,12 +7,12 @@ const Table = require("@VideState/Schemas/Primitives/Table")
 type Infer<S> = Types.Infer<S>
 type States<S> = { [string]: Types.Sources<Infer<S>> }
 
-export type RuleMetaData = Types.RuleMetaData<string>
+export type RuleMetadata = Types.RuleMetadata<string>
 
-return function <Fields>(fields: Fields, metaData: RuleMetaData)
+return function <Fields>(fields: Fields, metadata: RuleMetadata)
     local schema = Table(fields)
     Validation.schema(schema)
-    Info.register(metaData)
+    Info.register(metadata)
 
     return table.freeze({
         _schema = schema,
@@ -22,7 +22,7 @@ return function <Fields>(fields: Fields, metaData: RuleMetaData)
             initialState: string,
             options: Types.HandlerOptions?
         )
-            return Handler(schema, states, initialState, options, metaData.allowedStateNames)
+            return Handler(schema, states, initialState, options, metadata.allowedStateNames)
         end,
     })
 end

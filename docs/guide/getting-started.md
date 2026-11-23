@@ -42,6 +42,7 @@ automatically.
 
 ## Next steps
 
-- [Schemas](/guide/rule-and-schemas) lists every builder and its options.
-- [Rules and handlers](/guide/rules-and-handlers) covers states, sources, and errors.
+- [Schemas](/guide/schemas) lists every builder and its options.
+- [Rules](/guide/rules) covers rule metadata and typing.
+- [Handlers](/guide/handlers) covers states, sources, and errors.
 - [Transitions](/guide/transitions) covers `onChange` and `onTransition`.

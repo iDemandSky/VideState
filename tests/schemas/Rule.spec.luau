@@ -46,42 +46,73 @@ describe("rule handlers", function()
         expect(changes[1].to).toBe(true)
     end)
 
-    it("provides transition alpha and disconnects transition listeners", function()
+    it("provides transition values and disconnects transition listeners", function()
         local handler = VideState.rule({
             visible = VideState.boolean(),
-        }, { name = "AlphaPanel" }).new({
-            Idle = { visible = Vide.source(false) },
-            Active = { visible = Vide.source(true) },
+            opacity = VideState.float(),
+        }, { name = "ValuePanel" }).new({
+            Idle = { visible = Vide.source(false), opacity = Vide.source(0) },
+            Active = { visible = Vide.source(true), opacity = Vide.source(1) },
         }, "Idle", { transitionDuration = 0.05 })
 
-        local alphas = {}
-        local secondAlphas = {}
-        local disconnect = handler.onTransition(function(from, to, alpha)
+        local currents = {}
+        local secondCurrents = {}
+        local disconnect = handler.onTransition(function(from, to, current)
             expect(from.visible).toBe(false)
             expect(to.visible).toBe(true)
-            table.insert(alphas, alpha)
+            table.insert(currents, current)
         end)
-        local disconnectSecond = handler.onTransition(function(_, _, alpha)
-            table.insert(secondAlphas, alpha)
+        local disconnectSecond = handler.onTransition(function(_, _, current)
+            table.insert(secondCurrents, current)
         end)
 
         handler.setState("Active")
-        expect(alphas[1]).toBe(0)
-        expect(secondAlphas[1]).toBe(0)
+        expect(currents[1].opacity).toBe(0)
+        expect(secondCurrents[1].opacity).toBe(0)
 
         task.wait(0.1)
-        expect(alphas[#alphas]).toBe(1)
-        expect(secondAlphas[#secondAlphas]).toBe(1)
-        expect(#secondAlphas).toBe(#alphas)
+        expect(currents[#currents].opacity).toBe(1)
+        expect(secondCurrents[#secondCurrents].opacity).toBe(1)
+        expect(#secondCurrents).toBe(#currents)
 
         disconnect()
         disconnectSecond()
-        local countAfterDisconnect = #alphas
+        local countAfterDisconnect = #currents
         handler.setState("Idle")
         task.wait(0.1)
 
-        expect(#alphas).toBe(countAfterDisconnect)
-        expect(#secondAlphas).toBe(countAfterDisconnect)
+        expect(#currents).toBe(countAfterDisconnect)
+        expect(#secondCurrents).toBe(countAfterDisconnect)
+    end)
+
+    it("tweens numeric fields and snaps other fields at the start of a transition", function()
+        local handler = VideState.rule({
+            visible = VideState.boolean(),
+            opacity = VideState.float(),
+        }, { name = "TweenValuePanel" }).new({
+            Idle = { visible = Vide.source(false), opacity = Vide.source(0) },
+            Active = { visible = Vide.source(true), opacity = Vide.source(1) },
+        }, "Idle", { transitionDuration = 0.1 })
+
+        local currents: { { visible: boolean, opacity: number } } = {}
+        handler.onTransition(function(_, _, current)
+            table.insert(currents, current)
+        end, { ripple = { easing = "quadIn" } })
+
+        handler.setState("Active")
+        task.wait(0.2)
+
+        expect(currents[1].visible).toBe(true)
+        expect(currents[1].opacity).toBe(0)
+        expect(currents[#currents].opacity).toBe(1)
+
+        local hasIntermediate = false
+        for _, current in currents do
+            if current.opacity > 0 and current.opacity < 1 then
+                hasIntermediate = true
+            end
+        end
+        expect(hasIntermediate).toBe(true)
     end)
 
     it("stops a running transition when disconnected", function()
@@ -92,23 +123,102 @@ describe("rule handlers", function()
             Active = { visible = Vide.source(true) },
         }, "Idle", { transitionDuration = 0.25 })
 
-        local alphas = {}
-        local disconnect = handler.onTransition(function(_, _, alpha)
-            table.insert(alphas, alpha)
+        local currents = {}
+        local disconnect = handler.onTransition(function(_, _, current)
+            table.insert(currents, current)
         end)
 
         handler.setState("Active")
-        expect(alphas[1]).toBe(0)
+        expect(currents[1].visible).toBe(true)
 
         disconnect()
-        local countAfterDisconnect = #alphas
+        local countAfterDisconnect = #currents
         task.wait(0.05)
         handler.setState("Idle")
         task.wait(0.05)
 
-        expect(#alphas).toBe(countAfterDisconnect)
+        expect(#currents).toBe(countAfterDisconnect)
     end)
 
+    it("stops applying a tween after disconnecting", function()
+        local handler = VideState.rule({
+            visible = VideState.boolean(),
+        }, { name = "DisconnectedTweenPanel" }).new({
+            Idle = { visible = Vide.source(false) },
+            Active = { visible = Vide.source(true) },
+        }, "Idle", { transitionDuration = 0.25 })
+
+        local currents = {}
+        local disconnect = handler.onTransition(function(_, _, current)
+            table.insert(currents, current)
+        end, { ripple = { easing = "cubicOut" } })
+
+        handler.setState("Active")
+        expect(currents[1].visible).toBe(true)
+
+        disconnect()
+        local countAfterDisconnect = #currents
+        handler.setState("Idle")
+        task.wait(0.05)
+
+        expect(#currents).toBe(countAfterDisconnect)
+    end)
+
+    it("runs each listener for its own duration", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PerListenerDurationPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", { transitionDuration = 0.5 })
+
+        local shortCurrents: { { opacity: number } } = {}
+        local longCurrents: { { opacity: number } } = {}
+        handler.onTransition(function(_, _, current)
+            table.insert(shortCurrents, current)
+        end, { ripple = { duration = 0.05 } })
+        handler.onTransition(function(_, _, current)
+            table.insert(longCurrents, current)
+        end)
+
+        handler.setState("Active")
+        task.wait(0.2)
+        local shortCountAfterFinish = #shortCurrents
+        local longCountBeforeWait = #longCurrents
+        task.wait(0.2)
+
+        expect(shortCurrents[#shortCurrents].opacity).toBe(1)
+        expect(#shortCurrents).toBe(shortCountAfterFinish)
+        expect(#longCurrents > longCountBeforeWait).toBe(true)
+    end)
+
+    it("rejects invalid transition metadata", function()
+        local handler = VideState.rule({
+            visible = VideState.boolean(),
+        }, { name = "BadTweenPanel" }).new({
+            Idle = { visible = Vide.source(false) },
+        }, "Idle")
+
+        expect(function()
+            handler.onTransition(function() end, { ripple = { easing = "bounce" } } :: any)
+        end).toThrow("onTransition ripple easing must be a known easing name")
+
+        expect(function()
+            handler.onTransition(function() end, { ripple = { duration = -1 } } :: any)
+        end).toThrow("onTransition ripple duration must be a finite non-negative number")
+
+        expect(function()
+            handler.onTransition(function() end, { ripple = { tween = "quadIn" } } :: any)
+        end).toThrow("onTransition ripple metadata has an unknown key tween")
+
+        expect(function()
+            handler.onTransition(function() end, { tween = { easing = "quadIn" } } :: any)
+        end).toThrow("onTransition metadata has an unknown key tween")
+
+        expect(function()
+            handler.onTransition(function() end, "quadIn" :: any)
+        end).toThrow("onTransition metadata must be a table")
+    end)
     it("keeps state unchanged when switching to an unknown state", function()
         local handler = VideState.rule({
             visible = VideState.boolean(),

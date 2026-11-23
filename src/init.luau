@@ -1,6 +1,7 @@
 const Types = require("@self/Types")
 
 export type Infer<S> = Types.Infer<S>
+export type InferRule<R> = Types.InferRule<R>
 export type Source<T> = Types.Source<T>
 export type Sources<T> = Types.Sources<T>
 export type Disconnect = Types.Disconnect
@@ -8,6 +9,8 @@ export type OnChangeCallback<T> = Types.OnChangeCallback<T>
 export type OnTransitionCallback<T> = Types.OnTransitionCallback<T>
 export type HandlerOptions = Types.HandlerOptions
 export type Handler<T> = Types.Handler<T>
+export type TweenName = Types.TweenName
+export type TweenMetadata = Types.TweenMetadata
 
 return table.freeze({
     -- PRIMITIVE SCHEMAS --

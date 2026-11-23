@@ -7,7 +7,7 @@ type Disconnect = Types.Disconnect
 return function <T>()
     local container = EventEmitter("onChange")
 
-    const function onChange(callback: Callback<T>): Disconnect
+    return function(callback: Callback<T>): Disconnect
         local id = container.addListener(callback)
         local connected = true
 
@@ -21,7 +21,5 @@ return function <T>()
                 container.removeListener(id)
             end
         end
-    end
-
-    return onChange, container.emit
+    end, container.emit
 end

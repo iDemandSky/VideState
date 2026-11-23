@@ -1,7 +1,7 @@
 const TypedCore = require("@luau-packages/TypedCore")
 const Helper = require("../Helper")
 
-const function enum(...: string): TypedCore.Schema<string>
+return function(...: string): TypedCore.Schema<string>
     local enumValues = table.pack(...)
 
     Helper.assertMinimumCount(enumValues.n, 1, "Enum requires at least one string value")
@@ -39,4 +39,3 @@ const function enum(...: string): TypedCore.Schema<string>
     )
 end
 
-return enum

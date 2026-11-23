@@ -1,7 +1,7 @@
 const TypedCore = require("@luau-packages/TypedCore")
 const Helper = require("../Helper")
 
-const function vector2(): TypedCore.Schema<Vector2>
+return function(): TypedCore.Schema<Vector2>
     return Helper.createSchemaWithSource(
         "Vector2",
         function(value: unknown): TypedCore.ParseResult<Vector2>
@@ -12,4 +12,3 @@ const function vector2(): TypedCore.Schema<Vector2>
     )
 end
 
-return vector2

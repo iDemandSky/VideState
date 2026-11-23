@@ -6,7 +6,7 @@ export type StringOptions = {
     read truncate: boolean?,
 }
 
-const function stringSchema(options: StringOptions?): TypedCore.Schema<string>
+return function(options: StringOptions?): TypedCore.Schema<string>
     Helper.assertOptionsTable(options, "String")
 
     local maxLength = if options then options.maxLength else nil
@@ -59,4 +59,3 @@ const function stringSchema(options: StringOptions?): TypedCore.Schema<string>
     )
 end
 
-return stringSchema

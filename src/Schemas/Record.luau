@@ -1,7 +1,7 @@
 const Typed = require("@luau-packages/Typed")
 const TypedCore = require("@luau-packages/TypedCore")
 
-const function record<Fields>(fields: Fields)
+return function <Fields>(fields: Fields)
     assert(type(fields) == "table", "expected a table of field schemas")
 
     local definitions = fields :: { [string]: TypedCore.UnknownSchema }
@@ -21,4 +21,3 @@ const function record<Fields>(fields: Fields)
     return Typed.table(table.clone(definitions) :: Fields, { strict = true })
 end
 
-return record

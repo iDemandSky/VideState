@@ -12,6 +12,16 @@ url = "https://api.wally.run/v1/package-contents/centau/vide/0.4.1"
 sha256 = "f48fb011962483f235c2aa144af86ae92c081a79e2360ac0910f249b62f33dd4"
 
 [[package]]
+name = "littensy/ripple"
+version = "0.10.2"
+environment = "roblox"
+link = "Ripple"
+index = "https://github.com/UpliftGames/wally-index"
+type = "zip"
+url = "https://api.wally.run/v1/package-contents/littensy/ripple/0.10.2"
+sha256 = "3f9f41835bfc559b61e7310da8e6838236b02318a0b9aa52386cbe33bab72558"
+
+[[package]]
 name = "typed/core"
 version = "0.9.2"
 environment = "luau"

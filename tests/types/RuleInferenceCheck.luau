@@ -22,6 +22,8 @@ local sources: Sources = panel.sources
 local visibleSource: Vide.Source<boolean> = panel.sources.visible
 local countSource: Vide.Source<number> = panel.sources.count
 local values: Values = { visible = true, count = 2 }
+local ruleValues: VideState.InferRule<typeof(rule)> = values
+local typedHandler: VideState.Handler<VideState.InferRule<typeof(rule)>> = panel
 local inferredSchema: TypedCore.infer<typeof(rule._schema)> = values
 local disconnectChange: () -> () = panel.onChange(function(from, to)
     local _fromVisible: boolean = from.visible
@@ -30,10 +32,10 @@ local disconnectChange: () -> () = panel.onChange(function(from, to)
     local _toCount: number = to.count
 end)
 
-local disconnectTransition: () -> () = panel.onTransition(function(from, to, alpha)
+local disconnectTransition: () -> () = panel.onTransition(function(from, to, current)
     local _fromVisible: boolean = from.visible
     local _toVisible: boolean = to.visible
-    local _progress: number = alpha
+    local _currentVisible: boolean = current.visible
 end)
 
 disconnectChange()
@@ -44,6 +46,8 @@ return {
     visibleSource,
     countSource,
     inferredSchema,
+    ruleValues,
+    typedHandler,
     disconnectChange,
     disconnectTransition,
 }

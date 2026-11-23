@@ -132,7 +132,7 @@ function helper.createSchemaWithSource<T, S, M>(
     name: string,
     parse: (value: unknown) -> ParseResult<T>,
     shape: S,
-    metaData: M
+    metadata: M
 ): TypedCore.Schema<T, S, M>
     return TypedCore.schema.createSchema<<T, S, M>>(
         name,
@@ -148,7 +148,7 @@ function helper.createSchemaWithSource<T, S, M>(
             return parse(value)
         end,
         shape,
-        metaData
+        metadata
     )
 end
 

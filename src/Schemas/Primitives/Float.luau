@@ -7,7 +7,7 @@ export type FloatOptions = {
     read step: number?,
 }
 
-const function float(options: FloatOptions?): TypedCore.Schema<number>
+return function(options: FloatOptions?): TypedCore.Schema<number>
     Helper.assertOptionsTable(options, "Float")
 
     local min = if options then options.min else nil
@@ -70,4 +70,3 @@ const function float(options: FloatOptions?): TypedCore.Schema<number>
     )
 end
 
-return float
