@@ -75,28 +75,6 @@ two states.
 - A field is missing from a state, or a state's values do not match the schema. The message names the state and the field.
 - There are fewer than two states, or a state name is not in `allowedStateNames`.
 
-### info.get
-
-```luau
-VideState.info.get(
-    name: string -- The name the rule was registered with
-) -> RuleMetadata?
-```
-
-Looks up the metadata of a registered rule. Returns `nil` when no rule has that name.
-
-**Parameters**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `name` | `string` | The `name` given in the rule's metadata. |
-
-**Returns**
-
-| Type | Description |
-| --- | --- |
-| `RuleMetadata?` | A frozen copy of the metadata, or `nil` when no rule is registered under `name`. |
-
 ## Types
 
 ### RuleMetadata

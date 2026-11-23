@@ -46,3 +46,4 @@ automatically.
 - [Rules](/guide/rules) covers rule metadata and typing.
 - [Handlers](/guide/handlers) covers states, sources, and errors.
 - [Transitions](/guide/transitions) covers `onChange` and `onTransition`.
+- [Info](/guide/info) looks up registered rules while debugging.
