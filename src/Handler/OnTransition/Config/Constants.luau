@@ -21,7 +21,11 @@ const TWEEN_NAMES: { [string]: boolean } = {
 }
 
 -- Keys allowed in the metadata passed to `onTransition`.
-const METADATA_KEYS: { [string]: boolean } = { easing = true, duration = true, speed = true }
+const METADATA_KEYS: { [string]: boolean } = {
+    easing = true,
+    duration = true,
+    speed = true,
+}
 
 -- Value types that Ripple can interpolate directly.
 const ANIMATABLE_TYPES: { [string]: boolean } = {

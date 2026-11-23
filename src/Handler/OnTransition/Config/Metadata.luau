@@ -26,7 +26,11 @@ end
 
 -- Validates the metadata given to `onTransition`. Errors point at the caller of `onTransition`.
 const function parse(metadata: Types.TweenMetadata?, defaultDuration: number): Settings
-    local settings: Settings = { easing = nil, duration = defaultDuration, speed = nil }
+    local settings: Settings = {
+        easing = nil,
+        duration = defaultDuration,
+        speed = nil,
+    }
     if metadata == nil then
         return settings
     end
