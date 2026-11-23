@@ -1,15 +1,35 @@
 ---
 title: Components
-description: Build a UI component the way you would in Vue.js, with a rule as its blueprint and a handler for each instance.
+description: Build a menu button that reacts to the mouse, with a rule as its blueprint and a handler for each button.
 ---
 
 # Components
 
-VideState lets you build UI components. A [rule](/guide/rules) is the component's blueprint: the properties
-it has and the states it can be in. A [handler](/guide/handlers) is one instance of that component, with its
-own state and values. Vide creates the Instances, and the handler decides what their properties are.
+VideState lets you build UI components the way you would in Vue.js. A [rule](/guide/rules) is the
+component's blueprint: the properties it has and the states it can be in. A
+[handler](/guide/handlers) is one instance of that component, with its own state and values. Vide
+creates the Instances, and the handler decides what their properties are.
 
-This button has four states. Mouse events move it between them, and each state sets the button's properties.
+## What we're building
+
+A **Play button** for a game's main menu. It reacts to the mouse, and every reaction is a state:
+
+| State | When | What the player sees |
+| --- | --- | --- |
+| `Idle` | Nothing is happening | The normal dark button |
+| `Hovered` | The mouse is over it | A lighter background and slightly larger text |
+| `Pressed` | The mouse button is held down | A darker background |
+| `Disabled` | The player cannot use it yet | A greyed-out button that ignores the mouse |
+
+Every state sets the same three properties: `backgroundColor`, `textColor`, and `textSize`. The colors
+fade over 0.15 seconds when the state changes, instead of jumping.
+
+The steps below continue one script. Put them together in order, in a LocalScript.
+
+## 1. Describe the component
+
+The rule lists the properties a button has and the states it can be in. `allowedStateNames` makes
+VideState reject any state that is not one of the four.
 
 ```luau
 const Players = game:GetService("Players")
@@ -17,7 +37,6 @@ const Players = game:GetService("Players")
 const Vide = require("@Vide")
 const VideState = require("@VideState")
 
--- The blueprint: which properties a button has and which states it can be in.
 const ButtonRule = VideState.rule({
     backgroundColor = VideState.color3(),
     textColor = VideState.color3(),
@@ -26,14 +45,20 @@ const ButtonRule = VideState.rule({
     name = "Button",
     allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
 })
+```
 
+## 2. Design how each state looks
+
+A design says what every state looks like. It is plain data, so it is easy to change or replace. The
+`Look` and `Design` types match the rule, and your editor flags a missing state or property.
+
+```luau
 export type Look = {
     backgroundColor: Color3,
     textColor: Color3,
     textSize: number,
 }
 
--- A design gives every state its look. It is plain data, so it is easy to swap.
 export type Design = {
     Idle: Look,
     Hovered: Look,
@@ -63,8 +88,13 @@ const DefaultDesign: Design = {
         textSize = 18,
     },
 }
+```
 
--- Every state needs one Vide source for each property in the rule.
+## 3. Turn the design into sources
+
+A handler needs a Vide source for each property in each state. This helper builds them from a design.
+
+```luau
 const function createStates(design: Design)
     local states = {}
 
@@ -78,9 +108,15 @@ const function createStates(design: Design)
 
     return states
 end
+```
 
+## 4. Build the button
+
+`createButton` makes one button. Calling `ButtonRule.new` creates the handler, which is this
+button's component instance. The button starts in `Idle`, or in `Disabled` when it is not enabled.
+
+```luau
 const function createButton(label: string, design: Design, enabled: boolean)
-    -- The handler is this button's component instance.
     local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled", {
         onTransition = {
             duration = 0.15,
@@ -104,6 +140,7 @@ const function createButton(label: string, design: Design, enabled: boolean)
         TextSize = handler.sources.textSize,
     }
 
+    -- The mouse events only change the state. The handler decides what each state looks like.
     button.MouseEnter:Connect(function()
         if handler.currentState() == "Idle" then
             handler.setState("Hovered")
@@ -134,7 +171,13 @@ const function createButton(label: string, design: Design, enabled: boolean)
 
     return button
 end
+```
 
+## 5. Show it
+
+Create the Play button and mount it in the player's screen.
+
+```luau
 const player = Players.LocalPlayer
 
 Vide.mount(function()
@@ -145,6 +188,9 @@ Vide.mount(function()
     }
 end, player:WaitForChild("PlayerGui"))
 ```
+
+Hover over the button and it lightens and grows. Hold the mouse down and it darkens. Pass `false`
+as the last argument to `createButton` and it starts greyed out and ignores the mouse.
 
 ## What to notice
 

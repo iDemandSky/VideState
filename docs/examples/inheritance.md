@@ -1,21 +1,36 @@
 ---
 title: Inheritance
-description: Make a base UI component, then create many designs of it that share the same state structure.
+description: Make one base button component, then create a primary, a danger, and a default design that share its states.
 ---
 
 # Inheritance
 
-A base component defines the state structure once: its properties and its states. Each design of that component
-uses the same structure and only changes the property values. You get many looks from one component, without
-copying its logic.
+A base component defines the state structure once: its properties and its states. Each design of that
+component follows the same structure and only changes the property values. You get many looks from one
+component, without copying its logic.
 
-This builds on the button from [Components](/examples/components). The rule, `createStates`, and `createButton`
-stay exactly the same. Only the designs differ.
+## What we're building
 
-## The base component
+A **main menu with three buttons**, all made from the button component in [Components](/examples/components):
 
-The rule is the base. Every design has to follow it, so each one must provide `Idle`, `Hovered`,
-`Pressed`, and `Disabled` with the same three properties.
+| Button | Design | Purpose | Enabled |
+| --- | --- | --- | --- |
+| Play | `PrimaryDesign` (blue) | The main action | Yes |
+| Delete | `DangerDesign` (red) | A destructive action | Yes |
+| Shop | `DefaultDesign` (grey) | Not available yet | No |
+
+All three buttons have the same four states (`Idle`, `Hovered`, `Pressed`, `Disabled`) and the same three
+properties (`backgroundColor`, `textColor`, `textSize`). Only the values differ. For example, `Idle` is blue
+for Play, red for Delete, and dark grey for Shop.
+
+This page continues the script from Components. The rule, the `Look` and `Design` types, `createStates`,
+`createButton`, and `DefaultDesign` are exactly the same, so they are not repeated here.
+
+## 1. The base component
+
+The base is the `ButtonRule` you already wrote. It is the contract that every design has to follow: each
+design provides `Idle`, `Hovered`, `Pressed`, and `Disabled`, with the same three properties.
+It is shown again only as a reminder, so do not define it a second time.
 
 ```luau
 const ButtonRule = VideState.rule({
@@ -28,10 +43,12 @@ const ButtonRule = VideState.rule({
 })
 ```
 
-## Designs
+## 2. Add the designs
 
-A design is a table that follows the `Design` type from Components. It has the same states, so every design
-works with the same `createButton`.
+Each design is a table of type `Design`. It has the same states as `DefaultDesign`, with different values,
+so every design works with the same `createButton`.
+
+The primary design is blue. Its text grows by two points when hovered, like the default design:
 
 ```luau
 const PrimaryDesign: Design = {
@@ -56,7 +73,12 @@ const PrimaryDesign: Design = {
         textSize = 18,
     },
 }
+```
 
+The danger design is red. Its text does not grow on hover, which shows that designs can differ in any
+property and not only in colors:
+
+```luau
 const DangerDesign: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(200, 60, 60),
@@ -81,15 +103,15 @@ const DangerDesign: Design = {
 }
 ```
 
-## Using the designs
+## 3. Build the menu
 
-Each button is a separate handler, so changing one never affects another. The designs only decide what each
-state looks like.
+Create one button per design and place them in a list. Each button is its own handler, so changing one
+never affects another.
 
 ```luau
 Vide.mount(function()
     return Vide.create "ScreenGui" {
-        Name = "Designs",
+        Name = "MainMenu",
         ResetOnSpawn = false,
         [1] = Vide.create "Frame" {
             Size = UDim2.fromScale(1, 1),
@@ -106,6 +128,9 @@ Vide.mount(function()
     }
 end, player:WaitForChild("PlayerGui"))
 ```
+
+You get a blue Play button, a red Delete button, and a greyed-out Shop button. They share the same hover and
+press behavior, and each reacts on its own.
 
 ## What to notice
 
