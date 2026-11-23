@@ -12,15 +12,13 @@ create many handlers, and the handlers do not affect each other.
 
 Using a rule takes two steps, and the order matters:
 
-1. Create the rule once with [`VideState.rule`](#rule).
-2. Call [`new`](#new) on the rule it returns, once for each handler you need.
+1. Create the rule once with [`VideState.rule`](#creating-a-rule).
+2. Call [`new`](#creating-handlers-from-a-rule) on the rule it returns, once for each handler you need.
 
 `rule` is a function on `VideState`. `new` is a method of the rule that `rule` returns, so it
 does not exist until a rule has been created.
 
 ## Creating a rule
-
-### rule
 
 ```luau
 VideState.rule<Fields>(
@@ -42,7 +40,7 @@ Creates a rule and registers its metadata under `metadata.name`.
 
 | Type | Description |
 | --- | --- |
-| [`Rule`](#rule-1)`<Fields>` | A frozen table with the [`new`](#new) constructor and the `_schema` built from `fields`. |
+| [`Rule`](#rule)`<Fields>` | A frozen table with the [`new`](#creating-handlers-from-a-rule) constructor and the `_schema` built from `fields`. |
 
 **Errors**
 
@@ -51,9 +49,7 @@ Creates a rule and registers its metadata under `metadata.name`.
 
 ## Creating handlers from a rule
 
-### new
-
-Call `new` on a rule that [`rule`](#rule) has already returned. It is not a function of `VideState`.
+Call `new` on a rule that [`rule`](#creating-a-rule) has already returned. It is not a function of `VideState`.
 
 ```luau
 Rule.new(
@@ -129,9 +125,9 @@ type Rule<Fields> = {
 }
 ```
 
-A rule returned by [`rule`](#rule). It is frozen, so it cannot be changed after creation.
+A rule returned by [`rule`](#creating-a-rule). It is frozen, so it cannot be changed after creation.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `_schema` | [`Schema`](/guide/schemas#schema)`<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
-| `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#new). |
+| `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#creating-handlers-from-a-rule). |
