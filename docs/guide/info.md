@@ -23,9 +23,7 @@ tags. Keeping tags consistent is your responsibility.
 
 ## Functions
 
-### get
-
-<Badge type="tip" text="Added in 0.1.0" />
+### get <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.info.get(
@@ -47,9 +45,7 @@ Looks up the metadata of a registered rule. Returns `nil` when no rule has that 
 | --- | --- |
 | [`RuleMetadata`](/guide/rules#rulemetadata)`?` | A frozen copy of the metadata, or `nil` when no rule is registered under `name`. |
 
-### getAllRulesWithTags
-
-<Badge type="tip" text="Added in 0.1.0" />
+### getAllRulesWithTags <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.info.getAllRulesWithTags(
@@ -79,9 +75,7 @@ written.
 | <Badge type="danger" text="Error" /> | No tags are given | `getAllRulesWithTags requires at least one tag` |
 | <Badge type="danger" text="Error" /> | A tag is not a string | `Tag <n> must be a string, got <type>` |
 
-### getAllTags
-
-<Badge type="tip" text="Added in 0.1.0" />
+### getAllTags <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.info.getAllTags() -> { string }
@@ -95,9 +89,7 @@ Returns every tag used by a registered rule.
 | --- | --- |
 | `{ string }` | A frozen array of distinct tags, sorted alphabetically. Rules without tags add nothing. |
 
-### ruleHasTag
-
-<Badge type="tip" text="Added in 0.1.0" />
+### ruleHasTag <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.info.ruleHasTag(

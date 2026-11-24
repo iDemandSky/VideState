@@ -18,9 +18,7 @@ Using a rule takes two steps, and the order matters:
 `rule` is a function on `VideState`. `new` is a method of the rule that `rule` returns, so it
 does not exist until a rule has been created.
 
-## Creating a rule
-
-<Badge type="tip" text="Added in 0.1.0" />
+## Creating a rule <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.rule<Fields>(
@@ -51,9 +49,7 @@ Creates a rule and registers its metadata under `metadata.name`.
 | <Badge type="danger" text="Error" /> | A rule with the same `metadata.name` already exists | `Duplicate rule name: <name>` |
 | <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
 
-## Creating handlers from a rule
-
-<Badge type="tip" text="Added in 0.1.0" />
+## Creating handlers from a rule <Badge type="tip" text="Added in 0.1.0" />
 
 Call `new` on a rule that [`rule`](#creating-a-rule) has already returned. It is not a function of `VideState`.
 
@@ -105,9 +101,7 @@ two states.
 
 ## Types
 
-### RuleMetadata
-
-<Badge type="tip" text="Added in 0.1.0" />
+### RuleMetadata <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type RuleMetadata = {
@@ -125,9 +119,7 @@ type RuleMetadata = {
 | `tags` | `{ string }` | No | Strings for grouping rules. Tags are never formatted, so keep them consistent. Look them up with [`info`](/guide/info). |
 | `allowedStateNames` | `{ string }` | No | When set, [handlers](/guide/handlers) reject any other state name. When omitted, every state name is allowed. |
 
-### InferRule
-
-<Badge type="tip" text="Added in 0.1.0" />
+### InferRule <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type InferRule<R> = -- The value type of the rule R
@@ -140,9 +132,7 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 | --- | --- | --- |
 | `R` | `typeof(rule)` | The rule to read the value type from. |
 
-### Rule
-
-<Badge type="tip" text="Added in 0.1.0" />
+### Rule <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type Rule<Fields> = {

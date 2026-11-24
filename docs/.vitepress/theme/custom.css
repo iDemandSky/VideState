@@ -1,0 +1,6 @@
+/* Version badges sit on the right edge of the API heading they describe. */
+.vp-doc h2 .VPBadge,
+.vp-doc h3 .VPBadge {
+  float: right;
+  margin-top: 6px;
+}

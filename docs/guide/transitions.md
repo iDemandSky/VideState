@@ -63,9 +63,7 @@ read once and never change.
 
 ## Types
 
-### TransitionOptions
-
-<Badge type="tip" text="Added in 0.1.0" />
+### TransitionOptions <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type TransitionOptions = {
@@ -92,9 +90,7 @@ error: `easing` falls back to `"linear"` and `duration` to `0.25`. A negative `s
 which pauses the transition, and any other invalid `speed` is treated as `1`. A paused transition keeps
 its values and does not call listeners again until the speed is above `0`.
 
-### TweenName
-
-<Badge type="tip" text="Added in 0.1.0" />
+### TweenName <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type TweenName =
