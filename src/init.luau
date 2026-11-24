@@ -18,6 +18,7 @@ export type HandlerOptions = Types.HandlerOptions
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
 export type TransitionOptions = Types.TransitionOptions
+export type DebugSnapshot = Types.DebugSnapshot
 
 return table.freeze({
     -- PRIMITIVE SCHEMAS --
@@ -39,4 +40,7 @@ return table.freeze({
 
     -- INFO --
     info = require("@self/Info"),
+
+    -- DEBUG --
+    debug = require("@self/Debug"),
 })

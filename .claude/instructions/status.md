@@ -22,13 +22,8 @@ released: `CHANGELOG.md` still lists these changes under `## [Unreleased]`, and 
 deploys from `main`, so it does not show these features yet.
 
 Also unreleased: `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, the
-`delay` transition option, and the shared frame loop with its benchmark (`lest bench`).
-
-## In progress
-
-The user accepted this. Build it with tests and docs:
-
-- A debug view: a UI Labs story that lists handlers, their states, and their running transitions.
+`delay` transition option, the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its
+UI Labs story in `stories/`. The story has not been opened in UI Labs yet, because that needs the user's Studio.
 
 ## Known limits
 

@@ -34,6 +34,13 @@ user settles a new one.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
 
+## Debug tools
+
+- **Tracking is opt-in.** Only handlers passed to `debug.track` are listed. Every handler still adds its inspect
+  function to a weak table when created, because that is the only way the debug tools can read its internals.
+- **The view ships in the package** as `debug.view()`, a Vide component, so users can mount it in their own stories
+  or debug screens. The repository story in `stories/` uses it.
+
 ## Schemas
 
 - **No 3D schemas,** such as `Vector3`. VideState is for 2D UI. 2D types such as `NumberSequence` or `ColorSequence`

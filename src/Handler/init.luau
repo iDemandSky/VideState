@@ -3,6 +3,7 @@ const TypedCore = require("../packages/luau/TypedCore")
 
 const Types = require("./Types")
 const Validation = require("./Validation")
+const DebugRegistry = require("./Debug/Registry")
 const Change = require("@self/Change")
 const StateEvents = require("@self/StateEvents")
 const Transition = require("@self/Transition")
@@ -23,13 +24,14 @@ type Handler<T> = Types.Handler<T>
 --   FastForward fastForward
 --   Finish      finish, onFinish, waitForFinish
 --   SetState    setState
--- `destroy` is defined here, because it stops every feature.
+-- `destroy` is defined here, because it stops every feature, and so is the inspect function for the debug tools.
 return function <S>(
     schema: S,
     states: { [string]: Sources<TypedCore.infer<S>> },
     initialState: string,
     options: Types.HandlerOptions?,
-    allowedStateNames: { string }?
+    allowedStateNames: { string }?,
+    ruleName: string
 )
     type Values = TypedCore.infer<S>
 
@@ -106,7 +108,29 @@ return function <S>(
         transition.emit
     )
 
-    return table.freeze({
+    -- What the debug tools show about this handler. The label is filled in by `debug.track`.
+    const function inspect(): Types.DebugSnapshot
+        local running = state.currentTransition
+        local isRunning = running ~= nil and running.pending > 0
+        local connections = 0
+
+        for _ in state.connections do
+            connections += 1
+        end
+
+        return table.freeze({
+            label = ruleName,
+            rule = ruleName,
+            state = currentState(),
+            connections = connections,
+            isRunning = isRunning,
+            isPaused = pause.isPaused(),
+            isDestroyed = destroyed,
+            startedAt = state.startedAt,
+        })
+    end
+
+    local handler = table.freeze({
         sources = sources,
         currentState = function()
             return currentState()
@@ -126,4 +150,8 @@ return function <S>(
         waitForFinish = finish.waitForFinish,
         destroy = destroy,
     })
+
+    DebugRegistry.register(handler, inspect)
+
+    return handler
 end

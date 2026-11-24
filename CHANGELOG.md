@@ -20,6 +20,7 @@ version can contain breaking changes.
 - `handler.waitForFinish()` yields until the handler has no running transition.
 - `handler.destroy()` stops every transition and removes every listener. `setState` raises an error afterwards.
 - A `delay` transition option makes a connection wait before its tween starts, for staggered animations.
+- `VideState.debug` with `track`, `snapshot`, `list`, and `view`: an opt-in list of handlers with their state and transitions, and a Vide component that shows it. The `DebugSnapshot` type.
 
 ### Fixed
 

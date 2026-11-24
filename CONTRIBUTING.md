@@ -16,13 +16,24 @@ serve.bat    # Windows
 If either process exits, the launcher refreshes the output and retries after five seconds. Press Ctrl+C to
 stop serving. Every command in this file uses forward slashes, which work on all platforms.
 
+## Stories
+
+`stories/` has [UI Labs](https://ui-labs.luau.page/) stories, such as `DebugView.story.luau`, which previews the
+debug view with demo handlers. The `ui-labs` package is a dev dependency, so it is not published. To open the
+stories, install the UI Labs plugin in Roblox Studio, serve the project, and open the plugin. It runs in Studio's
+edit mode, so no playtest is needed.
+
+Larvae only processes `src/`, so stories require VideState and the packages with Instance paths, such as
+`require(ReplicatedStorage:WaitForChild("VideState"))`. Do not run `larvae init` to add `stories/` as an input: with
+two inputs, Larvae writes `dist/src/` and `dist/stories/`, but the derived Rojo project still points at `dist/`.
+
 ## Checks
 
 After every change, run:
 
 ```sh
-larvae check          # syntax and require errors
-larvae lint src tests # lints only the project code, not dist/, packages/, or .lest/
+larvae check                  # syntax and require errors
+larvae lint src tests stories # lints only the project code, not dist/, packages/, or .lest/
 ```
 
 Warnings in `.lest/`, `dist/`, and `packages/` come from generated or vendored code and can be ignored.
@@ -96,6 +107,11 @@ Each feature of a handler has its own module under `src/Handler/`, with the func
 | `SetState.luau` | `setState` | Changes the state and starts the change and transition events. |
 
 Shared types go in `src/Types.luau`, and `src/Utils/StartTimeEvent.luau` is the event that `Pause` and `Finish` use.
+`destroy` and the debug inspect function live in `src/Handler/init.luau`, because they read every feature.
+
+`src/Debug/` holds `VideState.debug`. Every handler adds its inspect function to `Debug/Registry.luau`, a weak table,
+when it is created. `Debug/init.luau` tracks the handlers passed to `track`, and `Debug/View.luau` is the Vide
+component.
 
 ## Conventions
 

@@ -22,7 +22,7 @@ return function <Fields>(fields: Fields, metadata: RuleMetadata)
             initialState: string,
             options: Types.HandlerOptions?
         )
-            return Handler(schema, states, initialState, options, metadata.allowedStateNames)
+            return Handler(schema, states, initialState, options, metadata.allowedStateNames, metadata.name)
         end,
     })
 end

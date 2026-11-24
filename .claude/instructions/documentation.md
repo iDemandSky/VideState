@@ -7,6 +7,8 @@ Whenever you add, edit, or delete a feature, update the documentation in the sam
 | `Rule` | `src/Rule/` | `docs/guide/rules.md` |
 | `Handler` | `src/Handler/` | `docs/guide/handlers.md`, and `docs/guide/transitions.md` for `onTransition` |
 | `Schemas` | `src/Schemas/` | `docs/guide/schemas.md` |
+| `debug` | `src/Debug/` | `docs/guide/debug.md` |
+| `info` | `src/Info.luau` | `docs/guide/info.md` |
 
 - Also update any `docs/examples/` page and the README section that uses the changed API.
 - Public type changes in `src/Types.luau` go in the doc of the class they belong to.

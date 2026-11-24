@@ -88,6 +88,25 @@ export type FastForwardOptions = {
     --- How many times faster the running transition plays. Must be a finite number above 0. It multiplies each connection's own speed.
     speed: number,
 }
+--- What the debug tools report about one handler at one moment.
+export type DebugSnapshot = {
+    --- The label passed to `debug.track`, or the rule name.
+    read label: string,
+    --- The name of the rule that created the handler.
+    read rule: string,
+    --- The active state.
+    read state: string,
+    --- How many `onTransition` connections the handler has.
+    read connections: number,
+    --- Whether a transition is running.
+    read isRunning: boolean,
+    --- Whether the handler is paused.
+    read isPaused: boolean,
+    --- Whether the handler was destroyed.
+    read isDestroyed: boolean,
+    --- The `os.clock()` time at which the most recent transition started, or nil before the first one.
+    read startedAt: number?,
+}
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
 --- Options for creating a handler. `onTransition` sets the default tween settings of its `onTransition` listeners. A listener can override them with its own options.
