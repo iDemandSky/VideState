@@ -118,6 +118,94 @@ describe("transition controls", function()
         expect(values[#values]).toBe(1)
     end)
 
+    it("starts a delayed connection late, and staggers connections", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "DelayPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.2,
+            },
+        })
+
+        local first: { number } = {}
+        local delayed: { number } = {}
+        local finishes = 0
+
+        handler.onTransition(function(_, _, current)
+            table.insert(first, current.opacity)
+        end)
+        handler.onTransition(function(_, _, current)
+            table.insert(delayed, current.opacity)
+        end, {
+            delay = 0.6,
+        })
+        handler.onFinish(function()
+            finishes += 1
+        end)
+
+        handler.setState("Active")
+
+        -- The first connection starts at once, and the delayed one sends nothing yet.
+        expect(#first).toBe(1)
+        expect(#delayed).toBe(0)
+
+        task.wait(0.35)
+
+        expect(first[#first]).toBe(1)
+        expect(#delayed).toBe(0)
+        expect(finishes).toBe(0)
+
+        task.wait(0.8)
+
+        -- It starts from the beginning after the delay, and the transition finishes once it ends.
+        expect(delayed[1]).toBe(0)
+        expect(delayed[#delayed]).toBe(1)
+        expect(finishes).toBe(1)
+
+        -- An instant change skips the delay.
+        handler.setState("Idle", { instant = true })
+
+        expect(delayed[#delayed]).toBe(0)
+
+        expect(function()
+            handler.onTransition(function() end, { delay = -1 })
+        end).toThrow("onTransition delay must be a finite non-negative number")
+    end)
+
+    it("holds a delay while paused, and finish ends a delayed connection", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "DelayPausePanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.2,
+                delay = 0.3,
+            },
+        })
+
+        local values: { number } = {}
+
+        handler.onTransition(function(_, _, current)
+            table.insert(values, current.opacity)
+        end)
+
+        handler.pause()
+        handler.setState("Active")
+        task.wait(0.6)
+
+        -- The paused delay did not run out.
+        expect(#values).toBe(0)
+
+        handler.finish()
+
+        expect(values[#values]).toBe(1)
+    end)
+
     it("changes the state instantly when setState is told to", function()
         local handler = VideState.rule({
             opacity = VideState.float(),

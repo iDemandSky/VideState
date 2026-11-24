@@ -48,6 +48,8 @@ export type TransitionOptions = {
     duration: (number | Source<number>)?,
     --- How fast the transition advances. Must never be negative, so a transition never moves backwards. Defaults to 1, and 0 pauses.
     speed: Source<number>?,
+    --- How long a connection waits before its tween starts, in seconds. Read when a transition starts. The wait is scaled by the speed, so pausing holds it. Defaults to 0.
+    delay: (number | Source<number>)?,
 }
 --- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()

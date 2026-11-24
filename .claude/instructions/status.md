@@ -21,15 +21,14 @@ released: `CHANGELOG.md` still lists these changes under `## [Unreleased]`, and 
 `main` has not been updated since 0.1.2, because the user asked not to push to `main` for this work. The docs site
 deploys from `main`, so it does not show these features yet.
 
-Also unreleased: `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, and the
-shared frame loop with its benchmark (`lest bench`).
+Also unreleased: `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, the
+`delay` transition option, and the shared frame loop with its benchmark (`lest bench`).
 
 ## In progress
 
-The user accepted these, in this order. Build them one at a time, each with tests and docs:
+The user accepted this. Build it with tests and docs:
 
-1. `delay` in the transition options, so a connection can start late (for staggered animations).
-2. A debug view: a UI Labs story that lists handlers, their states, and their running transitions.
+- A debug view: a UI Labs story that lists handlers, their states, and their running transitions.
 
 ## Known limits
 

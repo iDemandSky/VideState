@@ -54,7 +54,10 @@ const function play<T>(
 
     connection.run = run
 
-    Scheduler(group, connection.settings, getRate, function(current: T, alpha: number): number
+    -- An instant transition ignores the delay as well.
+    local delay = if instant then 0 else connection.settings.getDelay()
+
+    Scheduler(group, connection.settings, delay, getRate, function(current: T, alpha: number): number
         -- A connection that was disconnected is no longer in the table, so its loop stops.
         if state.connections[id] ~= connection then
             return 0

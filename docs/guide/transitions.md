@@ -64,6 +64,25 @@ transition and settles at exactly `1` when it ends. This is expected, because th
 the tweened fields past their start or end. Clamp it with `math.clamp(alpha, 0, 1)` if you need a
 fixed range.
 
+## Delays
+
+A connection with a `delay` waits before its tween starts. Give each connection a larger delay to stagger them,
+such as list items that appear one after another:
+
+```luau
+for index, item in items do
+    handler.onTransition(function(_, _, current)
+        item.Transparency = current.transparency
+    end, { delay = (index - 1) * 0.05 })
+end
+```
+
+- The connection sends nothing while it waits. Its first frame starts from the beginning of the tween.
+- The wait is scaled time: [`pause`](/guide/handlers#pause), a `speed` of `0`, and `fastForward` apply to it too.
+- `setState(name, { instant = true })` skips the delay, and [`finish`](/guide/handlers#finish) ends a connection that
+  is still waiting.
+- The transition finishes, and [`onFinish`](/guide/handlers#onfinish) runs, only after the most delayed connection ends.
+
 ## Pausing
 
 [`pause`](/guide/handlers#pause) freezes every transition of a handler, and [`resume`](/guide/handlers#resume)
@@ -135,15 +154,18 @@ read once and never change.
 
 ## Types
 
-### TransitionOptions <Badge type="tip" text="Added in 0.1.0" />
+### TransitionOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
 
 ```luau
 type TransitionOptions = {
     easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
     duration: (number | Source<number>)?, -- The duration in seconds
     speed: Source<number>?, -- How fast the transition advances
+    delay: (number | Source<number>)?, -- How long a connection waits before its tween starts
 }
 ```
+
+Changed in 0.2.0: added `delay`, and the options can also be passed to one connection.
 
 Settings for the transitions of one handler or one connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
 
@@ -152,13 +174,14 @@ Settings for the transitions of one handler or one connection. The tween is crea
 | `easing` | [`TweenName`](#tweenname) or `Source<TweenName>` | No | `"linear"` | The easing curve. An unknown name raises an error. |
 | `duration` | `number` or `Source<number>` | No | `0.25` | The duration in seconds. Must be finite and non-negative. |
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
+| `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
 
 Invalid values raise an error when the handler is created. This includes an unknown key, a
 non-table value, a negative `speed`, and a `speed` that is not a source. A source is also checked on
 creation, using its current value.
 
 If a source later returns an invalid value, the transition keeps running instead of raising an
-error: `easing` falls back to `"linear"` and `duration` to `0.25`. A negative `speed` is treated as `0`,
+error: `easing` falls back to `"linear"`, `duration` to `0.25`, and `delay` to `0`. A negative `speed` is treated as `0`,
 which pauses the transition, and any other invalid `speed` is treated as `1`. A paused transition keeps
 its values and does not call listeners again until the speed is above `0`.
 

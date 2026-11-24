@@ -420,7 +420,7 @@ type HandlerOptions = {
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1` | The default easing, duration, and speed of the handler's transition connections. A connection can override them. An invalid value raises an error when the handler is created. |
+| `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1`, no delay | The default easing, duration, speed, and delay of the handler's transition connections. A connection can override them. An invalid value raises an error when the handler is created. |
 
 ### Handler <Badge type="tip" text="Added in 0.1.0" />
 

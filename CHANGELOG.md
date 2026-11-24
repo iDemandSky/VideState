@@ -19,6 +19,7 @@ version can contain breaking changes.
 - `handler.onEnter(state, callback)` and `handler.onExit(state, callback)` run when the handler enters or leaves one state. The `OnEnterCallback` and `OnExitCallback` types.
 - `handler.waitForFinish()` yields until the handler has no running transition.
 - `handler.destroy()` stops every transition and removes every listener. `setState` raises an error afterwards.
+- A `delay` transition option makes a connection wait before its tween starts, for staggered animations.
 
 ### Fixed
 

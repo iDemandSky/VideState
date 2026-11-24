@@ -6,6 +6,8 @@ export type Settings = {
     read getEasing: () -> Types.TweenName,
     read getDuration: () -> number,
     read getSpeed: () -> number,
+    -- Read once, when a transition starts.
+    read getDelay: () -> number,
 }
 
 const function isValidEasing(value: unknown): boolean
@@ -42,6 +44,10 @@ const function isValidDuration(value: unknown): boolean
 end
 
 const function isValidSpeed(value: unknown): boolean
+    return isFiniteNonNegative(value)
+end
+
+const function isValidDelay(value: unknown): boolean
     return isFiniteNonNegative(value)
 end
 
@@ -98,6 +104,14 @@ const function validateDuration(value: unknown)
     end
 end
 
+const function validateDelay(value: unknown)
+    local current = if typeof(value) == "function" then (value :: () -> unknown)() else value
+
+    if not isValidDelay(current) then
+        error("onTransition delay must be a finite non-negative number", 0)
+    end
+end
+
 const function validateSpeed(value: unknown)
     if typeof(value) ~= "function" then
         error("onTransition speed must be a source", 0)
@@ -130,6 +144,7 @@ const function parse(options: Types.TransitionOptions?, base: Settings?): Settin
     local easing: unknown = nil
     local duration: unknown = nil
     local speed: unknown = nil
+    local delay: unknown = nil
 
     if options ~= nil then
         checkKeys(options)
@@ -148,11 +163,17 @@ const function parse(options: Types.TransitionOptions?, base: Settings?): Settin
             validateSpeed(options.speed)
             speed = options.speed
         end
+
+        if options.delay ~= nil then
+            validateDelay(options.delay)
+            delay = options.delay
+        end
     end
 
     local getEasing: () -> Types.TweenName
     local getDuration: () -> number
     local getSpeed: () -> number
+    local getDelay: () -> number
 
     if easing ~= nil then
         getEasing = createReader<<Types.TweenName>>(easing, isValidEasing, function(): Types.TweenName
@@ -188,10 +209,23 @@ const function parse(options: Types.TransitionOptions?, base: Settings?): Settin
         end
     end
 
+    if delay ~= nil then
+        getDelay = createReader<<number>>(delay, isValidDelay, function(): number
+            return Constants.DEFAULT_DELAY
+        end)
+    elseif base ~= nil then
+        getDelay = base.getDelay
+    else
+        getDelay = function(): number
+            return Constants.DEFAULT_DELAY
+        end
+    end
+
     return table.freeze({
         getEasing = getEasing,
         getDuration = getDuration,
         getSpeed = getSpeed,
+        getDelay = getDelay,
     })
 end
 
