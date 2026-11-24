@@ -308,7 +308,7 @@ does not run it again.
 
 ### scaleSpeed <Badge type="warning" text="Changed in 0.3.0" />
 
-Renamed from `fastForward`, because a scale below `1` slows the transition down. The `once` option is new.
+Renamed from `fastForward`, because a scale below `1` slows the transition down. The `once` option is new. To scale every handler at once, use [`every.handler.scaleSpeed`](/guide/every#scalespeed).
 
 ```luau
 Handler.scaleSpeed(

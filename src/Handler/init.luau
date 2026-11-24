@@ -4,6 +4,8 @@ const TypedCore = require("../packages/luau/TypedCore")
 const Types = require("./Types")
 const Validation = require("./Validation")
 const DebugRegistry = require("./Debug/Registry")
+const EveryRegistry = require("./Every/Registry")
+const EveryScale = require("./Every/Scale")
 const Change = require("@self/Change")
 const StateEvents = require("@self/StateEvents")
 const Transition = require("@self/Transition")
@@ -74,7 +76,7 @@ return function <S>(
             return 0
         end
 
-        return state.scale * state.baseScale
+        return state.scale * state.baseScale * EveryScale.get()
     end
 
     local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
@@ -152,6 +154,7 @@ return function <S>(
     })
 
     DebugRegistry.register(handler, inspect)
+    EveryRegistry.add(handler, ruleName)
 
     return handler
 end

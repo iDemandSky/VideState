@@ -34,6 +34,16 @@ user settles a new one.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
 
+## Every handler
+
+- **`VideState.every.handler` acts on all handlers.** The user chose the `every` namespace with `handler` as the first
+  scope, so scopes such as `every.rule(name)` or `withTags()` can be added later. The registry keeps the rule name of
+  each handler for that. It has `scaleSpeed`, `pause`, `resume`, and `finish`, and no `waitForFinish` or `destroy`.
+- **Its `scaleSpeed` has the same options as a handler's.** Without `once` it sets a global scale that also reaches
+  handlers created later. With `once = true` it scales only the transitions running now. The speed is
+  `every scale × handler scale × connection speed`.
+- **One handler failing does not stop the rest.** The first error is raised after every handler has run.
+
 ## Debug tools
 
 - **Tracking is opt-in.** Only handlers passed to `debug.track` are listed. Every handler still adds its inspect
