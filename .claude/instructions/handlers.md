@@ -6,6 +6,7 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | Module | Functions |
 | --- | --- |
 | `Change.luau` | `onChange` |
+| `StateEvents.luau` | `onEnter`, `onExit` |
 | `Transition/` | `onTransition`, and the `emit` that `setState` calls |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` |
 | `FastForward.luau` | `fastForward` |

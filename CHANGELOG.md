@@ -16,6 +16,7 @@ version can contain breaking changes.
 - `handler.onFinish(callback)` runs once when a transition has finished, and passes the `os.clock()` time at which it started.
 - The `OnFinishCallback` and `FastForwardOptions` types.
 - `handler.setState(name, { instant = true })` changes the state without an animation. The `SetStateOptions` type.
+- `handler.onEnter(state, callback)` and `handler.onExit(state, callback)` run when the handler enters or leaves one state. The `OnEnterCallback` and `OnExitCallback` types.
 
 ### Fixed
 

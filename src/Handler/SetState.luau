@@ -45,6 +45,7 @@ end
 return function <T>(
     readState: (stateName: string) -> T,
     currentState: Vide.Source<string>,
+    emitStateEvents: (previousState: string, nextState: string) -> (),
     emitChange: Types.StateEmitter<T>,
     emitTransition: Types.StartTransition<T>
 )
@@ -66,6 +67,8 @@ return function <T>(
         local from = table.freeze(table.clone(currentValues :: { [string]: unknown })) :: T
         local to = table.freeze(table.clone(nextValues :: { [string]: unknown })) :: T
 
+        -- The order is exit, enter, change, then the transition.
+        emitStateEvents(currentStateName, stateName)
         emitChange(from, to)
         emitTransition(from, to, instant)
     end

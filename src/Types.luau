@@ -71,6 +71,10 @@ export type Transition = {
 }
 --- Counts one connection of a transition as ended. `completed` is true when it reached its end.
 export type SettleTransition = (transition: Transition, completed: boolean) -> ()
+--- Called when a handler enters a state, with the name of the state it left.
+export type OnEnterCallback = (previousState: string) -> ()
+--- Called when a handler leaves a state, with the name of the state it enters.
+export type OnExitCallback = (nextState: string) -> ()
 --- Called when a handler is paused, with the `os.clock()` time at which its most recent transition started. If no transition has started yet, it is the time of the call.
 export type OnPauseCallback = (startedAt: number) -> ()
 --- Called when a handler is resumed, with the `os.clock()` time at which its most recent transition started.
@@ -94,6 +98,8 @@ export type Handler<T> = {
     read currentState: () -> string,
     read setState: (stateName: string, options: SetStateOptions?) -> (),
     read onChange: (callback: OnChangeCallback<T>) -> Disconnect,
+    read onEnter: (stateName: string, callback: OnEnterCallback) -> Disconnect,
+    read onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     read onTransition: ConnectTransition<T>,
     read pause: () -> (),
     read resume: () -> (),

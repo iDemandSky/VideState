@@ -417,6 +417,65 @@ describe("rule handlers", function()
         expect(values[#values]).toBe(1)
     end)
 
+    it("runs exit and enter listeners for the states involved, in order", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "EnterExitPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+            Hidden = { opacity = Vide.source(0) },
+        }, "Idle")
+
+        local events: { string } = {}
+
+        handler.onExit("Idle", function(nextState)
+            table.insert(events, "exit Idle to " .. nextState)
+        end)
+
+        local disconnectEnter = handler.onEnter("Active", function(previousState)
+            table.insert(events, "enter Active from " .. previousState)
+        end)
+
+        handler.onChange(function()
+            table.insert(events, "change")
+        end)
+        handler.onEnter("Hidden", function()
+            table.insert(events, "enter Hidden")
+        end)
+
+        handler.setState("Active")
+
+        expect(#events).toBe(3)
+        expect(events[1]).toBe("exit Idle to Active")
+        expect(events[2]).toBe("enter Active from Idle")
+        expect(events[3]).toBe("change")
+
+        -- The same state does not count as entering it again.
+        handler.setState("Active")
+
+        expect(#events).toBe(3)
+
+        disconnectEnter()
+        handler.setState("Idle")
+        handler.setState("Active")
+
+        local hasEnterAfterDisconnect = table.find(events, "enter Active from Idle", 3) ~= nil
+
+        expect(hasEnterAfterDisconnect).toBe(false)
+
+        expect(function()
+            handler.onEnter("Missing", function() end)
+        end).toThrow(`onEnter state "Missing" is not a state of this handler`)
+
+        expect(function()
+            handler.onExit("Idle", 1 :: any)
+        end).toThrow("onExit callback must be a function")
+
+        expect(function()
+            handler.onEnter(1 :: any, function() end)
+        end).toThrow("onEnter state name must be a string, got number")
+    end)
+
     it("changes the state instantly when setState is told to", function()
         local handler = VideState.rule({
             opacity = VideState.float(),

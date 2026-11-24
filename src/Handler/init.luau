@@ -4,6 +4,7 @@ const TypedCore = require("../packages/luau/TypedCore")
 const Types = require("./Types")
 const Validation = require("./Validation")
 const Change = require("@self/Change")
+const StateEvents = require("@self/StateEvents")
 const Transition = require("@self/Transition")
 const TransitionState = require("@self/Transition/State")
 const Pause = require("@self/Pause")
@@ -16,6 +17,7 @@ type Handler<T> = Types.Handler<T>
 
 -- Creates a handler. Each feature lives in its own module and provides the functions listed here:
 --   Change      onChange
+--   StateEvents onEnter, onExit
 --   Transition  onTransition
 --   Pause       pause, resume, onPause, onResume
 --   FastForward fastForward
@@ -54,6 +56,9 @@ return function <S>(
     local state = TransitionState.create<<Values>>()
 
     local change = Change<<Values>>()
+    local stateEvents = StateEvents(function(stateName: string): boolean
+        return validatedStates[stateName] ~= nil
+    end)
     local pause = Pause(function(): number
         return TransitionState.getStartedAt<<Values>>(state)
     end)
@@ -76,6 +81,7 @@ return function <S>(
             return Validation.parseState(schema, stateName, stateSources :: Sources<Values>)
         end,
         currentState,
+        stateEvents.emit,
         change.emit,
         transition.emit
     )
@@ -87,6 +93,8 @@ return function <S>(
         end,
         setState = setState,
         onChange = change.onChange,
+        onEnter = stateEvents.onEnter,
+        onExit = stateEvents.onExit,
         onTransition = transition.onTransition,
         pause = pause.pause,
         resume = pause.resume,

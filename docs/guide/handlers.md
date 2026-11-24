@@ -105,6 +105,79 @@ is registered.
 | --- | --- |
 | [`Disconnect`](#disconnect) | Call it to stop receiving changes. |
 
+### onEnter <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.onEnter(
+    stateName: string, -- The state to listen for
+    callback: (
+        previousState: string -- The state the handler left
+    ) -> ()
+) -> Disconnect
+```
+
+Runs `callback` each time the handler switches into `stateName`. It does not run for the initial state, or when
+[`setState`](#setstate) is called with the state that is already active.
+
+On a state change, the listeners run in this order: [`onExit`](#onexit) of the old state, `onEnter` of the new
+state, [`onChange`](#onchange), then the [`onTransition`](#ontransition) connections.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `stateName` | `string` | The name of a state passed to `new`. |
+| `callback` | [`OnEnterCallback`](#onentercallback) | Called with the name of the state the handler left. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Disconnect`](#disconnect) | Call it to stop listening. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `stateName` is not a string | `onEnter state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `stateName` is not a state of the handler | `onEnter state "<state>" is not a state of this handler` |
+| <Badge type="danger" text="Error" /> | `callback` is not a function | `onEnter callback must be a function` |
+
+### onExit <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.onExit(
+    stateName: string, -- The state to listen for
+    callback: (
+        nextState: string -- The state the handler enters
+    ) -> ()
+) -> Disconnect
+```
+
+Runs `callback` each time the handler switches out of `stateName`, before any [`onEnter`](#onenter) listener of
+the next state.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `stateName` | `string` | The name of a state passed to `new`. |
+| `callback` | [`OnExitCallback`](#onexitcallback) | Called with the name of the state the handler enters. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Disconnect`](#disconnect) | Call it to stop listening. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `stateName` is not a string | `onExit state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `stateName` is not a state of the handler | `onExit state "<state>" is not a state of this handler` |
+| <Badge type="danger" text="Error" /> | `callback` is not a function | `onExit callback must be a function` |
+
 ### onTransition <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
 
 ```luau
@@ -325,6 +398,8 @@ type Handler<T> = {
     currentState: () -> string,
     setState: (stateName: string, options: SetStateOptions?) -> (),
     onChange: (callback: OnChangeCallback<T>) -> Disconnect,
+    onEnter: (stateName: string, callback: OnEnterCallback) -> Disconnect,
+    onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
     pause: () -> (),
     resume: () -> (),
@@ -358,6 +433,26 @@ type Sources<T> = -- A record of Vide sources, one per field of T
 ```luau
 type OnChangeCallback<T> = (from: T, to: T) -> ()
 ```
+
+### OnEnterCallback <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type OnEnterCallback = (previousState: string) -> ()
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `previousState` | `string` | The name of the state the handler left. |
+
+### OnExitCallback <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type OnExitCallback = (nextState: string) -> ()
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `nextState` | `string` | The name of the state the handler enters. |
 
 ### OnTransitionCallback <Badge type="tip" text="Added in 0.1.0" />
 
