@@ -41,8 +41,8 @@ const function configure<T>(group: Group<T>, easing: Types.TweenName, duration: 
     group.easing = easing
     group.duration = duration
 
-    local options = {
-        easing = easing,
+    local options: Ripple.TweenOptions<any> = {
+        easing = easing :: Ripple.Easing,
         duration = duration,
     }
 

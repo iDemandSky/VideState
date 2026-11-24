@@ -7,7 +7,7 @@
       "VideState": {
         "$path": "src"
       },
-      "Packages": {
+      "packages": {
         "$path": "packages"
       }
     }

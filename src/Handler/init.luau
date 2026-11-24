@@ -29,7 +29,10 @@ return function <S>(
     for fieldName in initialSources do
         derivedSources[fieldName] = function(...)
             local activeSources = Validation.state(validatedStates, currentState(), "current")
-            return Validation.source(activeSources :: { [string]: unknown }, fieldName)(...)
+            -- A Vide source reads with no arguments and writes with one, so the call is forwarded as is.
+            local source = Validation.source(activeSources :: { [string]: unknown }, fieldName) :: (...unknown) -> unknown
+
+            return source(...)
         end
     end
 

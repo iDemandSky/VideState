@@ -3,9 +3,9 @@ const Constants = require("./Constants")
 
 -- The settings of one handler, read when a transition starts and again every frame.
 export type Settings = {
-    getEasing: () -> Types.TweenName,
-    getDuration: () -> number,
-    getSpeed: () -> number,
+    read getEasing: () -> Types.TweenName,
+    read getDuration: () -> number,
+    read getSpeed: () -> number,
 }
 
 const function isValidEasing(value: unknown): boolean
@@ -130,10 +130,10 @@ const function parse(options: Types.TransitionOptions?): Settings
         else createReader(speed, isValidSpeed, fallbackSpeed)
 
     return table.freeze({
-        getEasing = createReader(easing, isValidEasing, function(): Types.TweenName
-            return Constants.DEFAULT_EASING
+        getEasing = createReader<<Types.TweenName>>(easing, isValidEasing, function(): Types.TweenName
+            return Constants.DEFAULT_EASING :: Types.TweenName
         end),
-        getDuration = createReader(duration, isValidDuration, function(): number
+        getDuration = createReader<<number>>(duration, isValidDuration, function(): number
             return Constants.DEFAULT_DURATION
         end),
         getSpeed = getSpeed,

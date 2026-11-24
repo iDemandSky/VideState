@@ -41,8 +41,16 @@ larvae check          # syntax and require errors
 larvae lint src tests # lints only the project code, not dist/, packages/ or .lest/
 ```
 
-- Larvae does not infer types. Its language server only offers formatting and code actions, and a deliberate type error (`local x: number = "a"`) produced no diagnostic. Do not treat a clean `larvae check` as proof that the types are right.
-- For inference, rely on `tests/types/RuleInferenceCheck.luau` and `tests/types/SchemaExports.luau`. They need strict Luau analysis with the new type solver, so run them with `luau-analyze` or `luau-lsp` when one is available, and otherwise report the types as unverified.
+- Larvae does not infer types. Its language server only offers formatting and code actions, so a clean `larvae check` is not proof that the types are right.
+- For type inference, use the analyzer bundled with the Luau LSP VS Code extension (`bin/server.exe` inside `~/.vscode/extensions/johnnymorganz.luau-lsp-*`). It needs the new type solver, the Roblox definitions, and a fresh sourcemap:
+
+  ```sh
+  rojo sourcemap default.project.json -o <scratch>/sourcemap.json
+  server.exe analyze --flag:LuauSolverV2=true       --definitions=@roblox=<globalStorage>/johnnymorganz.luau-lsp/globalTypes.PluginSecurity.d.luau       --sourcemap <scratch>/sourcemap.json --platform roblox       src tests/types/RuleInferenceCheck.luau tests/types/SchemaExports.luau
+  ```
+
+  `<globalStorage>` is `~/AppData/Roaming/Code/User/globalStorage`. Keep the sourcemap out of the repo. `src` and the type tests must report no errors. Without `LuauSolverV2` the analyzer reports false errors, such as `read keyword is illegal here`.
+- The Rojo project names the packages folder `packages` in lowercase, to match the relative requires such as `../packages/luau/TypedCore`. The analyzer matches instance names case-sensitively, so do not rename it back to `Packages`.
 - Treat new lint warnings in `src/` and `tests/` as problems. Warnings in vendored or generated code can be ignored.
 
 ## Requires
