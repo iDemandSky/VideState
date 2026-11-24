@@ -1,5 +1,5 @@
-const Typed = require("../../packages/luau/Typed")
-const TypedCore = require("../../packages/luau/TypedCore")
+const Typed = require("@luau-packages/Typed")
+const TypedCore = require("@luau-packages/TypedCore")
 
 return function <Fields>(fields: Fields)
     assert(type(fields) == "table", "expected a table of field schemas")

@@ -64,7 +64,7 @@ Without `LuauSolverV2` the analyzer reports false errors.
 
 ## Conventions
 
-- Modules inside `src/` require each other relatively, never through the `@VideState` alias. Aliases are only for dependencies.
-- The Rojo project names the packages folder `packages` in lowercase, to match the relative requires. Do not rename it to `Packages`.
+- Modules inside `src/` require each other relatively, never through the `@VideState` alias. Aliases are only for dependencies, such as `@packages/Vide` and `@luau-packages/TypedCore`. Larvae rewrites them when it processes the project.
+- The Rojo project names the packages folder `packages` in lowercase, to match the `@packages` and `@luau-packages` aliases in `.luaurc`. Do not rename it to `Packages`.
 - Schema helpers and individual schema modules are internal. Users should use the builders on `VideState`.
 - Update the docs and `CHANGELOG.md` with every API change.

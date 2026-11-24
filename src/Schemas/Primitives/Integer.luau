@@ -1,4 +1,4 @@
-const TypedCore = require("../../../packages/luau/TypedCore")
+const TypedCore = require("@luau-packages/TypedCore")
 const Helper = require("../Helper")
 
 export type IntegerOptions = {

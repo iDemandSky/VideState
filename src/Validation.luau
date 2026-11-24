@@ -1,5 +1,5 @@
-const TypedCore = require("../packages/luau/TypedCore")
-const Vide = require("../packages/roblox/Vide")
+const TypedCore = require("@luau-packages/TypedCore")
+const Vide = require("@packages/Vide")
 const Constants = require("./Constants")
 
 local validation = {}

@@ -1,5 +1,5 @@
-const Typed = require("../../../packages/luau/Typed")
-const TypedCore = require("../../../packages/luau/TypedCore")
+const Typed = require("@luau-packages/Typed")
+const TypedCore = require("@luau-packages/TypedCore")
 const Helper = require("../Helper")
 
 return function <T>(schema: TypedCore.Schema<T>): TypedCore.Schema<T?>
