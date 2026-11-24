@@ -1,5 +1,5 @@
-const Vide = require("@packages/Vide")
-const TypedCore = require("@luau-packages/TypedCore")
+const Vide = require("../packages/roblox/Vide")
+const TypedCore = require("../packages/luau/TypedCore")
 
 const Types = require("./Types")
 const Validation = require("./Validation")

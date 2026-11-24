@@ -1,4 +1,4 @@
-const Ripple = require("@packages/Ripple")
+const Ripple = require("../../../../packages/roblox/Ripple")
 const Types = require("../../../Types")
 const FieldTweens = require("./FieldTweens")
 

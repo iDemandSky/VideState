@@ -1,5 +1,5 @@
-const TypedCore = require("@luau-packages/TypedCore")
-const Vide = require("@packages/Vide")
+const TypedCore = require("../../packages/luau/TypedCore")
+const Vide = require("../../packages/roblox/Vide")
 
 type Source<T> = Vide.Source<T>
 type ParseResult<T> = TypedCore.ParseResult<T>
