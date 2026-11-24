@@ -9,15 +9,40 @@ export type Settings = {
 }
 
 const function isValidEasing(value: unknown): boolean
-    return type(value) == "string" and Constants.TWEEN_NAMES[value] == true
+    if type(value) ~= "string" then
+        return false
+    end
+
+    return Constants.TWEEN_NAMES[value] == true
+end
+
+-- A number that is not NaN, not infinite, and not negative.
+const function isFiniteNonNegative(value: unknown): boolean
+    if type(value) ~= "number" then
+        return false
+    end
+
+    local isNotNaN = value == value
+    local isNotNegative = value >= 0
+    local isNotInfinite = value ~= math.huge
+
+    return isNotNaN and isNotNegative and isNotInfinite
+end
+
+const function isNegativeNumber(value: unknown): boolean
+    if type(value) ~= "number" then
+        return false
+    end
+
+    return value < 0
 end
 
 const function isValidDuration(value: unknown): boolean
-    return type(value) == "number" and value == value and value >= 0 and value ~= math.huge
+    return isFiniteNonNegative(value)
 end
 
 const function isValidSpeed(value: unknown): boolean
-    return type(value) == "number" and value == value and value >= 0 and value ~= math.huge
+    return isFiniteNonNegative(value)
 end
 
 -- Rejects options with keys outside the allowed set, so a misspelled or outdated key fails instead of being ignored.
@@ -80,7 +105,7 @@ const function validateSpeed(value: unknown)
 
     local current = (value :: () -> unknown)()
 
-    if type(current) == "number" and current < 0 then
+    if isNegativeNumber(current) then
         error("onTransition speed must not be negative", 0)
     end
 
@@ -91,7 +116,7 @@ end
 
 -- A negative speed is clamped to 0 so a transition never moves backwards. Any other invalid speed plays at normal speed.
 const function fallbackSpeed(value: unknown): number
-    if type(value) == "number" and value < 0 then
+    if isNegativeNumber(value) then
         return 0
     end
 

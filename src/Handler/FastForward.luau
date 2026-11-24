@@ -7,7 +7,15 @@ export type FastForward = {
 }
 
 const function isValidScale(value: unknown): boolean
-    return type(value) == "number" and value == value and value > 0 and value ~= math.huge
+    if type(value) ~= "number" then
+        return false
+    end
+
+    local isNotNaN = value == value
+    local isPositive = value > 0
+    local isNotInfinite = value ~= math.huge
+
+    return isNotNaN and isPositive and isNotInfinite
 end
 
 -- Validates the options of `fastForward` and returns the speed scale.

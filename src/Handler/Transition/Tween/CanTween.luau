@@ -2,7 +2,12 @@ const Constants = require("../Config/Constants")
 
 const function isAnimatablePrimitive(value: unknown): boolean
     local valueType = typeof(value)
-    return valueType == "number" or valueType == "vector" or valueType == "Vector3"
+
+    local isNumber = valueType == "number"
+    local isVector = valueType == "vector"
+    local isVector3 = valueType == "Vector3"
+
+    return isNumber or isVector or isVector3
 end
 
 -- Tables are only tweened when every component is a number or vector with the same key set.

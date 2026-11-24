@@ -12,6 +12,24 @@ export type Finish = {
     read onFinish: (callback: Types.OnFinishCallback) -> Disconnect,
 }
 
+-- The run of a connection when it is still playing the transition, and nil when it is not.
+const function getPlayingRun<T>(connection: State.Connection<T>, transition: Types.Transition): State.Run<T>?
+    local run = connection.run
+
+    if run == nil then
+        return nil
+    end
+
+    local isSameTransition = run.transition == transition
+    local hasEnded = run.ended
+
+    if isSameTransition and not hasEnded then
+        return run
+    end
+
+    return nil
+end
+
 -- How a transition ends: when its last connection ends, or when `finish` ends it early.
 return function <T>(state: State.State<T>): Finish
     local onFinish, emitFinish = CreateEvent("onFinish")
@@ -27,7 +45,9 @@ return function <T>(state: State.State<T>): Finish
 
         local isLast = transition.pending == 0
         local isCurrent = transition.generation == state.generation
-        local shouldFire = isLast and isCurrent and transition.completed and not transition.fired
+        local isCompleted = transition.completed
+        local isNotFired = not transition.fired
+        local shouldFire = isLast and isCurrent and isCompleted and isNotFired
 
         if shouldFire then
             transition.fired = true
@@ -45,9 +65,9 @@ return function <T>(state: State.State<T>): Finish
         local ids: { number } = {}
 
         for id, connection in state.connections do
-            local run = connection.run
+            local isPlaying = getPlayingRun(connection, transition) ~= nil
 
-            if run ~= nil and run.transition == transition and not run.ended then
+            if isPlaying then
                 table.insert(ids, id)
             end
         end
@@ -61,14 +81,21 @@ return function <T>(state: State.State<T>): Finish
             end
 
             local connection = state.connections[id]
-            local run = if connection == nil then nil else connection.run
 
-            if connection ~= nil and run ~= nil and run.transition == transition and not run.ended then
-                run.ended = true
-                connection.current = run.to
-                connection.callback(run.from, run.to, run.to, 1)
-                settle(transition, true)
+            if connection == nil then
+                continue
             end
+
+            local run = getPlayingRun(connection, transition)
+
+            if run == nil then
+                continue
+            end
+
+            run.ended = true
+            connection.current = run.to
+            connection.callback(run.from, run.to, run.to, 1)
+            settle(transition, true)
         end
     end
 

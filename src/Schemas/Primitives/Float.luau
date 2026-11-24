@@ -16,14 +16,23 @@ return function(options: FloatOptions?): TypedCore.Schema<number>
 
     Helper.assertFiniteOption(min, "Float minimum")
     Helper.assertFiniteOption(max, "Float maximum")
-    assert(
-        step == nil or (type(step) == "number" and Helper.isFinite(step) and step > 0),
-        "Float step must be positive and finite"
-    )
+    local stepMessage = "Float step must be positive and finite"
+
+    if step ~= nil then
+        assert(type(step) == "number", stepMessage)
+
+        local isFinite = Helper.isFinite(step)
+        local isPositive = step > 0
+
+        assert(isFinite and isPositive, stepMessage)
+    end
+
     Helper.assertOrderedBounds(min, max, "Float")
 
     local precision = if step then Helper.decimalPlaces(step) else nil
-    assert(precision == nil or precision <= 308, "Float step precision is too small to validate")
+    local isPrecisionSupported = precision == nil or precision <= 308
+
+    assert(isPrecisionSupported, "Float step precision is too small to validate")
 
     local scale = if precision then 10 ^ precision else nil
 
@@ -40,11 +49,14 @@ return function(options: FloatOptions?): TypedCore.Schema<number>
                 return Helper.invalidValue("expected a finite number")
             end
 
-            if min ~= nil and numberValue < min then
+            local isBelowMinimum = min ~= nil and numberValue < min
+            local isAboveMaximum = max ~= nil and numberValue > max
+
+            if isBelowMinimum then
                 return Helper.invalidValue(`expected a number at least {min}, got {numberValue}`)
             end
 
-            if max ~= nil and numberValue > max then
+            if isAboveMaximum then
                 return Helper.invalidValue(`expected a number at most {max}, got {numberValue}`)
             end
 

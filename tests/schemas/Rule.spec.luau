@@ -167,7 +167,9 @@ describe("rule handlers", function()
         local hasIntermediate = false
 
         for index, current in currents do
-            local isBetween = current.opacity > 0 and current.opacity < 1
+            local isAboveStart = current.opacity > 0
+            local isBelowEnd = current.opacity < 1
+            local isBetween = isAboveStart and isBelowEnd
 
             if isBetween then
                 hasIntermediate = true
@@ -290,7 +292,9 @@ describe("rule handlers", function()
 
         -- The new transition starts at the value the first one reached, not at the previous state's 1.
         local firstValue = values[countBeforeInterrupt + 1]
-        local isBetween = valueBeforeInterrupt > 0.05 and valueBeforeInterrupt < 0.95
+        local isAboveStart = valueBeforeInterrupt > 0.05
+        local isBelowEnd = valueBeforeInterrupt < 0.95
+        local isBetween = isAboveStart and isBelowEnd
 
         expect(isBetween).toBe(true)
         expect(math.abs(firstValue - valueBeforeInterrupt) < 0.0001).toBe(true)
@@ -352,7 +356,9 @@ describe("rule handlers", function()
         expect(#second).toBe(secondCount)
         expect(#pauseTimes).toBe(1)
 
-        local isStartInRange = pauseTimes[1] >= before and pauseTimes[1] <= after
+        local isNotBeforeCall = pauseTimes[1] >= before
+        local isNotAfterCall = pauseTimes[1] <= after
+        local isStartInRange = isNotBeforeCall and isNotAfterCall
 
         expect(isStartInRange).toBe(true)
 
@@ -496,7 +502,9 @@ describe("rule handlers", function()
         expect(second[#second]).toBe(1)
         expect(#finishes).toBe(1)
 
-        local isStartInRange = finishes[1] >= before and finishes[1] <= os.clock()
+        local isNotBeforeCall = finishes[1] >= before
+        local isNotAfterCall = finishes[1] <= os.clock()
+        local isStartInRange = isNotBeforeCall and isNotAfterCall
 
         expect(isStartInRange).toBe(true)
 

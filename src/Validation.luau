@@ -25,8 +25,17 @@ export type Sources<T> = sourceRecord<T>
 function validation.schema<S>(schema: S): TypedCore.SchemaFromGeneric<S>
     local validator: TypedCore.SchemaFromGeneric<S> = schema
 
-    if type(validator) ~= "table" or type(validator.parse) ~= "function" then
-        error("rule expects a schema", 2)
+    local message = "rule expects a schema"
+
+    -- The table check comes first, because the parse check reads a field of the validator.
+    if type(validator) ~= "table" then
+        error(message, 2)
+    end
+
+    local hasParse = type(validator.parse) == "function"
+
+    if not hasParse then
+        error(message, 2)
     end
 
     return validator
@@ -106,7 +115,9 @@ function validation.states<S>(
     for stateName, sources in states do
         validation.stateName(stateName, "state name")
 
-        if allowedStateNames ~= nil and not table.find(allowedStateNames, stateName) then
+        local isNotAllowed = allowedStateNames ~= nil and not table.find(allowedStateNames, stateName)
+
+        if isNotAllowed then
             error(`state "{stateName}" is not in allowedStateNames`, 2)
         end
 

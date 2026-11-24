@@ -3,6 +3,24 @@ const Group = require("./Tween/Group")
 const Scheduler = require("./Scheduler")
 const State = require("./State")
 
+-- Whether the previous run of a connection is still playing, so a new transition continues from its last value.
+const function isInterrupted<T>(connection: State.Connection<T>): boolean
+    local run = connection.run
+
+    if run == nil then
+        return false
+    end
+
+    if connection.current == nil then
+        return false
+    end
+
+    local hasEnded = run.ended
+    local isDone = Group.isDone(run.group)
+
+    return not hasEnded and not isDone
+end
+
 -- Starts the run of one connection for a transition.
 const function play<T>(
     state: State.State<T>,
@@ -14,11 +32,7 @@ const function play<T>(
     getRate: () -> number,
     settle: Types.SettleTransition
 )
-    local previousRun = connection.run
-    local previousCurrent = connection.current
-    local isRunning = previousRun ~= nil and not previousRun.ended and not Group.isDone(previousRun.group)
-    local isInterrupted = isRunning and previousCurrent ~= nil
-    local start = if isInterrupted then previousCurrent :: T else from
+    local start = if isInterrupted(connection) then connection.current :: T else from
 
     local group = Group.create(
         start,
@@ -48,7 +62,10 @@ const function play<T>(
 
         return 1
     end, function(): boolean
-        return state.generation ~= transition.generation or run.ended
+        local isReplaced = state.generation ~= transition.generation
+        local hasEnded = run.ended
+
+        return isReplaced or hasEnded
     end, function(completed: boolean)
         run.ended = true
         settle(transition, completed)

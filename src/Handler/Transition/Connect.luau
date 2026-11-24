@@ -44,8 +44,14 @@ return function<T>(
 
             local run = if connection == nil then nil else connection.run
 
+            if run == nil then
+                return
+            end
+
+            local isPlaying = not run.ended
+
             -- A connection that leaves in the middle of a transition no longer counts toward its end.
-            if run ~= nil and not run.ended then
+            if isPlaying then
                 run.ended = true
                 settle(run.transition, false)
             end
