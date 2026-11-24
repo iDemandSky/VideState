@@ -3,10 +3,10 @@ const Types = require("../Types")
 type Disconnect = Types.Disconnect
 
 -- A list of listeners that receive the start time of the transition. `connect` is returned to the user as it
--- is, so the error level of 2 points at the user's call.
+-- is, so the error level of 2 points at the user's call. `clear` removes every listener.
 return function(
     name: string
-): ((callback: (startedAt: number) -> ()) -> Disconnect, (startedAt: number) -> ())
+): ((callback: (startedAt: number) -> ()) -> Disconnect, (startedAt: number) -> (), () -> ())
     local listeners: { [number]: (startedAt: number) -> () } = {}
     local nextId = 0
 
@@ -42,5 +42,9 @@ return function(
         end
     end
 
-    return connect, emit
+    const function clear()
+        table.clear(listeners)
+    end
+
+    return connect, emit, clear
 end

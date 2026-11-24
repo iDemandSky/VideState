@@ -70,6 +70,7 @@ it to set the first layout of a component, or to snap it back without an animati
 
 | | Cause | Message |
 | --- | --- | --- |
+| <Badge type="danger" text="Error" /> | The handler was destroyed | `setState cannot be called after destroy` |
 | <Badge type="danger" text="Error" /> | `options` is not a table | `setState options must be a table` |
 | <Badge type="danger" text="Error" /> | `options` has an unknown key | `setState options has an unknown key <key>` |
 | <Badge type="danger" text="Error" /> | `options.instant` is not a boolean | `setState instant must be a boolean` |
@@ -389,6 +390,24 @@ The wait ends when the transition reaches its end, when [`finish`](#finish) ends
 [`onTransition`](#ontransition) connection has disconnected. If a newer `setState` replaces the transition, the wait
 goes on until the newer one ends. While the handler is [paused](#pause), it keeps waiting.
 
+### destroy <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.destroy() -> ()
+```
+
+Stops the handler for good. Every running transition stops without sending another frame, and
+[`onFinish`](#onfinish) does not run. Every listener is removed, including `onChange`, `onEnter`, `onExit`,
+`onTransition`, `onPause`, `onResume`, and `onFinish`. Threads waiting in [`waitForFinish`](#waitforfinish)
+continue.
+
+Afterwards, [`setState`](#setstate) raises an error, and [`pause`](#pause), [`resume`](#resume), and
+[`finish`](#finish) do nothing. [`sources`](#sources) and [`currentState`](#currentstate) can still be read.
+Calling `destroy` again does nothing.
+
+To destroy a handler together with the Vide component that uses it, pass it to Vide's cleanup inside the
+component: `Vide.cleanup(handler.destroy)`.
+
 ## Types
 
 ### HandlerOptions <Badge type="tip" text="Added in 0.1.0" />
@@ -422,6 +441,7 @@ type Handler<T> = {
     finish: () -> (),
     onFinish: (callback: OnFinishCallback) -> Disconnect,
     waitForFinish: () -> (),
+    destroy: () -> (),
 }
 ```
 

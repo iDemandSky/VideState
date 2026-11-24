@@ -8,6 +8,8 @@ export type Change<T> = {
     read onChange: (callback: Types.OnChangeCallback<T>) -> Disconnect,
     -- Sends a state change to every listener.
     read emit: Types.StateEmitter<T>,
+    -- Removes every listener. `destroy` calls it.
+    read clear: () -> (),
 }
 
 -- The `onChange` event of a handler: it runs once when the state changes.
@@ -34,6 +36,9 @@ return function <T>(): Change<T>
     local change: Change<T> = {
         onChange = onChange,
         emit = container.emit,
+        clear = function()
+            table.clear(container.listeners)
+        end,
     }
 
     return table.freeze(change)

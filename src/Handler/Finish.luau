@@ -12,8 +12,8 @@ export type Finish = {
     read onFinish: (callback: Types.OnFinishCallback) -> Disconnect,
     -- Yields until the handler has no running transition.
     read waitForFinish: () -> (),
-    -- Resumes every thread that waits in `waitForFinish`.
-    read releaseWaiting: () -> (),
+    -- Removes every finish listener and releases the waiting threads. `destroy` calls it.
+    read clear: () -> (),
 }
 
 -- The run of a connection when it is still playing the transition, and nil when it is not.
@@ -36,7 +36,7 @@ end
 
 -- How a transition ends: when its last connection ends, or when `finish` ends it early.
 return function <T>(state: State.State<T>): Finish
-    local onFinish, emitFinish = CreateEvent("onFinish")
+    local onFinish, emitFinish, clearFinish = CreateEvent("onFinish")
     local waiting: { thread } = {}
 
     const function releaseWaiting()
@@ -144,7 +144,10 @@ return function <T>(state: State.State<T>): Finish
         finish = finish,
         onFinish = onFinish,
         waitForFinish = waitForFinish,
-        releaseWaiting = releaseWaiting,
+        clear = function()
+            clearFinish()
+            releaseWaiting()
+        end,
     }
 
     return table.freeze(controls)

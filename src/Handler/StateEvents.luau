@@ -9,6 +9,8 @@ export type StateEvents = {
     read onExit: (stateName: string, callback: Types.OnExitCallback) -> Disconnect,
     -- Runs the exit listeners of the previous state, then the enter listeners of the next one. `setState` calls it.
     read emit: (previousState: string, nextState: string) -> (),
+    -- Removes every listener. `destroy` calls it.
+    read clear: () -> (),
 }
 
 type Listeners = { [string]: { [number]: (stateName: string) -> () } }
@@ -91,6 +93,10 @@ return function(isState: (stateName: string) -> boolean): StateEvents
         emit = function(previousState: string, nextState: string)
             run(exitListeners, previousState, nextState)
             run(enterListeners, nextState, previousState)
+        end,
+        clear = function()
+            table.clear(enterListeners)
+            table.clear(exitListeners)
         end,
     }
 

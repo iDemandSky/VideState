@@ -9,6 +9,8 @@ export type Transition<T> = {
     read onTransition: Types.ConnectTransition<T>,
     -- Starts a transition on every connection. `setState` calls it.
     read emit: Types.StartTransition<T>,
+    -- Stops every running transition without another frame, and removes every connection. `destroy` calls it.
+    read stop: () -> (),
 }
 
 -- The `onTransition` event of a handler: it tweens between the states, and one connection plays its own tween.
@@ -24,6 +26,12 @@ return function <T>(
     local transition: Transition<T> = {
         onTransition = Connect(state, handlerSettings, settle),
         emit = Start(state, getRate, settle),
+        stop = function()
+            -- A new generation makes every running loop stale, so each one stops on its next frame.
+            state.generation += 1
+            state.currentTransition = nil
+            table.clear(state.connections)
+        end,
     }
 
     return table.freeze(transition)

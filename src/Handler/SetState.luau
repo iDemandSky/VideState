@@ -44,12 +44,17 @@ end
 
 return function <T>(
     readState: (stateName: string) -> T,
+    isDestroyed: () -> boolean,
     currentState: Vide.Source<string>,
     emitStateEvents: (previousState: string, nextState: string) -> (),
     emitChange: Types.StateEmitter<T>,
     emitTransition: Types.StartTransition<T>
 )
     return function(stateName: string, options: Types.SetStateOptions?)
+        if isDestroyed() then
+            error("setState cannot be called after destroy", 2)
+        end
+
         Validation.stateName(stateName, "state name")
 
         local instant = parseOptions(options)

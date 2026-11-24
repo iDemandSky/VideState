@@ -756,6 +756,69 @@ describe("rule handlers", function()
         expect(releasedByFinish).toBe(true)
     end)
 
+    it("stops everything when destroyed", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "DestroyPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.5,
+            },
+        })
+
+        local frames = 0
+        local pauses = 0
+        local finishes = 0
+        local released = false
+
+        handler.onTransition(function()
+            frames += 1
+        end)
+        handler.onPause(function()
+            pauses += 1
+        end)
+        handler.onFinish(function()
+            finishes += 1
+        end)
+
+        handler.setState("Active")
+
+        task.spawn(function()
+            handler.waitForFinish()
+            released = true
+        end)
+
+        task.wait(0.1)
+
+        local framesBeforeDestroy = frames
+
+        handler.destroy()
+        handler.destroy()
+
+        -- Waiting threads continue, and the running transition sends no other frame.
+        expect(released).toBe(true)
+
+        task.wait(0.6)
+
+        expect(frames).toBe(framesBeforeDestroy)
+        expect(finishes).toBe(0)
+
+        -- Listeners were removed, and the controls do nothing.
+        handler.pause()
+        handler.resume()
+        handler.finish()
+        handler.waitForFinish()
+
+        expect(pauses).toBe(0)
+        expect(handler.currentState()).toBe("Active")
+
+        expect(function()
+            handler.setState("Idle")
+        end).toThrow("setState cannot be called after destroy")
+    end)
+
     it("finishes a paused transition", function()
         local handler = VideState.rule({
             opacity = VideState.float(),

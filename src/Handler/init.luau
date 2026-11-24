@@ -23,6 +23,7 @@ type Handler<T> = Types.Handler<T>
 --   FastForward fastForward
 --   Finish      finish, onFinish, waitForFinish
 --   SetState    setState
+-- `destroy` is defined here, because it stops every feature.
 return function <S>(
     schema: S,
     states: { [string]: Sources<TypedCore.infer<S>> },
@@ -75,10 +76,29 @@ return function <S>(
     end
 
     local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
+    local destroyed = false
+
+    -- Stops every transition and removes every listener. `setState` raises an error afterwards.
+    const function destroy()
+        if destroyed then
+            return
+        end
+
+        destroyed = true
+        transition.stop()
+        change.clear()
+        stateEvents.clear()
+        pause.clear()
+        finish.clear()
+    end
+
     local setState = SetState<<Values>>(
         function(stateName: string): Values
             local stateSources = Validation.state(validatedStates, stateName, "selected")
             return Validation.parseState(schema, stateName, stateSources :: Sources<Values>)
+        end,
+        function(): boolean
+            return destroyed
         end,
         currentState,
         stateEvents.emit,
@@ -104,5 +124,6 @@ return function <S>(
         finish = finish.finish,
         onFinish = finish.onFinish,
         waitForFinish = finish.waitForFinish,
+        destroy = destroy,
     })
 end
