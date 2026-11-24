@@ -27,6 +27,8 @@ version can contain breaking changes.
 ### Changed
 
 - `handler.onTransition(callback, options)` takes optional `TransitionOptions`, so each connection can have its own easing, duration, and speed. Settings it leaves out are inherited from the handler's `onTransition` option. Every connection now tweens on its own instead of sharing one tween per handler.
+- Every running transition is stepped by one shared loop instead of one loop per connection. In a Studio benchmark with 10,000 handlers, the average frame went from about 64 ms to about 55 ms. A callback that raises an error now stops only its own connection, and `onTransition` callbacks must not yield.
+- The README and the docs now say VideState has only been benchmarked in Roblox Studio.
 
 ## [0.1.2] - 2026-11-24
 

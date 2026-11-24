@@ -7,8 +7,8 @@ VideState change their properties whenever the state changes.
 
 > **⚠️ Warning**
 >
-> VideState has not been benchmarked, and it has not been tested in production. Use it wisely:
-> measure it in your own project, especially with many handlers or transitions running at once,
+> VideState has only been benchmarked in Roblox Studio, and it has not been tested in production. Use it
+> wisely: measure it in your own project, especially with many handlers or transitions running at once,
 > before you depend on it.
 
 ## Install

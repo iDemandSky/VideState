@@ -23,6 +23,21 @@ user settles a new one.
   transition that a newer `setState` replaces never finishes.
 - **No `animated` sources.** Derived sources that follow the tween were proposed and dropped, because `onTransition`
   already covers it.
+- **`setState` takes `{ instant = true }`,** which runs the transition with a duration of 0: one frame with the next
+  values and an alpha of 1, and `onFinish` still runs.
+- **`onExit` runs first, then `onEnter`, `onChange`, and the transition.** The callbacks receive the other state's name.
+  They do not run for the initial state or for a `setState` to the active state.
+- **`waitForFinish` waits until the handler is idle,** not for one transition: a replaced transition keeps the wait
+  going until the newer one ends.
+- **`destroy` stops transitions silently** (no last frame, no `onFinish`), removes every listener, releases waiting
+  threads, and makes `setState` raise an error. The other functions do nothing afterwards.
+- **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
+  `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
+
+## Schemas
+
+- **No 3D schemas,** such as `Vector3`. VideState is for 2D UI. 2D types such as `NumberSequence` or `ColorSequence`
+  are still open.
 
 ## Code and tooling
 

@@ -40,6 +40,24 @@ lest schemas
 The suite needs Roblox Studio, because Vide and Ripple only load inside Roblox. It covers the schema
 builders, rules, handlers, `onTransition`, and `info`.
 
+Lest stops a spec file once its tests have run for 15 seconds in total, and reports it as a timeout. Keep
+each spec file well under that, and split a file by topic when it grows, as `Rule`, `Transition`, and
+`TransitionControls` are split.
+
+## Benchmark
+
+`tests/bench/` measures many handlers transitioning at once. It is a separate suite that never runs by
+default:
+
+```sh
+larvae process
+rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
+lest bench
+```
+
+It prints one `[bench]` line per round, with the time `setState` took on every handler and the average and
+worst frame time while they animate. Studio caps the frame rate, so compare runs on the same machine.
+
 ## Type checks
 
 `tests/types/RuleInferenceCheck.luau` and `tests/types/SchemaExports.luau` must pass strict Luau analysis

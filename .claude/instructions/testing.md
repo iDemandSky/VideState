@@ -10,3 +10,6 @@
 - Building the place from `default.project.json` fails, because the `@VideState` aliases are only rewritten by `larvae process`.
 - The suite needs the `studio` backend because Vide and Ripple only load inside Roblox. The `native` backend fails at `require` of Vide.
 - If Studio fails to launch, report the change as unverified.
+- Lest stops a spec file after 15 seconds of tests in total and reports `spec exceeded its deadline`. That is not a hang. Keep each file well under it, and split a file by topic when it grows (`Rule`, `Transition`, `TransitionControls`).
+- Studio's first frame can take over a second. A test that runs first can see a short transition finish early, so use durations of a few seconds where a test needs the transition to still be running, and `fastForward` to end it quickly.
+- `lest bench` runs the benchmark in `tests/bench/`. See `CONTRIBUTING.md`.

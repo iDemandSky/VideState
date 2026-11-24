@@ -21,18 +21,28 @@ released: `CHANGELOG.md` still lists these changes under `## [Unreleased]`, and 
 `main` has not been updated since 0.1.2, because the user asked not to push to `main` for this work. The docs site
 deploys from `main`, so it does not show these features yet.
 
+Also unreleased: `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, and the
+shared frame loop with its benchmark (`lest bench`).
+
+## In progress
+
+The user accepted these, in this order. Build them one at a time, each with tests and docs:
+
+1. `delay` in the transition options, so a connection can start late (for staggered animations).
+2. A debug view: a UI Labs story that lists handlers, their states, and their running transitions.
+
 ## Known limits
 
-- Not benchmarked, and not tested in production. The README and the docs say so.
+- Benchmarked only in Roblox Studio, and not tested in production. The README and the docs say so.
 - Strings, booleans, enums, and other non-animatable fields cannot be transitioned. They switch at the start.
-- Every connection runs its own frame loop, and a paused handler's loops keep running without moving anything.
+- `onTransition` callbacks must not yield, because one shared loop steps every transition.
+- A paused transition stays on the shared loop and is stepped without moving.
 - `ember.toml` ships raw `src/`. That works because `src/` requires its dependencies with relative paths. A local
   install of 0.2.0 resolved every require on disk, but it has not been run in Studio yet.
 
 ## Ideas not started
 
-- One shared frame loop for all running transitions, measured with a benchmark first.
-- Automatic cleanup through Vide scopes, and `handler.destroy()`.
 - Tween settings per state pair (such as `Idle -> Active`) and per field.
 - A spring option, using Ripple's springs.
-- More schemas: `Vector3`, `NumberRange`, `NumberSequence`, `ColorSequence`, and a `union`.
+- More 2D schemas: `NumberRange`, `NumberSequence`, `ColorSequence`, and a `union`. Not `Vector3`; see
+  [decisions.md](decisions.md).
