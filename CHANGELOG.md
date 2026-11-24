@@ -7,6 +7,8 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-24
+
 ### Added
 
 - `handler.pause()` and `handler.resume()` pause and continue every transition of a handler.

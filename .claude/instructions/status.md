@@ -4,7 +4,8 @@ Update this file when a release ships, a limit is found or fixed, or an idea is 
 
 ## Released
 
-The latest release is 0.1.2.
+The latest release is 0.2.0 (2026-11-24). Versions 0.1.0 to 0.1.2 are deprecated on Ember, because 0.2.0 changes some
+existing features.
 
 ## Unreleased on `dev`
 
