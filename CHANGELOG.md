@@ -5,7 +5,7 @@ All notable changes to VideState are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the version is below 1.0.0, a minor
 version can contain breaking changes.
 
-## [Unreleased]
+## [0.1.0]
 
 ### Added
 
@@ -16,3 +16,7 @@ version can contain breaking changes.
 - Schema builders: `boolean`, `integer`, `float`, `string`, `enum`, `optional`, `table`, `record`, `color3`, `udim`, `udim2`, and `vector2`.
 - `VideState.Infer` and `VideState.InferRule` to read the Luau type of a schema or a rule.
 - `VideState.info` for debugging: `get`, `getAllRulesWithTags`, `getAllTags`, and `ruleHasTag`.
+
+### Known limitations
+
+- `onTransition` cannot transition strings. A `string` field switches to its next value at the start of the transition, as do booleans, enums, and any other value that is not animatable. Support for transitioning strings is planned for a later release.
