@@ -10,9 +10,18 @@ outline: [2, 3]
 runs repeatedly with a `current` value that moves from the previous state to the next one, and an
 `alpha` that shows the progress. This page covers how transitions behave and the settings that control them.
 
-The tween settings belong to the handler, not to each listener. A handler tweens its fields once per
-transition and sends the same `current` and `alpha` to every listener, so all listeners stay in step.
-Set them with the `onTransition` key of the handler's [`HandlerOptions`](/guide/handlers#handleroptions).
+Every `onTransition` connection has its own tween, so each one can animate with its own settings.
+Pass them as the second argument of [`onTransition`](/guide/handlers#ontransition). A setting a connection
+leaves out is inherited from the `onTransition` key of the handler's
+[`HandlerOptions`](/guide/handlers#handleroptions), and then from the default.
+
+```luau
+handler.onTransition(fade, { duration = 0.2, easing = "quadOut" })
+handler.onTransition(slide, { duration = 0.5, easing = "backOut" })
+```
+
+Connections with the same settings still start together and stay in step. Each connection costs its own
+set of tweens, so connect only the listeners that need to animate.
 
 ::: warning Strings cannot be transitioned
 Only numbers, vectors and the other [animatable types](#animatable-fields) are tweened. A `string`
@@ -28,7 +37,8 @@ If you need a gradual effect on text, such as a typewriter reveal, build it your
 - Each animatable field is tweened from its previous value to its next value.
 - Fields that cannot be tweened, such as booleans, strings, and enums, switch to their next value at the start of the transition.
 - A duration of `0` calls the callback once with `current` equal to the next value and an `alpha` of `1`.
-- Calling `setState` again before a transition finishes stops the earlier animation and starts a new one.
+- `setState(name, { instant = true })` does the same for one change, whatever the duration is. See [`setState`](/guide/handlers#setstate).
+- Calling `setState` again before a transition finishes stops the earlier animation and starts a new one. The new one starts from the value the earlier animation had reached, so `current` does not jump. The `from` argument of the callback is still the previous state's values.
 - No animation runs while there are no `onTransition` listeners, and a transition stops once every listener has disconnected.
 - A listener added during a transition receives updates from the next transition.
 - Every easing starts at the previous value and ends at the next one. `back` and `elastic` easings overshoot, so numeric values can go below the start or above the end. Clamp them in your callback if your UI needs a fixed range.
@@ -54,6 +64,87 @@ transition and settles at exactly `1` when it ends. This is expected, because th
 the tweened fields past their start or end. Clamp it with `math.clamp(alpha, 0, 1)` if you need a
 fixed range.
 
+## Delays
+
+A connection with a `delay` waits before its tween starts. Give each connection a larger delay to stagger them,
+such as list items that appear one after another:
+
+```luau
+for index, item in items do
+    handler.onTransition(function(_, _, current)
+        item.Transparency = current.transparency
+    end, { delay = (index - 1) * 0.05 })
+end
+```
+
+- The connection sends nothing while it waits. Its first frame starts from the beginning of the tween.
+- The wait is scaled time: [`pause`](/guide/handlers#pause), a `speed` of `0`, and `fastForward` apply to it too.
+- `setState(name, { instant = true })` skips the delay, and [`finish`](/guide/handlers#finish) ends a connection that
+  is still waiting.
+- The transition finishes, and [`onFinish`](/guide/handlers#onfinish) runs, only after the most delayed connection ends.
+
+## Pausing
+
+[`pause`](/guide/handlers#pause) freezes every transition of a handler, and [`resume`](/guide/handlers#resume)
+continues them from the same values. [`onPause`](/guide/handlers#onpause) and
+[`onResume`](/guide/handlers#onresume) report the `os.clock()` time at which the most recent transition
+started, so you can work out how long it has been running.
+
+```luau
+handler.onPause(function(startedAt)
+    print("paused after", os.clock() - startedAt, "seconds")
+end)
+
+handler.pause()
+handler.resume()
+```
+
+- A paused transition keeps its values and its listeners are not called again.
+- `setState` while paused starts the new transition, sends its first frame, and holds it there until `resume`.
+- Pausing applies to the whole handler. To pause or slow a single connection, use a `speed` source in that connection's options. A `speed` of `0` pauses only that connection and does not fire `onPause`.
+- If `speed` is also `0`, the transition stays frozen after `resume` until the speed is above `0`.
+
+## Fast-forwarding and finishing
+
+[`fastForward`](/guide/handlers#fastforward) plays the running transition faster, and
+[`finish`](/guide/handlers#finish) ends it at once. Use them to let a player skip an animation.
+
+```luau
+handler.onFinish(function(startedAt)
+    print("took", os.clock() - startedAt, "seconds")
+end)
+
+handler.fastForward({ speed = 4 })
+handler.finish()
+```
+
+- `fastForward` multiplies each connection's own `speed`, and only for the transition that is running. The next `setState` plays at normal speed.
+- `finish` sends every connection its last frame, with `current` equal to the next state's values and an `alpha` of `1`, before it returns. It works while the handler is paused.
+- [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
+- Connections with different durations finish at different times, so the event waits for the slowest one.
+- [`waitForFinish`](/guide/handlers#waitforfinish) yields until the handler has no running transition, for code that runs in sequence.
+
+## Performance
+
+Every running transition of every handler is stepped by one shared loop, which runs only while a transition
+is running. The first frame of a transition is sent inside `setState`, and later frames are sent by the loop.
+
+- `onTransition` callbacks must not yield. A yield holds up the loop, and with it every running transition.
+- A callback that raises an error stops only its own connection. The error is still reported in the output, and
+  the other connections keep running.
+
+A benchmark in Roblox Studio started a transition on many handlers at once, each with one connection and two
+tweened fields. The frame times include Studio's frame cap, which was about 30 frames per second during the
+run, so only a frame time well above 33 ms shows real cost.
+
+| Handlers | `setState` on all of them | Average frame | Worst frame |
+| --- | --- | --- | --- |
+| 1,000 | about 25 ms | about 25 ms | under 120 ms (the first frame) |
+| 5,000 | about 150 ms | about 27 ms | about 32 ms |
+| 10,000 | about 300 ms | about 55 ms | about 64 ms |
+
+Measure your own use. The numbers depend on the device, the number of fields, and the work your callbacks do.
+
 ## Changing settings during a transition
 
 When a setting is a Vide source, it is read every frame. Changing it affects the running transition,
@@ -63,30 +154,34 @@ read once and never change.
 
 ## Types
 
-### TransitionOptions <Badge type="tip" text="Added in 0.1.0" />
+### TransitionOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
 
 ```luau
 type TransitionOptions = {
     easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
     duration: (number | Source<number>)?, -- The duration in seconds
     speed: Source<number>?, -- How fast the transition advances
+    delay: (number | Source<number>)?, -- How long a connection waits before its tween starts
 }
 ```
 
-Settings for the transitions of one handler. The tween is created by [Ripple](https://github.com/littensy/ripple).
+Changed in 0.2.0: added `delay`, and the options can also be passed to one connection.
+
+Settings for the transitions of one handler or one connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `easing` | [`TweenName`](#tweenname) or `Source<TweenName>` | No | `"linear"` | The easing curve. An unknown name raises an error. |
 | `duration` | `number` or `Source<number>` | No | `0.25` | The duration in seconds. Must be finite and non-negative. |
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
+| `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
 
 Invalid values raise an error when the handler is created. This includes an unknown key, a
 non-table value, a negative `speed`, and a `speed` that is not a source. A source is also checked on
 creation, using its current value.
 
 If a source later returns an invalid value, the transition keeps running instead of raising an
-error: `easing` falls back to `"linear"` and `duration` to `0.25`. A negative `speed` is treated as `0`,
+error: `easing` falls back to `"linear"`, `duration` to `0.25`, and `delay` to `0`. A negative `speed` is treated as `0`,
 which pauses the transition, and any other invalid `speed` is treated as `1`. A paused transition keeps
 its values and does not call listeners again until the speed is above `0`.
 

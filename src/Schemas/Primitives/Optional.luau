@@ -3,7 +3,14 @@ const TypedCore = require("../../../packages/luau/TypedCore")
 const Helper = require("../Helper")
 
 return function <T>(schema: TypedCore.Schema<T>): TypedCore.Schema<T?>
-    assert(type(schema) == "table" and type(schema.parse) == "function", "expected a schema to make optional")
+    local message = "expected a schema to make optional"
+
+    -- The table check comes first, because the parse check reads a field of the schema.
+    assert(type(schema) == "table", message)
+
+    local hasParse = type(schema.parse) == "function"
+
+    assert(hasParse, message)
 
     const optionalSchema = Typed.optional(schema)
 

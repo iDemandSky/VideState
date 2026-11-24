@@ -6,3 +6,8 @@ default = false
 [place]
 file = ".lest/schema-tests.rbxlx"
 rojo = "default.project.json"
+
+[suites.bench]
+include = ["tests/bench/**/*.spec.luau"]
+backend = "studio"
+default = false

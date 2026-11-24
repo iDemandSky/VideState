@@ -7,6 +7,31 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `handler.pause()` and `handler.resume()` pause and continue every transition of a handler.
+- `handler.onPause(callback)` and `handler.onResume(callback)` report those events and pass the `os.clock()` time at which the most recent transition started.
+- The `OnPauseCallback` and `OnResumeCallback` types.
+- `handler.fastForward({ speed })` plays the running transition faster, and `handler.finish()` ends every running transition at once with its last frame.
+- `handler.onFinish(callback)` runs once when a transition has finished, and passes the `os.clock()` time at which it started.
+- The `OnFinishCallback` and `FastForwardOptions` types.
+- `handler.setState(name, { instant = true })` changes the state without an animation. The `SetStateOptions` type.
+- `handler.onEnter(state, callback)` and `handler.onExit(state, callback)` run when the handler enters or leaves one state. The `OnEnterCallback` and `OnExitCallback` types.
+- `handler.waitForFinish()` yields until the handler has no running transition.
+- `handler.destroy()` stops every transition and removes every listener. `setState` raises an error afterwards.
+- A `delay` transition option makes a connection wait before its tween starts, for staggered animations.
+- `VideState.debug` with `track`, `snapshot`, `list`, and `view`: an opt-in list of handlers with their state and transitions, and a Vide component that shows it. The `DebugSnapshot` type.
+
+### Fixed
+
+- A transition that is interrupted by another `setState` now continues from the value it had reached. Before, the new transition started from the previous state's values, so `current` jumped.
+
+### Changed
+
+- `handler.onTransition(callback, options)` takes optional `TransitionOptions`, so each connection can have its own easing, duration, and speed. Settings it leaves out are inherited from the handler's `onTransition` option. Every connection now tweens on its own instead of sharing one tween per handler.
+- Every running transition is stepped by one shared loop instead of one loop per connection. In a Studio benchmark with 10,000 handlers, the average frame went from about 64 ms to about 55 ms. A callback that raises an error now stops only its own connection, and `onTransition` callbacks must not yield.
+- The README and the docs now say VideState has only been benchmarked in Roblox Studio.
+
 ## [0.1.2] - 2026-11-24
 
 ### Changed

@@ -98,6 +98,7 @@ two states.
 | <Badge type="danger" text="Error" /> | `onTransition.speed` is not a source | `onTransition speed must be a source` |
 | <Badge type="danger" text="Error" /> | `onTransition.speed` is negative | `onTransition speed must not be negative` |
 | <Badge type="danger" text="Error" /> | `onTransition.speed` is not finite | `onTransition speed must be a finite non-negative number` |
+| <Badge type="danger" text="Error" /> | `onTransition.delay` is not a finite, non-negative number | `onTransition delay must be a finite non-negative number` |
 
 ## Types
 

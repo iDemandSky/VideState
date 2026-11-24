@@ -16,7 +16,10 @@ return function(options: StringOptions?): TypedCore.Schema<string>
         Helper.assertInteger(maxLength, "String maxLength", 0)
     end
 
-    assert(truncate == nil or type(truncate) == "boolean", "String truncate must be a boolean")
+    local isTruncateMissing = truncate == nil
+    local isTruncateBoolean = type(truncate) == "boolean"
+
+    assert(isTruncateMissing or isTruncateBoolean, "String truncate must be a boolean")
 
     return Helper.createSchemaWithSource(
         "String",

@@ -7,10 +7,18 @@ export type Sources<T> = Types.Sources<T>
 export type Disconnect = Types.Disconnect
 export type OnChangeCallback<T> = Types.OnChangeCallback<T>
 export type OnTransitionCallback<T> = Types.OnTransitionCallback<T>
+export type OnPauseCallback = Types.OnPauseCallback
+export type OnResumeCallback = Types.OnResumeCallback
+export type OnFinishCallback = Types.OnFinishCallback
+export type FastForwardOptions = Types.FastForwardOptions
+export type SetStateOptions = Types.SetStateOptions
+export type OnEnterCallback = Types.OnEnterCallback
+export type OnExitCallback = Types.OnExitCallback
 export type HandlerOptions = Types.HandlerOptions
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
 export type TransitionOptions = Types.TransitionOptions
+export type DebugSnapshot = Types.DebugSnapshot
 
 return table.freeze({
     -- PRIMITIVE SCHEMAS --
@@ -32,4 +40,7 @@ return table.freeze({
 
     -- INFO --
     info = require("@self/Info"),
+
+    -- DEBUG --
+    debug = require("@self/Debug"),
 })

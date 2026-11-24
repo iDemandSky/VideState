@@ -32,7 +32,9 @@ end
 -- Applies changed settings to a running group. Ripple restarts each tween from its current position, so the
 -- remaining distance is covered with the new settings and the values do not jump.
 const function configure<T>(group: Group<T>, easing: Types.TweenName, duration: number)
-    local isSame = group.easing == easing and group.duration == duration
+    local isSameEasing = group.easing == easing
+    local isSameDuration = group.duration == duration
+    local isSame = isSameEasing and isSameDuration
 
     if isSame then
         return

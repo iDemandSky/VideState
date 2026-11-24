@@ -41,7 +41,10 @@ function helper.invalidValue(message: string): TypedCore.ParseResultErr
 end
 
 function helper.isFinite(value: number): boolean
-    return value == value and math.abs(value) < math.huge
+    local isNotNaN = value == value
+    local isBelowInfinity = math.abs(value) < math.huge
+
+    return isNotNaN and isBelowInfinity
 end
 
 function helper.decimalPlaces(value: number): number
@@ -61,28 +64,42 @@ function helper.decimalPlaces(value: number): number
 end
 
 function helper.assertOptionsTable(options: unknown, name: string)
-    assert(options == nil or type(options) == "table", `expected {name} options to be a table`)
+    local isMissing = options == nil
+    local isTable = type(options) == "table"
+
+    assert(isMissing or isTable, `expected {name} options to be a table`)
 end
 
 function helper.assertFiniteOption(value: unknown, name: string)
-    assert(
-        value == nil or (type(value) == "number" and helper.isFinite(value)),
-        `{name} must be finite`
-    )
+    local isMissing = value == nil
+    -- The number check comes first because `isFinite` only accepts a number.
+    local isFiniteNumber = type(value) == "number" and helper.isFinite(value)
+
+    assert(isMissing or isFiniteNumber, `{name} must be finite`)
 end
 
 function helper.assertInteger(value: unknown, name: string, minimum: number?)
-    assert(
-        type(value) == "number"
-            and helper.isFinite(value)
-            and value % 1 == 0
-            and (minimum == nil or value >= minimum),
-        `{name} must be a finite integer{if minimum then ` greater than or equal to {minimum}` else ""}`
-    )
+    local message = `{name} must be a finite integer{if minimum then ` greater than or equal to {minimum}` else ""}`
+
+    assert(type(value) == "number", message)
+
+    local isFinite = helper.isFinite(value)
+    local isWhole = value % 1 == 0
+    local isAtLeastMinimum = minimum == nil or value >= minimum
+
+    assert(isFinite and isWhole and isAtLeastMinimum, message)
 end
 
 function helper.assertOrderedBounds(min: number?, max: number?, name: string)
-    assert(min == nil or max == nil or min <= max, `{name} minimum must not exceed maximum`)
+    if min == nil then
+        return
+    end
+
+    if max == nil then
+        return
+    end
+
+    assert(min <= max, `{name} minimum must not exceed maximum`)
 end
 
 function helper.assertMinimumCount(count: number, minimum: number, message: string)

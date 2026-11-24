@@ -9,6 +9,9 @@
       },
       "packages": {
         "$path": "packages"
+      },
+      "VideStateStories": {
+        "$path": "stories"
       }
     }
   }

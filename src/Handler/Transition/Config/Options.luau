@@ -6,18 +6,49 @@ export type Settings = {
     read getEasing: () -> Types.TweenName,
     read getDuration: () -> number,
     read getSpeed: () -> number,
+    -- Read once, when a transition starts.
+    read getDelay: () -> number,
 }
 
 const function isValidEasing(value: unknown): boolean
-    return type(value) == "string" and Constants.TWEEN_NAMES[value] == true
+    if type(value) ~= "string" then
+        return false
+    end
+
+    return Constants.TWEEN_NAMES[value] == true
+end
+
+-- A number that is not NaN, not infinite, and not negative.
+const function isFiniteNonNegative(value: unknown): boolean
+    if type(value) ~= "number" then
+        return false
+    end
+
+    local isNotNaN = value == value
+    local isNotNegative = value >= 0
+    local isNotInfinite = value ~= math.huge
+
+    return isNotNaN and isNotNegative and isNotInfinite
+end
+
+const function isNegativeNumber(value: unknown): boolean
+    if type(value) ~= "number" then
+        return false
+    end
+
+    return value < 0
 end
 
 const function isValidDuration(value: unknown): boolean
-    return type(value) == "number" and value == value and value >= 0 and value ~= math.huge
+    return isFiniteNonNegative(value)
 end
 
 const function isValidSpeed(value: unknown): boolean
-    return type(value) == "number" and value == value and value >= 0 and value ~= math.huge
+    return isFiniteNonNegative(value)
+end
+
+const function isValidDelay(value: unknown): boolean
+    return isFiniteNonNegative(value)
 end
 
 -- Rejects options with keys outside the allowed set, so a misspelled or outdated key fails instead of being ignored.
@@ -73,6 +104,14 @@ const function validateDuration(value: unknown)
     end
 end
 
+const function validateDelay(value: unknown)
+    local current = if typeof(value) == "function" then (value :: () -> unknown)() else value
+
+    if not isValidDelay(current) then
+        error("onTransition delay must be a finite non-negative number", 0)
+    end
+end
+
 const function validateSpeed(value: unknown)
     if typeof(value) ~= "function" then
         error("onTransition speed must be a source", 0)
@@ -80,7 +119,7 @@ const function validateSpeed(value: unknown)
 
     local current = (value :: () -> unknown)()
 
-    if type(current) == "number" and current < 0 then
+    if isNegativeNumber(current) then
         error("onTransition speed must not be negative", 0)
     end
 
@@ -91,18 +130,21 @@ end
 
 -- A negative speed is clamped to 0 so a transition never moves backwards. Any other invalid speed plays at normal speed.
 const function fallbackSpeed(value: unknown): number
-    if type(value) == "number" and value < 0 then
+    if isNegativeNumber(value) then
         return 0
     end
 
     return Constants.DEFAULT_SPEED
 end
 
--- Validates the `onTransition` handler options and returns readers for each setting.
-const function parse(options: Types.TransitionOptions?): Settings
-    local easing: unknown = Constants.DEFAULT_EASING
-    local duration: unknown = Constants.DEFAULT_DURATION
+-- Validates `onTransition` options and returns readers for each setting. A setting that `options` leaves out
+-- is read from `base`, which is how a connection inherits the settings of its handler. With no `base`, it
+-- takes the default.
+const function parse(options: Types.TransitionOptions?, base: Settings?): Settings
+    local easing: unknown = nil
+    local duration: unknown = nil
     local speed: unknown = nil
+    local delay: unknown = nil
 
     if options ~= nil then
         checkKeys(options)
@@ -121,22 +163,69 @@ const function parse(options: Types.TransitionOptions?): Settings
             validateSpeed(options.speed)
             speed = options.speed
         end
+
+        if options.delay ~= nil then
+            validateDelay(options.delay)
+            delay = options.delay
+        end
     end
 
-    local getSpeed: () -> number = if speed == nil
-        then function(): number
-            return Constants.DEFAULT_SPEED
-        end
-        else createReader(speed, isValidSpeed, fallbackSpeed)
+    local getEasing: () -> Types.TweenName
+    local getDuration: () -> number
+    local getSpeed: () -> number
+    local getDelay: () -> number
 
-    return table.freeze({
+    if easing ~= nil then
         getEasing = createReader<<Types.TweenName>>(easing, isValidEasing, function(): Types.TweenName
             return Constants.DEFAULT_EASING :: Types.TweenName
-        end),
+        end)
+    elseif base ~= nil then
+        getEasing = base.getEasing
+    else
+        getEasing = function(): Types.TweenName
+            return Constants.DEFAULT_EASING :: Types.TweenName
+        end
+    end
+
+    if duration ~= nil then
         getDuration = createReader<<number>>(duration, isValidDuration, function(): number
             return Constants.DEFAULT_DURATION
-        end),
+        end)
+    elseif base ~= nil then
+        getDuration = base.getDuration
+    else
+        getDuration = function(): number
+            return Constants.DEFAULT_DURATION
+        end
+    end
+
+    if speed ~= nil then
+        getSpeed = createReader<<number>>(speed, isValidSpeed, fallbackSpeed)
+    elseif base ~= nil then
+        getSpeed = base.getSpeed
+    else
+        getSpeed = function(): number
+            return Constants.DEFAULT_SPEED
+        end
+    end
+
+    if delay ~= nil then
+        getDelay = createReader<<number>>(delay, isValidDelay, function(): number
+            return Constants.DEFAULT_DELAY
+        end)
+    elseif base ~= nil then
+        getDelay = base.getDelay
+    else
+        getDelay = function(): number
+            return Constants.DEFAULT_DELAY
+        end
+    end
+
+    return table.freeze({
+        getEasing = getEasing,
+        getDuration = getDuration,
         getSpeed = getSpeed,
+        getDelay = getDelay,
     })
 end
 

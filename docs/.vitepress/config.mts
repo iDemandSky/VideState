@@ -29,7 +29,8 @@ export default defineConfig({
           { text: 'Rules', link: '/guide/rules' },
           { text: 'Handlers', link: '/guide/handlers' },
           { text: 'Transitions', link: '/guide/transitions' },
-          { text: 'Info (debugging)', link: '/guide/info' }
+          { text: 'Info (debugging)', link: '/guide/info' },
+          { text: 'Debug view', link: '/guide/debug' }
         ]
       },
       {

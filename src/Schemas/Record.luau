@@ -8,14 +8,17 @@ return function <Fields>(fields: Fields)
 
     for name, schema in definitions do
         assert(type(name) == "string", `expected a string field name, got {typeof(name)}`)
-        assert(
-            type(schema) == "table"
-                and type(schema.type) == "string"
-                and type(schema.parse) == "function"
-                and type(schema.unwrapParse) == "function"
-                and type(schema.cast) == "function",
-            `expected a schema for field "{name}"`
-        )
+        local message = `expected a schema for field "{name}"`
+
+        -- The table check comes first, because the other checks read fields of the schema.
+        assert(type(schema) == "table", message)
+
+        local hasType = type(schema.type) == "string"
+        local hasParse = type(schema.parse) == "function"
+        local hasUnwrapParse = type(schema.unwrapParse) == "function"
+        local hasCast = type(schema.cast) == "function"
+
+        assert(hasType and hasParse and hasUnwrapParse and hasCast, message)
     end
 
     return Typed.table(table.clone(definitions) :: Fields, { strict = true })

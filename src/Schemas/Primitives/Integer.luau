@@ -31,15 +31,21 @@ return function(options: IntegerOptions?): TypedCore.Schema<number>
 
             local numberValue = result.value
 
-            if not Helper.isFinite(numberValue) or numberValue % 1 ~= 0 then
+            local isFinite = Helper.isFinite(numberValue)
+            local isWhole = numberValue % 1 == 0
+
+            if not isFinite or not isWhole then
                 return Helper.invalidValue(`expected a finite integer, got {numberValue}`)
             end
 
-            if min ~= nil and numberValue < min then
+            local isBelowMinimum = min ~= nil and numberValue < min
+            local isAboveMaximum = max ~= nil and numberValue > max
+
+            if isBelowMinimum then
                 return Helper.invalidValue(`expected an integer at least {min}, got {numberValue}`)
             end
 
-            if max ~= nil and numberValue > max then
+            if isAboveMaximum then
                 return Helper.invalidValue(`expected an integer at most {max}, got {numberValue}`)
             end
 
