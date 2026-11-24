@@ -7,6 +7,12 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-24
+
+### Changed
+
+- Added a warning to the README that VideState has not been benchmarked or tested in production.
+
 ## [0.1.1] - 2026-11-24
 
 ### Changed

@@ -5,6 +5,11 @@ VideState change their properties whenever the state changes.
 
 **Documentation: https://idemandsky.github.io/VideState/**
 
+> [!WARNING]
+> VideState has not been benchmarked, and it has not been tested in production. Use it wisely:
+> measure it in your own project, especially with many handlers or transitions running at once,
+> before you depend on it.
+
 Vide creates the UI Instances. VideState owns the values those Instances bind to: it validates them,
 switches them between states, and can animate the change.
 
