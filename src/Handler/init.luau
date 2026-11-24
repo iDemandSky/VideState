@@ -14,7 +14,7 @@ const SetState = require("@self/SetState")
 type Sources<T> = Types.Sources<T>
 type Handler<T> = Types.Handler<T>
 
--- Creates a handler. Each feature lives in its own folder and provides the functions listed here:
+-- Creates a handler. Each feature lives in its own module and provides the functions listed here:
 --   Change      onChange
 --   Transition  onTransition
 --   Pause       pause, resume, onPause, onResume

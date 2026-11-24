@@ -64,19 +64,19 @@ Without `LuauSolverV2` the analyzer reports false errors.
 
 ## Handler layout
 
-Each feature of a handler has its own folder under `src/Handler/`, with the functions and events it provides.
+Each feature of a handler has its own module under `src/Handler/`, with the functions and events it provides.
 `src/Handler/init.luau` only creates them and wires them together.
 
-| Folder | Provides | Notes |
+| Module | Provides | Notes |
 | --- | --- | --- |
-| `Change/` | `onChange` | Runs once when the state changes. |
+| `Change.luau` | `onChange` | Runs once when the state changes. |
 | `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` wraps Ripple. |
-| `Pause/` | `pause`, `resume`, `onPause`, `onResume` | Pause state for every transition of the handler. |
-| `FastForward/` | `fastForward` | Speed scale for the running transition. |
-| `Finish/` | `finish`, `onFinish` | How a transition ends. |
+| `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` | Pause state for every transition of the handler. |
+| `FastForward.luau` | `fastForward` | Speed scale for the running transition. |
+| `Finish.luau` | `finish`, `onFinish` | How a transition ends. |
 | `SetState.luau` | `setState` | Changes the state and starts the change and transition events. |
 
-Shared types go in `src/Types.luau`, and `src/Utils/StartTimeEvent.luau` is the event that `Pause/` and `Finish/` use.
+Shared types go in `src/Types.luau`, and `src/Utils/StartTimeEvent.luau` is the event that `Pause` and `Finish` use.
 
 ## Conventions
 
