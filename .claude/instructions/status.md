@@ -23,7 +23,7 @@ deploys from `main`, so it does not show these features yet.
 
 Also unreleased: `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, the
 `delay` transition option, the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its
-UI Labs story in `stories/`. The story has not been opened in UI Labs yet, because that needs the user's Studio.
+UI Labs story in `stories/`. The story was opened in UI Labs (v1.6.1) and the view lists the three demo handlers with their state, timer, and connection count.
 
 ## Known limits
 
