@@ -417,6 +417,64 @@ describe("rule handlers", function()
         expect(values[#values]).toBe(1)
     end)
 
+    it("changes the state instantly when setState is told to", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "InstantPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 1,
+            },
+        })
+
+        local values: { number } = {}
+        local alphas: { number } = {}
+        local finishes = 0
+
+        handler.onTransition(function(_, _, current, alpha)
+            table.insert(values, current.opacity)
+            table.insert(alphas, alpha)
+        end)
+        handler.onFinish(function()
+            finishes += 1
+        end)
+
+        handler.setState("Active", { instant = true })
+
+        -- One frame with the next values, sent before setState returns.
+        expect(#values).toBe(1)
+        expect(values[1]).toBe(1)
+        expect(alphas[1]).toBe(1)
+        expect(finishes).toBe(1)
+        expect(handler.currentState()).toBe("Active")
+
+        task.wait(0.2)
+
+        expect(#values).toBe(1)
+
+        -- Without the option, the next change animates again.
+        handler.setState("Idle")
+        task.wait(0.2)
+
+        local isAnimating = values[#values] > 0
+
+        expect(isAnimating).toBe(true)
+
+        expect(function()
+            handler.setState("Active", { instant = "yes" } :: any)
+        end).toThrow("setState instant must be a boolean")
+
+        expect(function()
+            handler.setState("Active", { skip = true } :: any)
+        end).toThrow("setState options has an unknown key skip")
+
+        expect(function()
+            handler.setState("Active", true :: any)
+        end).toThrow("setState options must be a table")
+    end)
+
     it("fast-forwards only the running transition", function()
         local handler = VideState.rule({
             opacity = VideState.float(),

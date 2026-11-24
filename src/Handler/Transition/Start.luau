@@ -29,16 +29,19 @@ const function play<T>(
     connection: State.Connection<T>,
     from: T,
     to: T,
+    instant: boolean,
     getRate: () -> number,
     settle: Types.SettleTransition
 )
     local start = if isInterrupted(connection) then connection.current :: T else from
+    -- A duration of 0 sends one frame with the next values and an alpha of 1, then ends.
+    local duration = if instant then 0 else connection.settings.getDuration()
 
     local group = Group.create(
         start,
         to,
         connection.settings.getEasing(),
-        connection.settings.getDuration()
+        duration
     )
 
     local run: State.Run<T> = {
@@ -77,8 +80,8 @@ return function<T>(
     state: State.State<T>,
     getRate: () -> number,
     settle: Types.SettleTransition
-): Types.StateEmitter<T>
-    return function(from: T, to: T)
+): Types.StartTransition<T>
+    return function(from: T, to: T, instant: boolean)
         state.generation += 1
         state.startedAt = os.clock()
         state.scale = 1
@@ -108,7 +111,7 @@ return function<T>(
                 continue
             end
 
-            play(state, transition, id, connection, from, to, getRate, settle)
+            play(state, transition, id, connection, from, to, instant, getRate, settle)
         end
     end
 end

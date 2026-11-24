@@ -41,27 +41,38 @@ Returns the name of the active state. It is a function, so call it to read the n
 | --- | --- |
 | `string` | The name of the active state. |
 
-### setState <Badge type="tip" text="Added in 0.1.0" />
+### setState <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
 
 ```luau
 Handler.setState(
-    stateName: string -- The state to switch to
+    stateName: string, -- The state to switch to
+    options: SetStateOptions? -- Options for this call only
 ) -> ()
 ```
 
+Changed in 0.2.0: takes an optional `options` argument, so one change can skip its animation.
+
 Switches to a state. Later reads and writes of [`sources`](#sources) use that state's sources, and
 [`onChange`](#onchange) and [`onTransition`](#ontransition) listeners are called.
+
+With `instant = true`, the change is not animated. Every `onTransition` connection receives one frame with
+the next state's values and an `alpha` of `1` before `setState` returns, and [`onFinish`](#onfinish) runs. Use
+it to set the first layout of a component, or to snap it back without an animation.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
 | `stateName` | `string` | The name of a state passed to `new`. |
+| `options` | [`SetStateOptions`](#setstateoptions)`?` | Optional. Options for this call only. |
 
 **Errors**
 
 | | Cause | Message |
 | --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `setState options must be a table` |
+| <Badge type="danger" text="Error" /> | `options` has an unknown key | `setState options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | `options.instant` is not a boolean | `setState instant must be a boolean` |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `state name must be a string, got <type>` |
 | <Badge type="danger" text="Error" /> | The state name is unknown | `unknown state "<state>"` |
 | <Badge type="danger" text="Error" /> | The state's values no longer match the schema | `Invalid state "<state>":` followed by the schema issues |
@@ -312,7 +323,7 @@ type HandlerOptions = {
 type Handler<T> = {
     sources: Sources<T>,
     currentState: () -> string,
-    setState: (stateName: string) -> (),
+    setState: (stateName: string, options: SetStateOptions?) -> (),
     onChange: (callback: OnChangeCallback<T>) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
     pause: () -> (),
@@ -390,6 +401,18 @@ type OnFinishCallback = (startedAt: number) -> ()
 | Name | Type | Description |
 | --- | --- | --- |
 | `startedAt` | `number` | The `os.clock()` time at which the transition that finished started. |
+
+### SetStateOptions <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type SetStateOptions = {
+    instant: boolean?, -- Skips the animation of this change
+}
+```
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `instant` | `boolean` | No | `false` | When `true`, every `onTransition` connection receives the next state's values at once, with an `alpha` of `1`. |
 
 ### FastForwardOptions <Badge type="tip" text="Added in 0.2.0" />
 

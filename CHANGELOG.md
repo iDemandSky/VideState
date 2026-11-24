@@ -15,6 +15,7 @@ version can contain breaking changes.
 - `handler.fastForward({ speed })` plays the running transition faster, and `handler.finish()` ends every running transition at once with its last frame.
 - `handler.onFinish(callback)` runs once when a transition has finished, and passes the `os.clock()` time at which it started.
 - The `OnFinishCallback` and `FastForwardOptions` types.
+- `handler.setState(name, { instant = true })` changes the state without an animation. The `SetStateOptions` type.
 
 ### Fixed
 

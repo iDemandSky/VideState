@@ -11,6 +11,7 @@ export type OnPauseCallback = Types.OnPauseCallback
 export type OnResumeCallback = Types.OnResumeCallback
 export type OnFinishCallback = Types.OnFinishCallback
 export type FastForwardOptions = Types.FastForwardOptions
+export type SetStateOptions = Types.SetStateOptions
 export type HandlerOptions = Types.HandlerOptions
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName

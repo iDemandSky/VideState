@@ -8,7 +8,7 @@ export type Transition<T> = {
     -- Listens for transitions. Each connection can override the tween settings of the handler.
     read onTransition: Types.ConnectTransition<T>,
     -- Starts a transition on every connection. `setState` calls it.
-    read emit: Types.StateEmitter<T>,
+    read emit: Types.StartTransition<T>,
 }
 
 -- The `onTransition` event of a handler: it tweens between the states, and one connection plays its own tween.

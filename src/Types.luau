@@ -55,6 +55,13 @@ export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number
 export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
+--- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame.
+export type StartTransition<T> = (from: T, to: T, instant: boolean) -> ()
+--- Options for one `setState` call.
+export type SetStateOptions = {
+    --- Skips the animation. Every `onTransition` connection receives the next state's values at once, with an alpha of 1. Defaults to false.
+    instant: boolean?,
+}
 --- One `setState` that has listeners. It is finished when every connection that was playing it has ended.
 export type Transition = {
     generation: number,
@@ -85,7 +92,7 @@ export type HandlerOptions = {
 export type Handler<T> = {
     read sources: Sources<T>,
     read currentState: () -> string,
-    read setState: (stateName: string) -> (),
+    read setState: (stateName: string, options: SetStateOptions?) -> (),
     read onChange: (callback: OnChangeCallback<T>) -> Disconnect,
     read onTransition: ConnectTransition<T>,
     read pause: () -> (),
