@@ -1,5 +1,5 @@
-const Types = require("../../../Types")
-const Options = require("../Config/Options")
+const Types = require("../../Types")
+const Options = require("./Config/Options")
 const State = require("./State")
 
 type Disconnect = Types.Disconnect

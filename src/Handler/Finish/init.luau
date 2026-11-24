@@ -1,11 +1,11 @@
-const Types = require("../../../Types")
-const CreateEvent = require("./Event")
-const State = require("./State")
+const Types = require("../Types")
+const CreateEvent = require("../Utils/StartTimeEvent")
+const State = require("./Transition/State")
 
 type Disconnect = Types.Disconnect
 
-export type Lifecycle = {
-    -- Counts one connection of a transition as ended.
+export type Finish = {
+    -- Counts one connection of a transition as ended. The transitions call it.
     read settle: Types.SettleTransition,
     -- Sends the last frame to every connection that is still playing the current transition, and ends it.
     read finish: () -> (),
@@ -13,7 +13,7 @@ export type Lifecycle = {
 }
 
 -- How a transition ends: when its last connection ends, or when `finish` ends it early.
-return function<T>(state: State.State<T>): Lifecycle
+return function <T>(state: State.State<T>): Finish
     local onFinish, emitFinish = CreateEvent("onFinish")
 
     -- The finish event fires once, when the last connection ends, if at least one of them reached its end
@@ -72,11 +72,11 @@ return function<T>(state: State.State<T>): Lifecycle
         end
     end
 
-    local lifecycle: Lifecycle = {
+    local controls: Finish = {
         settle = settle,
         finish = finish,
         onFinish = onFinish,
     }
 
-    return table.freeze(lifecycle)
+    return table.freeze(controls)
 end

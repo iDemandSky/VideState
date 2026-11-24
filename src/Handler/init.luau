@@ -3,13 +3,24 @@ const TypedCore = require("@luau-packages/TypedCore")
 
 const Types = require("./Types")
 const Validation = require("./Validation")
-const OnChange = require("@self/OnChange")
-const OnTransition = require("@self/OnTransition")
+const Change = require("@self/Change")
+const Transition = require("@self/Transition")
+const TransitionState = require("@self/Transition/State")
+const Pause = require("@self/Pause")
+const FastForward = require("@self/FastForward")
+const Finish = require("@self/Finish")
 const SetState = require("@self/SetState")
 
 type Sources<T> = Types.Sources<T>
 type Handler<T> = Types.Handler<T>
 
+-- Creates a handler. Each feature lives in its own folder and provides the functions listed here:
+--   Change      onChange
+--   Transition  onTransition
+--   Pause       pause, resume, onPause, onResume
+--   FastForward fastForward
+--   Finish      finish, onFinish
+--   SetState    setState
 return function <S>(
     schema: S,
     states: { [string]: Sources<TypedCore.infer<S>> },
@@ -37,17 +48,36 @@ return function <S>(
     end
 
     local sources = table.freeze(derivedSources) :: Sources<Values>
-    local onChange, emitChange = OnChange<<Values>>()
     local transitionOptions = if options == nil then nil else options.onTransition
-    local onTransition, emitTransition, controls = OnTransition<<Values>>(transitionOptions)
+
+    -- The transitions of the handler share this state, and the features below act on it.
+    local state = TransitionState.create<<Values>>()
+
+    local change = Change<<Values>>()
+    local pause = Pause(function(): number
+        return TransitionState.getStartedAt<<Values>>(state)
+    end)
+    local fastForward = FastForward<<Values>>(state)
+    local finish = Finish<<Values>>(state)
+
+    -- 0 holds every transition while the handler is paused.
+    const function getRate(): number
+        if pause.isPaused() then
+            return 0
+        end
+
+        return state.scale
+    end
+
+    local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
     local setState = SetState<<Values>>(
         function(stateName: string): Values
             local stateSources = Validation.state(validatedStates, stateName, "selected")
             return Validation.parseState(schema, stateName, stateSources :: Sources<Values>)
         end,
         currentState,
-        emitChange,
-        emitTransition
+        change.emit,
+        transition.emit
     )
 
     return table.freeze({
@@ -56,14 +86,14 @@ return function <S>(
             return currentState()
         end,
         setState = setState,
-        onChange = onChange,
-        onTransition = onTransition,
-        pause = controls.pause,
-        resume = controls.resume,
-        onPause = controls.onPause,
-        onResume = controls.onResume,
-        fastForward = controls.fastForward,
-        finish = controls.finish,
-        onFinish = controls.onFinish,
+        onChange = change.onChange,
+        onTransition = transition.onTransition,
+        pause = pause.pause,
+        resume = pause.resume,
+        onPause = pause.onPause,
+        onResume = pause.onResume,
+        fastForward = fastForward.fastForward,
+        finish = finish.finish,
+        onFinish = finish.onFinish,
     })
 end

@@ -1,5 +1,5 @@
-const Options = require("../Config/Options")
-const Group = require("../Tween/Group")
+const Options = require("./Config/Options")
+const Group = require("./Tween/Group")
 
 -- Calls `emit` with the first frame, then steps the group every frame until it is done.
 -- `emit` returns how many listeners are still connected, and the loop stops when none are.

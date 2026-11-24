@@ -1,4 +1,4 @@
-const Types = require("../../../Types")
+const Types = require("../Types")
 
 type Disconnect = Types.Disconnect
 

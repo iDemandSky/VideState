@@ -1,5 +1,5 @@
-const Types = require("../../../Types")
-const Group = require("../Tween/Group")
+const Types = require("../../Types")
+const Group = require("./Tween/Group")
 const Scheduler = require("./Scheduler")
 const State = require("./State")
 

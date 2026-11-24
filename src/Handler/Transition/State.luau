@@ -1,6 +1,6 @@
-const Types = require("../../../Types")
-const Options = require("../Config/Options")
-const Group = require("../Tween/Group")
+const Types = require("../../Types")
+const Options = require("./Config/Options")
+const Group = require("./Tween/Group")
 
 -- What one connection plays for one transition. `ended` is set when it finishes, is finished early, or disconnects.
 export type Run<T> = {
