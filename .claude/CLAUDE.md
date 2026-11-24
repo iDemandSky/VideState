@@ -5,10 +5,14 @@ Project rules and design notes live in `.claude/instructions/`, not here. Keep t
 ## Always loaded
 
 @instructions/overview.md
+@instructions/status.md
+@instructions/decisions.md
 @instructions/handlers.md
 @instructions/schemas.md
 @instructions/git.md
 @instructions/documentation.md
+@instructions/readme-and-docs-site.md
+@instructions/release.md
 @instructions/testing.md
 @instructions/larvae-checks.md
 @instructions/cross-platform-paths.md
