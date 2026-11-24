@@ -13,7 +13,7 @@ version can contain breaking changes.
 
 ### Added
 
-- A `permanent` option for `handler.scaleSpeed`. With `permanent = true` the scale stays for every following transition. Without it, the scale applies only to the running transition, as before.
+- A `once` option for `handler.scaleSpeed`. It defaults to `false`, so the scale stays for every following transition. With `once = true` the scale applies only to the running transition. Breaking: `fastForward` applied only to the running transition, so pass `once = true` to keep that.
 
 ## [0.2.1] - 2026-11-24
 

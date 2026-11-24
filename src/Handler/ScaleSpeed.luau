@@ -2,7 +2,7 @@ const Types = require("../Types")
 const State = require("./Transition/State")
 
 export type ScaleSpeed = {
-    -- Scales the speed of the running transition, or of every transition with `permanent`.
+    -- Scales the speed of every transition, or only of the running one with `once = true`.
     read scaleSpeed: (options: Types.ScaleSpeedOptions) -> (),
 }
 
@@ -18,7 +18,7 @@ const function isValidScale(value: unknown): boolean
     return isNotNaN and isPositive and isNotInfinite
 end
 
--- Validates the options of `scaleSpeed` and returns the speed scale and whether it is permanent.
+-- Validates the options of `scaleSpeed` and returns the speed scale and whether it applies once.
 const function parse(options: unknown): (number, boolean)
     if typeof(options) ~= "table" then
         error("scaleSpeed options must be a table", 0)
@@ -28,9 +28,9 @@ const function parse(options: unknown): (number, boolean)
 
     for key in fields do
         local isSpeed = key == "speed"
-        local isPermanent = key == "permanent"
+        local isOnce = key == "once"
 
-        if not isSpeed and not isPermanent then
+        if not isSpeed and not isOnce then
             error("scaleSpeed options has an unknown key " .. tostring(key), 0)
         end
     end
@@ -41,26 +41,26 @@ const function parse(options: unknown): (number, boolean)
         error("scaleSpeed speed must be a finite number above 0", 0)
     end
 
-    local permanent = fields.permanent
+    local once = fields.once
 
-    if permanent ~= nil and type(permanent) ~= "boolean" then
-        error("scaleSpeed permanent must be a boolean", 0)
+    if once ~= nil and type(once) ~= "boolean" then
+        error("scaleSpeed once must be a boolean", 0)
     end
 
-    return speed :: number, permanent == true
+    return speed :: number, once == true
 end
 
 -- The `scaleSpeed` function of a handler. It sets the scale that every connection of the running transition
--- multiplies its own speed by. A scale without `permanent` is reset by the next transition, and a permanent one stays.
+-- multiplies its own speed by. A scale with `once = true` is reset by the next transition, and any other stays.
 return function <T>(state: State.State<T>): ScaleSpeed
     local controls: ScaleSpeed = {
         scaleSpeed = function(options: Types.ScaleSpeedOptions)
-            local speed, permanent = parse(options)
+            local speed, once = parse(options)
 
-            if permanent then
-                state.baseScale = speed
-            else
+            if once then
                 state.scale = speed
+            else
+                state.baseScale = speed
             end
         end,
     }

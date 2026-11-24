@@ -30,7 +30,7 @@ export type State<T> = {
     currentTransition: Types.Transition?,
     -- The scale that `scaleSpeed` puts on the running transition. A new transition resets it.
     scale: number,
-    -- The scale that `scaleSpeed` keeps for every transition when `permanent` is true.
+    -- The scale that `scaleSpeed` keeps for every transition when `once` is false.
     baseScale: number,
 }
 

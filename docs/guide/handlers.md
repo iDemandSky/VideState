@@ -308,7 +308,7 @@ does not run it again.
 
 ### scaleSpeed <Badge type="warning" text="Changed in 0.3.0" />
 
-Renamed from `fastForward`, because a scale below `1` slows the transition down. The `permanent` option is new.
+Renamed from `fastForward`, because a scale below `1` slows the transition down. The `once` option is new.
 
 ```luau
 Handler.scaleSpeed(
@@ -316,13 +316,13 @@ Handler.scaleSpeed(
 ) -> ()
 ```
 
-Speeds up or slows down the transition that is running now. It affects every [`onTransition`](#ontransition)
+Speeds up or slows down the transitions of the handler. It affects every [`onTransition`](#ontransition)
 connection of the handler, and it multiplies each connection's own `speed`. A connection with a `speed`
 of `0.5` scaled by `4` plays at `2`, and scaled by `0.5` plays at `0.25`.
 
-By default the scale applies once: the next `setState` starts a transition at normal speed again. With
-`permanent = true` it stays for every following transition, until you call `scaleSpeed` again with
-`permanent = true`. A permanent `speed` of `1` removes it. A permanent scale and a once scale multiply.
+By default the scale stays for every following transition, until you call `scaleSpeed` again. A `speed` of
+`1` removes it. With `once = true` the scale applies only to the running transition, and the next `setState`
+starts a transition at normal speed again. A kept scale and a once scale multiply.
 
 To jump straight to the end, use [`finish`](#finish).
 
@@ -339,7 +339,7 @@ To jump straight to the end, use [`finish`](#finish).
 | <Badge type="danger" text="Error" /> | `options` is not a table | `scaleSpeed options must be a table` |
 | <Badge type="danger" text="Error" /> | `options` has an unknown key | `scaleSpeed options has an unknown key <key>` |
 | <Badge type="danger" text="Error" /> | `options.speed` is not a finite number above 0 | `scaleSpeed speed must be a finite number above 0` |
-| <Badge type="danger" text="Error" /> | `options.permanent` is not a boolean | `scaleSpeed permanent must be a boolean` |
+| <Badge type="danger" text="Error" /> | `options.once` is not a boolean | `scaleSpeed once must be a boolean` |
 
 ### finish <Badge type="tip" text="Added in 0.2.0" />
 
@@ -557,14 +557,14 @@ Renamed from `FastForwardOptions`.
 ```luau
 type ScaleSpeedOptions = {
     speed: number, -- How many times the speed of the running transition is multiplied
-    permanent: boolean?, -- Keep the scale for every following transition
+    once: boolean?, -- Apply the scale only to the running transition, and not to the next ones
 }
 ```
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `speed` | `number` | Yes | None | The speed scale. Must be a finite number above `0`. Above `1` plays faster, `1` is normal speed, and below `1` plays slower. |
-| `permanent` | `boolean` | No | `false` | When `true`, the scale stays for every following transition. When `false`, it applies only to the running one. |
+| `once` | `boolean` | No | `false` | When `true`, the scale applies only to the running transition. When `false`, it stays for every following transition. |
 
 ### Disconnect <Badge type="tip" text="Added in 0.1.0" />
 

@@ -87,8 +87,8 @@ export type OnFinishCallback = (startedAt: number) -> ()
 export type ScaleSpeedOptions = {
     --- How many times the speed is multiplied. Must be a finite number above 0. It multiplies each connection's own speed. Above 1 plays faster and below 1 plays slower.
     speed: number,
-    --- When true, the scale applies to every following transition too, until `scaleSpeed` is called again with `permanent`. When false or left out, it applies only to the running transition. Defaults to false.
-    permanent: boolean?,
+    --- When true, the scale applies only to the running transition, and the next `setState` plays at normal speed. When false, it also applies to every following transition, until `scaleSpeed` is called again. Defaults to false.
+    once: boolean?,
 }
 --- What the debug tools report about one handler at one moment.
 export type DebugSnapshot = {

@@ -284,7 +284,7 @@ describe("transition controls", function()
 
         handler.setState("Active")
         task.wait(0.1)
-        handler.scaleSpeed({ speed = 20 })
+        handler.scaleSpeed({ speed = 20, once = true })
         task.wait(0.3)
 
         -- Without the scale, 0.4 of the 1 second would have played.
@@ -309,10 +309,10 @@ describe("transition controls", function()
         end).toThrow("scaleSpeed options must be a table")
     end)
 
-    it("keeps a permanent scale for every following transition", function()
+    it("keeps the scale for every following transition by default for every following transition", function()
         local handler = VideState.rule({
             opacity = VideState.float(),
-        }, { name = "PermanentScalePanel" }).new({
+        }, { name = "KeptScalePanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
         }, "Idle", {
@@ -327,7 +327,7 @@ describe("transition controls", function()
             alpha = frameAlpha
         end)
 
-        handler.scaleSpeed({ speed = 20, permanent = true })
+        handler.scaleSpeed({ speed = 20 })
         handler.setState("Active")
         task.wait(0.3)
 
@@ -336,18 +336,18 @@ describe("transition controls", function()
         handler.setState("Idle")
         task.wait(0.3)
 
-        -- The permanent scale is still in place for the second transition.
+        -- The scale is still in place for the second transition.
         expect(alpha).toBe(1)
 
-        handler.scaleSpeed({ speed = 1, permanent = true })
+        handler.scaleSpeed({ speed = 1 })
         handler.setState("Active")
         task.wait(0.3)
 
         expect(alpha < 0.9).toBe(true)
 
         expect(function()
-            handler.scaleSpeed({ speed = 2, permanent = "yes" :: any })
-        end).toThrow("scaleSpeed permanent must be a boolean")
+            handler.scaleSpeed({ speed = 2, once = "yes" :: any })
+        end).toThrow("scaleSpeed once must be a boolean")
     end)
 
     it("finishes every running transition at once", function()
