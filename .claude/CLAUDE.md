@@ -1,62 +1,22 @@
 # VideState
 
-Project background and API notes:
+Project rules and design notes live in `.claude/instructions/`, not here. Keep them there; this file only loads them. When a rule changes, edit the file in `.claude/instructions/`. Do not copy it into this file.
 
-@instructions/README.md
+## Always loaded
 
-Git workflow follows the global rules in `~/.claude/CLAUDE.md` (commit to `dev` after each feature change, Conventional Commits). After pushing `dev`, also push it to `main` (`git push origin dev:main`, fast-forward only). Publishing to Ember, tags, and releases still happen only when the user asks.
+@instructions/overview.md
+@instructions/handlers.md
+@instructions/schemas.md
+@instructions/git.md
+@instructions/documentation.md
+@instructions/testing.md
+@instructions/larvae-checks.md
+@instructions/cross-platform-paths.md
+@instructions/requires.md
 
-## Documentation
+## Layout
 
-Whenever you add, edit, or delete a feature, update the documentation in the same change. Scope it by class:
-
-| Class | Source | Docs to update |
-|---|---|---|
-| `Rule` | `src/Rule/` | `docs/guide/rules.md` |
-| `Handler` | `src/Handler/` | `docs/guide/handlers.md`, and `docs/guide/transitions.md` for `onTransition` |
-| `Schemas` | `src/Schemas/` | `docs/guide/schemas.md` |
-
-- Also update any `docs/examples/` page and the README section that uses the changed API.
-- Public type changes in `src/Types.luau` go in the doc of the class they belong to.
-- Removed features must be removed from the docs too, not left as stale references.
-- Every API entry has a version badge at the end of its heading line, such as `<Badge type="tip" text="Added in 0.1.0" />`. When you change an API, add a `Changed in <version>` warning badge with a one-line note, and a `Removed in` or `Deprecated in` danger badge when it goes away. Use the version in `ember.toml` that the change will ship in, and add the matching entry to `CHANGELOG.md`.
-- Commit the docs together with the code they describe.
-
-## Testing
-
-- `lest` does not rebuild its test place, so it can silently run stale code. Always rebuild first, then run:
-  ```sh
-  larvae process
-  rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
-  lest schemas
-  ```
-  Use `lest schemas -t "<text>"` to run only tests whose name contains the text.
-- Building the place from `default.project.json` fails, because the `@VideState` aliases are only rewritten by `larvae process`.
-- The suite needs the `studio` backend because Vide and Ripple only load inside Roblox. The `native` backend fails at `require` of Vide.
-- If Studio fails to launch, report the change as unverified.
-
-## Larvae checks
-
-After every code change, run Larvae before testing and fix what it reports:
-
-```sh
-larvae check          # syntax and require errors
-larvae lint src tests # lints only the project code, not dist/, packages/ or .lest/
-```
-
-- Larvae does not infer types. Its language server only offers formatting and code actions, so a clean `larvae check` is not proof that the types are right.
-- For type inference, use the analyzer bundled with the Luau LSP VS Code extension (`bin/server` inside `~/.vscode/extensions/johnnymorganz.luau-lsp-*`, `server.exe` on Windows). It needs the new type solver, the Roblox definitions, and a fresh sourcemap. The command and the per-OS location of `<globalStorage>` are in the "Type checks" section of `CONTRIBUTING.md`. Keep the sourcemap out of the repo. `src` and the type tests must report no errors. Without `LuauSolverV2` the analyzer reports false errors, such as `read keyword is illegal here`.
-- The Rojo project names the packages folder `packages` in lowercase, to match the `@packages` and `@luau-packages` aliases in `.luaurc`. The analyzer matches instance names case-sensitively, so do not rename it back to `Packages`.
-- Treat new lint warnings in `src/` and `tests/` as problems. Warnings in vendored or generated code can be ignored.
-
-## Cross-platform paths
-
-- Write every path in docs, scripts, and config with forward slashes, such as `.larvae/build.project.json`. Backslashes only work on Windows.
-- Match the exact case of file and folder names. Linux and macOS are case-sensitive, so `tests/types` and `Tests/types` are different paths.
-- Do not hard-code a user folder such as `C:/Users/...` or `~/AppData/...`. Describe the location per OS, or use `~`.
-- Dev launchers exist for each platform: `serve.sh` for macOS, Linux, and Git Bash, and `serve.bat` for Windows. Keep both in step. Shell scripts must keep LF line endings, which `.gitattributes` enforces.
-
-## Requires
-
-- Modules inside `src/` require each other relatively, never through the `@VideState` alias. In a normal file use `./Sibling` and `../Parent`. In an `init.luau`, `./` and `../` are relative to the folder's own parent, so reach its children with `@self/Child`.
-- Aliases are only for dependencies, such as `@packages/Vide` and `@luau-packages/TypedCore`.
+- `src/`: the package. `Handler/` has one module per handler feature, `Rule/` and `Schemas/` hold the rest.
+- `tests/`: `schemas/` has the `lest` specs, `types/` has the files the type analyzer checks.
+- `docs/`: the VitePress site (`guide/` and `examples/`).
+- `.claude/instructions/`: the rules above.
