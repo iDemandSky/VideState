@@ -65,6 +65,8 @@ read once and never change.
 
 ### TransitionOptions
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type TransitionOptions = {
     easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
@@ -91,6 +93,8 @@ which pauses the transition, and any other invalid `speed` is treated as `1`. A 
 its values and does not call listeners again until the speed is above `0`.
 
 ### TweenName
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type TweenName =

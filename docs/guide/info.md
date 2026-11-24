@@ -25,6 +25,8 @@ tags. Keeping tags consistent is your responsibility.
 
 ### get
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.info.get(
     name: string -- The name the rule was registered with
@@ -46,6 +48,8 @@ Looks up the metadata of a registered rule. Returns `nil` when no rule has that 
 | [`RuleMetadata`](/guide/rules#rulemetadata)`?` | A frozen copy of the metadata, or `nil` when no rule is registered under `name`. |
 
 ### getAllRulesWithTags
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.info.getAllRulesWithTags(
@@ -77,6 +81,8 @@ written.
 
 ### getAllTags
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.info.getAllTags() -> { string }
 ```
@@ -90,6 +96,8 @@ Returns every tag used by a registered rule.
 | `{ string }` | A frozen array of distinct tags, sorted alphabetically. Rules without tags add nothing. |
 
 ### ruleHasTag
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.info.ruleHasTag(

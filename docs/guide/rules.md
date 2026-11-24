@@ -20,6 +20,8 @@ does not exist until a rule has been created.
 
 ## Creating a rule
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.rule<Fields>(
     fields: Fields, -- A record of schema builders, keyed by field name
@@ -50,6 +52,8 @@ Creates a rule and registers its metadata under `metadata.name`.
 | <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
 
 ## Creating handlers from a rule
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 Call `new` on a rule that [`rule`](#creating-a-rule) has already returned. It is not a function of `VideState`.
 
@@ -103,6 +107,8 @@ two states.
 
 ### RuleMetadata
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type RuleMetadata = {
     name: string, -- Unique name of the rule
@@ -121,6 +127,8 @@ type RuleMetadata = {
 
 ### InferRule
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type InferRule<R> = -- The value type of the rule R
 ```
@@ -133,6 +141,8 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 | `R` | `typeof(rule)` | The rule to read the value type from. |
 
 ### Rule
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type Rule<Fields> = {

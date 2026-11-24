@@ -14,6 +14,8 @@ validate their options when they are called, and an invalid option raises an err
 
 ### boolean
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.boolean() -> Schema<boolean>
 ```
@@ -27,6 +29,8 @@ Accepts `true` or `false`, and rejects every other type.
 | [`Schema`](#schema)`<boolean>` | A schema for booleans. |
 
 ### integer
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.integer(
@@ -63,6 +67,8 @@ Accepts finite whole numbers.
 | <Badge type="danger" text="Error" /> | `min` is greater than `max` | `Integer minimum must not exceed maximum` |
 
 ### float
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.float(
@@ -103,6 +109,8 @@ Accepts finite numbers, including whole numbers.
 | <Badge type="danger" text="Error" /> | `min` is greater than `max` | `Float minimum must not exceed maximum` |
 
 ### string
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ::: warning Strings are not transitioned
 A `string` field cannot be tweened by [`onTransition`](/guide/handlers#ontransition). When the state
@@ -145,6 +153,8 @@ Accepts strings.
 
 ### enum
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.enum(
     ...: string -- The accepted values
@@ -174,6 +184,8 @@ Accepts only the strings passed as arguments. Matching is case-sensitive.
 
 ### optional
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.optional(
     schema: Schema<T> -- The schema for the value when it is not nil
@@ -195,6 +207,8 @@ Accepts `nil` and any value the inner schema accepts. A Vide source that holds `
 | [`Schema`](#schema)`<T?>` | A schema that accepts `nil` or a value accepted by `schema`. |
 
 ### table
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.table(
@@ -225,6 +239,8 @@ inferred from the field schemas, so [`Infer`](#infer) returns a table with the s
 | <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
 
 ### record
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.record(
@@ -262,6 +278,8 @@ Each of these builders takes no parameters and rejects every other type.
 
 ### color3
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.color3() -> Schema<Color3>
 ```
@@ -269,6 +287,8 @@ VideState.color3() -> Schema<Color3>
 Accepts a `Color3`.
 
 ### udim
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.udim() -> Schema<UDim>
@@ -278,6 +298,8 @@ Accepts a `UDim`.
 
 ### udim2
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 VideState.udim2() -> Schema<UDim2>
 ```
@@ -285,6 +307,8 @@ VideState.udim2() -> Schema<UDim2>
 Accepts a `UDim2`.
 
 ### vector2
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 VideState.vector2() -> Schema<Vector2>
@@ -295,6 +319,8 @@ Accepts a `Vector2`.
 ## Schema
 
 ### parse
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 Schema.parse(
@@ -321,6 +347,8 @@ Checks a value against the schema without raising an error.
 
 ### Infer
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type Infer<S> = -- The Luau type that the schema S accepts
 ```
@@ -332,6 +360,8 @@ Gives the Luau type that a schema accepts.
 | `S` | `typeof(schema)` | The schema to read the accepted type from. |
 
 ### IntegerOptions
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type IntegerOptions = {
@@ -348,6 +378,8 @@ Options for [`integer`](#integer).
 | `max` | `number` | No | No upper bound | The largest allowed value, inclusive. Must be an integer. |
 
 ### FloatOptions
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type FloatOptions = {
@@ -367,6 +399,8 @@ Options for [`float`](#float).
 
 ### StringOptions
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type StringOptions = {
     maxLength: number?, -- Maximum length in Unicode code points
@@ -382,6 +416,8 @@ Options for [`string`](#string).
 | `truncate` | `boolean` | No | `false` | When `true`, longer strings are cut down to `maxLength` instead of rejected. |
 
 ### ParseResult
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type ParseResult<T> =

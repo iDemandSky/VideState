@@ -14,6 +14,8 @@ another, and different handlers may use different state names.
 
 ### sources
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 Handler.sources: Sources<T>
 ```
@@ -29,6 +31,8 @@ switching to it, write to that state's own source.
 
 ### currentState
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 Handler.currentState() -> string
 ```
@@ -42,6 +46,8 @@ Returns the name of the active state. It is a function, so call it to read the n
 | `string` | The name of the active state. |
 
 ### setState
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 Handler.setState(
@@ -70,6 +76,8 @@ A failed `setState` leaves the handler unchanged.
 
 ### onChange
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 Handler.onChange(
     callback: (
@@ -95,6 +103,8 @@ is registered.
 | [`Disconnect`](#disconnect) | Call it to stop receiving changes. |
 
 ### onTransition
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 Handler.onTransition(
@@ -136,6 +146,8 @@ sees the same values at the same time. See [Transitions](/guide/transitions) for
 
 ### HandlerOptions
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type HandlerOptions = {
     onTransition: TransitionOptions? -- Tween settings shared by every onTransition listener
@@ -147,6 +159,8 @@ type HandlerOptions = {
 | `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1` | The easing, duration, and speed of the handler's transitions. An invalid value raises an error when the handler is created. |
 
 ### Handler
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type Handler<T> = {
@@ -167,6 +181,8 @@ handler matches its rule.
 
 ### Sources
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type Sources<T> = -- A record of Vide sources, one per field of T
 ```
@@ -177,11 +193,15 @@ type Sources<T> = -- A record of Vide sources, one per field of T
 
 ### OnChangeCallback
 
+<Badge type="tip" text="Added in 0.1.0" />
+
 ```luau
 type OnChangeCallback<T> = (from: T, to: T) -> ()
 ```
 
 ### OnTransitionCallback
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
@@ -195,6 +215,8 @@ type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 | `alpha` | `number` | The eased progress, from 0 to 1. With `back` and `elastic` easings it can go below 0 or above 1. See [alpha](/guide/transitions#alpha). |
 
 ### Disconnect
+
+<Badge type="tip" text="Added in 0.1.0" />
 
 ```luau
 type Disconnect = () -> ()
