@@ -115,7 +115,7 @@ Runs `callback` with a `current` value that moves from the previous state to the
 [Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as strings,
 booleans, and enums, are not transitioned: they switch to their next value at the start of the transition. Each connection has its own tween. Its
 settings come from `options`, and any setting it leaves out comes from the handler's
-[`onTransition` option](#handleroptions), then from the default. See [Transitions](/guide/transitions) for the full behavior.
+[`onTransition`](#handleroptions) option, then from the default. See [Transitions](/guide/transitions) for the full behavior.
 
 **Parameters**
 
@@ -135,7 +135,7 @@ settings come from `options`, and any setting it leaves out comes from the handl
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onTransition callback must be a function` |
-| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as the handler's [`onTransition` option](/guide/rules#errors), such as `onTransition easing must be a known easing name` |
+| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as the handler's [`onTransition`](/guide/rules#errors) option, such as `onTransition easing must be a known easing name` |
 
 ## Types
 
