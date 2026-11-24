@@ -11,11 +11,46 @@ VideState change their properties whenever the state changes.
 > wisely: measure it in your own project, especially with many handlers or transitions running at once,
 > before you depend on it.
 
+## Features
+
+- **Rules** describe a component's properties with schemas (`boolean`, `integer`, `float`, `string`, `enum`,
+  `optional`, `table`, `record`, `color3`, `udim`, `udim2`, `vector2`), and validate every state.
+- **Handlers** hold one component's state, with `sources` that follow the active state and bind to Vide properties.
+- **Events** for state changes: `onChange`, `onEnter`, `onExit`.
+- **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`.
+  An interrupted transition continues from its current value.
+- **Transition controls**: `pause`, `resume`, `fastForward`, `finish`, `onFinish`, `waitForFinish`, and
+  `setState(name, { instant = true })`.
+- **Cleanup** with `destroy`.
+- **Debug tools**: `VideState.debug` lists tracked handlers, and its `view` is a Vide component.
+
 ## Install
 
 ```sh
 embr add idemandsky/videstate
 ```
+
+## Quick start
+
+```luau
+const VideState = require("@VideState")
+const Vide = require("@packages/Vide")
+
+local PanelRule = VideState.rule({
+    visible = VideState.boolean(),
+    order = VideState.integer({ min = 0 }),
+}, { name = "Panel" })
+
+local panel = PanelRule.new({
+    Idle = { visible = Vide.source(false), order = Vide.source(0) },
+    Active = { visible = Vide.source(true), order = Vide.source(1) },
+}, "Idle")
+
+panel.setState("Active")
+```
+
+Bind `panel.sources.visible` to any Vide property, and it follows the active state. The
+[documentation](https://idemandsky.github.io/VideState/) covers every API.
 
 ## License
 

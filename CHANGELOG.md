@@ -7,6 +7,12 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-24
+
+### Changed
+
+- The README lists the features and has a quick start, so the Ember page is detailed.
+
 ## [0.2.0] - 2026-11-24
 
 ### Added
