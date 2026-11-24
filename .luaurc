@@ -4,6 +4,7 @@
         "VideState": "src",
         "packages": "./packages/roblox",
         "luau-packages": "./packages/luau",
-        "Lest": ".lest/core"
+        "Lest": ".lest/core",
+        "ui-labs": "./packages/roblox/ui-labs"
     }
 }
