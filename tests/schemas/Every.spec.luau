@@ -20,6 +20,19 @@ const function createHandler(name: string, tags: { string }?)
     })
 end
 
+-- A handler whose rule has the states Idle and Closed, instead of Idle and Active.
+const function createClosableHandler(name: string, tags: { string }?)
+    return VideState.rule({
+        opacity = VideState.float(),
+    }, {
+        name = name,
+        tags = tags,
+    }).new({
+        Idle = { opacity = Vide.source(0) },
+        Closed = { opacity = Vide.source(1) },
+    }, "Idle")
+end
+
 describe("every handler", function()
     it("scales running and future transitions of every handler", function()
         local first = createHandler("EveryScaleFirstPanel")
@@ -255,7 +268,131 @@ describe("every handler", function()
 
         expect(function()
             VideState.every.handler.withTags("EveryTagMenu").scaleSpeed({ speed = 0 })
-        end).toThrow("every.handler.withTags.scaleSpeed speed must be a finite number above 0")
+        end).toThrow("every.handler.scaleSpeed speed must be a finite number above 0")
+    end)
+
+    it("narrows the scope by rule and by state, and chains the filters", function()
+        local first = createHandler("EveryFilterFirstPanel", { "EveryFilterTag" })
+        local second = createHandler("EveryFilterSecondPanel", { "EveryFilterTag" })
+        local third = createHandler("EveryFilterThirdPanel", { "EveryFilterTag", "EveryFilterOther" })
+
+        second.setState("Active")
+        third.setState("Active")
+
+        const tagged = VideState.every.handler.withTags("EveryFilterTag")
+
+        expect(tagged.count()).toBe(3)
+        expect(tagged.inState("Active").count()).toBe(2)
+        expect(tagged.inState("Idle").count()).toBe(1)
+        expect(tagged.withRule("EveryFilterFirstPanel").count()).toBe(1)
+        expect(tagged.withRule("EveryFilterFirstPanel").inState("Active").count()).toBe(0)
+        expect(tagged.withTags("EveryFilterOther").inState("Active").count()).toBe(1)
+        expect(VideState.every.handler.withRule("EveryFilterMissingRule").count()).toBe(0)
+
+        -- The filters are read each time, so a state change moves a handler in or out of the scope.
+        first.setState("Active")
+
+        expect(tagged.inState("Active").count()).toBe(3)
+    end)
+
+    it("reports whether any handler in scope is running or paused", function()
+        local running = createHandler("EveryReadRunningPanel", { "EveryReadTag" })
+        local idle = createHandler("EveryReadIdlePanel", { "EveryReadTag", "EveryReadIdle" })
+
+        running.onTransition(function() end)
+        idle.onTransition(function() end)
+
+        const tagged = VideState.every.handler.withTags("EveryReadTag")
+
+        expect(tagged.isAnyRunning()).toBe(false)
+        expect(tagged.isAnyPaused()).toBe(false)
+
+        running.setState("Active")
+
+        expect(tagged.isAnyRunning()).toBe(true)
+        expect(tagged.withTags("EveryReadIdle").isAnyRunning()).toBe(false)
+
+        idle.pause()
+
+        expect(tagged.isAnyPaused()).toBe(true)
+        expect(tagged.withRule("EveryReadRunningPanel").isAnyPaused()).toBe(false)
+
+        idle.resume()
+        tagged.finish()
+
+        expect(tagged.isAnyRunning()).toBe(false)
+        expect(VideState.every.handler.withTags("EveryReadNobody").isAnyRunning()).toBe(false)
+    end)
+
+    it("changes the state of every handler in scope", function()
+        local first = createHandler("EverySetStateFirstPanel", { "EverySetStateTag" })
+        local second = createHandler("EverySetStateSecondPanel", { "EverySetStateTag" })
+        local firstChanges = 0
+
+        first.onChange(function()
+            firstChanges += 1
+        end)
+
+        VideState.every.handler.withTags("EverySetStateTag").setState("Active")
+
+        expect(first.currentState()).toBe("Active")
+        expect(second.currentState()).toBe("Active")
+        expect(firstChanges).toBe(1)
+
+        VideState.every.handler.withTags("EverySetStateTag").inState("Active").setState("Idle", { instant = true })
+
+        expect(first.currentState()).toBe("Idle")
+        expect(second.currentState()).toBe("Idle")
+    end)
+
+    it("lists every handler without the state in one error and changes none", function()
+        local first = createHandler("EveryMissingFirstPanel", { "EveryMissingTag" })
+        local second = createHandler("EveryMissingSecondPanel", { "EveryMissingTag" })
+        local third = createHandler("EveryMissingThirdPanel", { "EveryMissingTag" })
+        local closable = createClosableHandler("EveryMissingClosablePanel", { "EveryMissingTag" })
+        local another = createClosableHandler("EveryMissingAnotherPanel", { "EveryMissingTag" })
+
+        expect(function()
+            VideState.every.handler.withTags("EveryMissingTag").setState("Closed")
+        end).toThrow(
+            "is missing in 3 handlers: EveryMissingFirstPanel (1), EveryMissingSecondPanel (1), EveryMissingThirdPanel (1)"
+        )
+
+        const ok, message = pcall(function()
+            VideState.every.handler.withTags("EveryMissingTag").setState("Active")
+        end)
+
+        expect(ok).toBe(false)
+        expect(message).toBe(
+            'every.handler.setState state "Active" is missing in 2 handlers: EveryMissingAnotherPanel (1), EveryMissingClosablePanel (1). No handler changed state'
+        )
+
+        -- Nothing changed, not even the handlers that have the state.
+        expect(first.currentState()).toBe("Idle")
+        expect(second.currentState()).toBe("Idle")
+        expect(third.currentState()).toBe("Idle")
+        expect(closable.currentState()).toBe("Idle")
+        expect(another.currentState()).toBe("Idle")
+
+        -- A scope that only has handlers with the state works.
+        VideState.every.handler.withTags("EveryMissingTag").withRule("EveryMissingClosablePanel").setState("Closed")
+
+        expect(closable.currentState()).toBe("Closed")
+        expect(another.currentState()).toBe("Idle")
+
+        expect(function()
+            VideState.every.handler.setState(2 :: any)
+        end).toThrow("every.handler.setState state name must be a string, got number")
+    end)
+
+    it("rejects invalid filters", function()
+        expect(function()
+            VideState.every.handler.withRule(2 :: any)
+        end).toThrow("every.handler.withRule rule name must be a string, got number")
+
+        expect(function()
+            VideState.every.handler.inState(2 :: any)
+        end).toThrow("every.handler.inState state name must be a string, got number")
     end)
 
     it("rejects invalid options", function()

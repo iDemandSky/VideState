@@ -38,13 +38,22 @@ user settles a new one.
 
 - **`VideState.every.handler` acts on all handlers.** The user chose the `every` namespace with `handler` as the first
   scope, so scopes such as `every.rule(name)` or `withTags()` can be added later. The registry keeps the rule name of
-  each handler for that. It has `scaleSpeed`, `pause`, `resume`, `finish`, and `destroy`, and no `waitForFinish`. The user asked for `destroy`
-  after first leaving it out, and a destroyed handler leaves the registry.
+  each handler for that. It has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`, the reads `count`, `isAnyRunning`, and
+  `isAnyPaused`, and no `waitForFinish`. The user asked for `destroy` after first leaving it out, and a destroyed
+  handler leaves the registry.
 - **Its `scaleSpeed` has the same options as a handler's.** Without `once` it sets a global scale that also reaches
   handlers created later. With `once = true` it scales only the transitions running now. The speed is
   `every scale × handler scale × connection speed`.
-- **`withTags(...)` returns a group with the same functions.** It matches the rules that have all the tags, as
-  `Info.getAllRulesWithTags` does, and it looks the handlers up on every call. A group `scaleSpeed` without `once`
+- **A filter returns a group with the same functions, so filters chain with "and".** They are `withTags(...)`,
+  `withRule(name)`, and `inState(name)`. `withTags` matches the rules that have all the tags, as
+  `Info.getAllRulesWithTags` does. The handlers are looked up on every call, so `inState` sees the current state.
+  The registry holds each handler's rule name, an inspect function, and a `hasState` function, and no entry may hold
+  its handler, because the keys are weak.
+- **`every.handler.setState` checks every handler first.** The user asked for the handlers that lack the state to be
+  batched into one error instead of one by one. It lists the rules with their handler counts, and changes no handler.
+- **No function returns the handlers themselves, and there is no snapshot list.** Handles would keep handlers alive
+  and the analyzer cannot type `Handler<any>`. `debug` stays the opt-in way to list handlers.
+- **A filtered group's `scaleSpeed` is not the global one.** Without `once` it
   calls each matching handler's own `scaleSpeed`, so it does not reach handlers created later and it replaces the
   scale the handler set itself. Only the unfiltered one sets the global scale.
 - **One handler failing does not stop the rest.** The first error is raised after every handler has run.

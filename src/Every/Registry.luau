@@ -1,5 +1,4 @@
 const Types = require("../Types")
-const Info = require("../Info")
 
 -- The functions of a handler that `every.handler` calls. A handler of any rule has them.
 export type Controls = {
@@ -7,15 +6,32 @@ export type Controls = {
     read resume: () -> (),
     read finish: () -> (),
     read scaleSpeed: (options: Types.ScaleSpeedOptions) -> (),
+    read setState: (stateName: string, options: Types.SetStateOptions?) -> (),
     read destroy: () -> (),
 }
 
--- Every live handler, with the name of its rule. The keys are weak, so a handler that nothing else holds is
--- collected. The rule name is what a tag filter reads the tags of the rule from.
-const entries: { [Controls]: string } = setmetatable({}, { __mode = "k" }) :: any
+-- What the filters of a group read about a handler.
+export type Entry = {
+    -- The name of the rule, which the tags of the rule are read from.
+    ruleName: string,
+    -- The same snapshot the debug tools use, read each time so it is current.
+    inspect: () -> Types.DebugSnapshot,
+    -- Whether the handler has a state with this name.
+    hasState: (stateName: string) -> boolean,
+}
 
-const function add(handler: Controls, ruleName: string)
-    entries[handler] = ruleName
+-- A handler together with what the filters read about it.
+export type Member = {
+    handler: Controls,
+    entry: Entry,
+}
+
+-- Every live handler. The keys are weak, so a handler that nothing else holds is collected. An entry must not
+-- hold its handler, or the key would stay alive.
+const entries: { [Controls]: Entry } = setmetatable({}, { __mode = "k" }) :: any
+
+const function add(handler: Controls, entry: Entry)
+    entries[handler] = entry
 end
 
 -- A destroyed handler leaves the list.
@@ -23,31 +39,23 @@ const function remove(handler: Controls)
     entries[handler] = nil
 end
 
--- Whether the rule has every one of the tags. Tags are compared exactly as written.
-const function hasAllTags(ruleName: string, tags: { string }): boolean
-    for _, tag in tags do
-        if not Info.ruleHasTag(ruleName, tag) then
-            return false
-        end
-    end
+-- A snapshot, so a callback that creates a handler cannot change the list while it is walked. With `matches`,
+-- only the handlers it accepts are listed.
+const function list(matches: ((entry: Entry) -> boolean)?): { Member }
+    local members: { Member } = {}
 
-    return true
-end
-
--- A snapshot, so a callback that creates a handler cannot change the list while it is walked. With `tags`, only
--- the handlers whose rule has all of them are listed.
-const function list(tags: { string }?): { Controls }
-    local handlers: { Controls } = {}
-
-    for handler, ruleName in entries do
-        local isListed = tags == nil or hasAllTags(ruleName, tags)
+    for handler, entry in entries do
+        local isListed = matches == nil or matches(entry)
 
         if isListed then
-            table.insert(handlers, handler)
+            table.insert(members, {
+                handler = handler,
+                entry = entry,
+            })
         end
     end
 
-    return handlers
+    return members
 end
 
 return table.freeze({

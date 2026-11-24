@@ -161,7 +161,13 @@ return function <S>(
 
     DebugRegistry.register(handler, inspect)
     registered = handler
-    EveryRegistry.add(handler, ruleName)
+    EveryRegistry.add(handler, {
+        ruleName = ruleName,
+        inspect = inspect,
+        hasState = function(stateName: string): boolean
+            return validatedStates[stateName] ~= nil
+        end,
+    })
 
     return handler
 end
