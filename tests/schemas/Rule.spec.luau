@@ -104,7 +104,8 @@ describe("rule handlers", function()
         }, "Idle", {
             onTransition = {
                 easing = "quadIn",
-                duration = 0.1,
+                -- A long transition spans many frames, so a slow frame cannot skip every intermediate value.
+                duration = 0.4,
             },
         })
 
@@ -117,7 +118,7 @@ describe("rule handlers", function()
         end)
 
         handler.setState("Active")
-        task.wait(0.2)
+        task.wait(0.9)
 
         expect(currents[1].visible).toBe(true)
         expect(currents[1].opacity).toBe(0)
@@ -148,7 +149,7 @@ describe("rule handlers", function()
         }, "Idle", {
             onTransition = {
                 easing = "backOut",
-                duration = 0.3,
+                duration = 0.5,
             },
         })
 
@@ -161,7 +162,7 @@ describe("rule handlers", function()
         end)
 
         handler.setState("Active")
-        task.wait(0.5)
+        task.wait(1)
 
         expect(highestAlpha > 1).toBe(true)
         expect(lastAlpha).toBe(1)
