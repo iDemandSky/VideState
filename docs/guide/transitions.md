@@ -103,6 +103,7 @@ handler.finish()
 - `finish` sends every connection its last frame, with `current` equal to the next state's values and an `alpha` of `1`, before it returns. It works while the handler is paused.
 - [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
 - Connections with different durations finish at different times, so the event waits for the slowest one.
+- [`waitForFinish`](/guide/handlers#waitforfinish) yields until the handler has no running transition, for code that runs in sequence.
 
 ## Changing settings during a transition
 

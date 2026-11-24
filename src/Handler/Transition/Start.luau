@@ -93,9 +93,11 @@ return function<T>(
             table.insert(ids, id)
         end
 
+        -- One extra count holds the transition open until every connection has started, so it cannot end while
+        -- they are being started. A transition with no connections ends right away.
         local transition: Types.Transition = {
             generation = state.generation,
-            pending = #ids,
+            pending = #ids + 1,
             completed = false,
             fired = false,
         }
@@ -113,5 +115,7 @@ return function<T>(
 
             play(state, transition, id, connection, from, to, instant, getRate, settle)
         end
+
+        settle(transition, false)
     end
 end

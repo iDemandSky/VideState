@@ -21,7 +21,7 @@ type Handler<T> = Types.Handler<T>
 --   Transition  onTransition
 --   Pause       pause, resume, onPause, onResume
 --   FastForward fastForward
---   Finish      finish, onFinish
+--   Finish      finish, onFinish, waitForFinish
 --   SetState    setState
 return function <S>(
     schema: S,
@@ -103,5 +103,6 @@ return function <S>(
         fastForward = fastForward.fastForward,
         finish = finish.finish,
         onFinish = finish.onFinish,
+        waitForFinish = finish.waitForFinish,
     })
 end

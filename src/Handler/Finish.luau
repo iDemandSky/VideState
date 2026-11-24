@@ -10,6 +10,10 @@ export type Finish = {
     -- Sends the last frame to every connection that is still playing the current transition, and ends it.
     read finish: () -> (),
     read onFinish: (callback: Types.OnFinishCallback) -> Disconnect,
+    -- Yields until the handler has no running transition.
+    read waitForFinish: () -> (),
+    -- Resumes every thread that waits in `waitForFinish`.
+    read releaseWaiting: () -> (),
 }
 
 -- The run of a connection when it is still playing the transition, and nil when it is not.
@@ -33,9 +37,21 @@ end
 -- How a transition ends: when its last connection ends, or when `finish` ends it early.
 return function <T>(state: State.State<T>): Finish
     local onFinish, emitFinish = CreateEvent("onFinish")
+    local waiting: { thread } = {}
+
+    const function releaseWaiting()
+        local threads = waiting
+
+        waiting = {}
+
+        for _, thread in threads do
+            task.spawn(thread)
+        end
+    end
 
     -- The finish event fires once, when the last connection ends, if at least one of them reached its end
-    -- and no newer transition replaced this one.
+    -- and no newer transition replaced this one. Once the current transition has no connection left, the
+    -- handler is idle and the waiting threads continue, whether or not it reached its end.
     const function settle(transition: Types.Transition, completed: boolean)
         transition.pending -= 1
 
@@ -48,11 +64,35 @@ return function <T>(state: State.State<T>): Finish
         local isCompleted = transition.completed
         local isNotFired = not transition.fired
         local shouldFire = isLast and isCurrent and isCompleted and isNotFired
+        local isIdle = isLast and isCurrent
 
         if shouldFire then
             transition.fired = true
             emitFinish(State.getStartedAt(state))
         end
+
+        if isIdle then
+            releaseWaiting()
+        end
+    end
+
+    const function isRunning(): boolean
+        local transition = state.currentTransition
+
+        if transition == nil then
+            return false
+        end
+
+        return transition.pending > 0
+    end
+
+    const function waitForFinish()
+        if not isRunning() then
+            return
+        end
+
+        table.insert(waiting, coroutine.running())
+        coroutine.yield()
     end
 
     const function finish()
@@ -103,6 +143,8 @@ return function <T>(state: State.State<T>): Finish
         settle = settle,
         finish = finish,
         onFinish = onFinish,
+        waitForFinish = waitForFinish,
+        releaseWaiting = releaseWaiting,
     }
 
     return table.freeze(controls)

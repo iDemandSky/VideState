@@ -376,6 +376,19 @@ connection does not run, so it does not finish either.
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onFinish callback must be a function` |
 
+### waitForFinish <Badge type="warning" text="Yields" /> <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.waitForFinish() -> ()
+```
+
+Yields the calling thread until the handler has no running transition, then returns. It returns at once when
+nothing is running. Use it in sequential code instead of an [`onFinish`](#onfinish) connection.
+
+The wait ends when the transition reaches its end, when [`finish`](#finish) ends it, or when every
+[`onTransition`](#ontransition) connection has disconnected. If a newer `setState` replaces the transition, the wait
+goes on until the newer one ends. While the handler is [paused](#pause), it keeps waiting.
+
 ## Types
 
 ### HandlerOptions <Badge type="tip" text="Added in 0.1.0" />
@@ -408,6 +421,7 @@ type Handler<T> = {
     fastForward: (options: FastForwardOptions) -> (),
     finish: () -> (),
     onFinish: (callback: OnFinishCallback) -> Disconnect,
+    waitForFinish: () -> (),
 }
 ```
 

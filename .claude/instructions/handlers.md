@@ -10,7 +10,7 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | `Transition/` | `onTransition`, and the `emit` that `setState` calls |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` |
 | `FastForward.luau` | `fastForward` |
-| `Finish.luau` | `finish`, `onFinish` |
+| `Finish.luau` | `finish`, `onFinish`, `waitForFinish` |
 | `SetState.luau` | `setState` |
 
 The handler also has `sources` and `currentState`, which `init.luau` builds itself.

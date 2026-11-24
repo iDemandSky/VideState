@@ -17,6 +17,7 @@ version can contain breaking changes.
 - The `OnFinishCallback` and `FastForwardOptions` types.
 - `handler.setState(name, { instant = true })` changes the state without an animation. The `SetStateOptions` type.
 - `handler.onEnter(state, callback)` and `handler.onExit(state, callback)` run when the handler enters or leaves one state. The `OnEnterCallback` and `OnExitCallback` types.
+- `handler.waitForFinish()` yields until the handler has no running transition.
 
 ### Fixed
 

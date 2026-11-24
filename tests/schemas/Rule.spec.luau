@@ -686,6 +686,76 @@ describe("rule handlers", function()
         end).toThrow("onFinish callback must be a function")
     end)
 
+    it("waits until the running transition has finished", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "WaitPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.3,
+            },
+        })
+
+        -- With nothing running, it returns at once.
+        local startedAt = os.clock()
+
+        handler.waitForFinish()
+
+        expect(os.clock() - startedAt < 0.01).toBe(true)
+
+        -- A state change with no connections does not run, so there is nothing to wait for.
+        handler.setState("Active")
+        handler.waitForFinish()
+
+        local lastAlpha = 0
+
+        handler.onTransition(function(_, _, _, alpha)
+            lastAlpha = alpha
+        end)
+
+        handler.setState("Idle")
+        handler.waitForFinish()
+
+        expect(lastAlpha).toBe(1)
+
+        -- A transition that another one replaces keeps the wait going until the new one ends.
+        local released = false
+
+        handler.setState("Active")
+
+        task.spawn(function()
+            handler.waitForFinish()
+            released = true
+        end)
+
+        task.wait(0.1)
+        handler.setState("Idle")
+        task.wait(0.25)
+
+        expect(released).toBe(false)
+
+        task.wait(0.3)
+
+        expect(released).toBe(true)
+        expect(handler.currentState()).toBe("Idle")
+
+        -- finish ends the wait as well.
+        local releasedByFinish = false
+
+        handler.setState("Active")
+
+        task.spawn(function()
+            handler.waitForFinish()
+            releasedByFinish = true
+        end)
+
+        handler.finish()
+
+        expect(releasedByFinish).toBe(true)
+    end)
+
     it("finishes a paused transition", function()
         local handler = VideState.rule({
             opacity = VideState.float(),

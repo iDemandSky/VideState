@@ -108,6 +108,7 @@ export type Handler<T> = {
     read fastForward: (options: FastForwardOptions) -> (),
     read finish: () -> (),
     read onFinish: (callback: OnFinishCallback) -> Disconnect,
+    read waitForFinish: () -> (),
 }
 --- Metadata passed to `VideState.rule`. `name` must be unique across all rules.
 export type RuleMetadata<S> = {
