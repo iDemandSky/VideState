@@ -4,11 +4,12 @@ Update this file when a release ships, a limit is found or fixed, or an idea is 
 
 ## Released
 
-The latest release is 0.1.2, the version in `ember.toml`.
+The latest release is 0.1.2.
 
 ## Unreleased on `dev`
 
-Listed under `## [Unreleased]` in `CHANGELOG.md`. The doc badges call it 0.2.0.
+`ember.toml` is already set to 0.2.0, so the package can be tested locally with `embr publish --local`. It is not
+released: `CHANGELOG.md` still lists these changes under `## [Unreleased]`, and the doc badges call it 0.2.0.
 
 - Per-connection `onTransition` options.
 - `pause`, `resume`, `onPause`, `onResume`.
