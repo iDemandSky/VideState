@@ -6,8 +6,15 @@ Notes for working on VideState itself. This file is not part of the published pa
 
 Run `embr install` first if the pinned tools (Larvae, Rojo, and Lest) are not installed.
 
-Run `serve.bat` from the repository to build the Larvae output and serve it with Rojo. If either process
-exits, the launcher refreshes the output and retries after five seconds. Press Ctrl+C to stop serving.
+Build the Larvae output and serve it with Rojo from the repository root:
+
+```sh
+./serve.sh   # macOS, Linux, and Windows with Git Bash
+serve.bat    # Windows
+```
+
+If either process exits, the launcher refreshes the output and retries after five seconds. Press Ctrl+C to
+stop serving. Every command in this file uses forward slashes, which work on all platforms.
 
 ## Checks
 
@@ -43,13 +50,17 @@ The Luau LSP extension ships an analyzer that can run them:
 
 ```sh
 rojo sourcemap default.project.json -o <scratch>/sourcemap.json
-server.exe analyze --flag:LuauSolverV2=true \
+<server> analyze --flag:LuauSolverV2=true \
     --definitions=@roblox=<globalStorage>/johnnymorganz.luau-lsp/globalTypes.PluginSecurity.d.luau \
     --sourcemap <scratch>/sourcemap.json --platform roblox \
     src tests/types/RuleInferenceCheck.luau tests/types/SchemaExports.luau
 ```
 
-Keep the sourcemap out of the repository. Without `LuauSolverV2` the analyzer reports false errors.
+- `<server>` is `~/.vscode/extensions/johnnymorganz.luau-lsp-<version>-<platform>/bin/server`, or `server.exe` on Windows.
+- `<globalStorage>` is `~/Library/Application Support/Code/User/globalStorage` on macOS, `~/.config/Code/User/globalStorage` on Linux, and `%APPDATA%/Code/User/globalStorage` on Windows.
+- `<scratch>` is any folder outside the repository, so the sourcemap stays out of it.
+
+Without `LuauSolverV2` the analyzer reports false errors.
 
 ## Conventions
 
