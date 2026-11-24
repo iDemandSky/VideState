@@ -308,7 +308,7 @@ does not run it again.
 
 ### scaleSpeed <Badge type="warning" text="Changed in 0.3.0" />
 
-Renamed from `fastForward`, because a scale below `1` slows the transition down.
+Renamed from `fastForward`, because a scale below `1` slows the transition down. The `permanent` option is new.
 
 ```luau
 Handler.scaleSpeed(
@@ -318,7 +318,11 @@ Handler.scaleSpeed(
 
 Speeds up or slows down the transition that is running now. It affects every [`onTransition`](#ontransition)
 connection of the handler, and it multiplies each connection's own `speed`. A connection with a `speed`
-of `0.5` scaled by `4` plays at `2`, and scaled by `0.5` plays at `0.25`. The next `setState` starts a transition at normal speed again.
+of `0.5` scaled by `4` plays at `2`, and scaled by `0.5` plays at `0.25`.
+
+By default the scale applies once: the next `setState` starts a transition at normal speed again. With
+`permanent = true` it stays for every following transition, until you call `scaleSpeed` again with
+`permanent = true`. A permanent `speed` of `1` removes it. A permanent scale and a once scale multiply.
 
 To jump straight to the end, use [`finish`](#finish).
 
@@ -335,6 +339,7 @@ To jump straight to the end, use [`finish`](#finish).
 | <Badge type="danger" text="Error" /> | `options` is not a table | `scaleSpeed options must be a table` |
 | <Badge type="danger" text="Error" /> | `options` has an unknown key | `scaleSpeed options has an unknown key <key>` |
 | <Badge type="danger" text="Error" /> | `options.speed` is not a finite number above 0 | `scaleSpeed speed must be a finite number above 0` |
+| <Badge type="danger" text="Error" /> | `options.permanent` is not a boolean | `scaleSpeed permanent must be a boolean` |
 
 ### finish <Badge type="tip" text="Added in 0.2.0" />
 
@@ -552,12 +557,14 @@ Renamed from `FastForwardOptions`.
 ```luau
 type ScaleSpeedOptions = {
     speed: number, -- How many times the speed of the running transition is multiplied
+    permanent: boolean?, -- Keep the scale for every following transition
 }
 ```
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `speed` | `number` | Yes | None | The speed scale. Must be a finite number above `0`. Above `1` plays faster, `1` is normal speed, and below `1` plays slower. |
+| `permanent` | `boolean` | No | `false` | When `true`, the scale stays for every following transition. When `false`, it applies only to the running one. |
 
 ### Disconnect <Badge type="tip" text="Added in 0.1.0" />
 

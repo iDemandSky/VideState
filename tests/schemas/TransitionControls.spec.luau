@@ -309,6 +309,47 @@ describe("transition controls", function()
         end).toThrow("scaleSpeed options must be a table")
     end)
 
+    it("keeps a permanent scale for every following transition", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PermanentScalePanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 1,
+            },
+        })
+
+        local alpha = 0
+
+        handler.onTransition(function(_, _, _, frameAlpha)
+            alpha = frameAlpha
+        end)
+
+        handler.scaleSpeed({ speed = 20, permanent = true })
+        handler.setState("Active")
+        task.wait(0.3)
+
+        expect(alpha).toBe(1)
+
+        handler.setState("Idle")
+        task.wait(0.3)
+
+        -- The permanent scale is still in place for the second transition.
+        expect(alpha).toBe(1)
+
+        handler.scaleSpeed({ speed = 1, permanent = true })
+        handler.setState("Active")
+        task.wait(0.3)
+
+        expect(alpha < 0.9).toBe(true)
+
+        expect(function()
+            handler.scaleSpeed({ speed = 2, permanent = "yes" :: any })
+        end).toThrow("scaleSpeed permanent must be a boolean")
+    end)
+
     it("finishes every running transition at once", function()
         local handler = VideState.rule({
             opacity = VideState.float(),

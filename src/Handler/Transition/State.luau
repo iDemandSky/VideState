@@ -30,6 +30,8 @@ export type State<T> = {
     currentTransition: Types.Transition?,
     -- The scale that `scaleSpeed` puts on the running transition. A new transition resets it.
     scale: number,
+    -- The scale that `scaleSpeed` keeps for every transition when `permanent` is true.
+    baseScale: number,
 }
 
 const function create<T>(): State<T>
@@ -40,6 +42,7 @@ const function create<T>(): State<T>
         startedAt = nil,
         currentTransition = nil,
         scale = 1,
+        baseScale = 1,
     }
 end
 

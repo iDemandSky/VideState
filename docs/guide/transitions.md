@@ -118,7 +118,7 @@ handler.scaleSpeed({ speed = 4 })
 handler.finish()
 ```
 
-- `scaleSpeed` multiplies each connection's own `speed`, and only for the transition that is running. The next `setState` plays at normal speed.
+- `scaleSpeed` multiplies each connection's own `speed`. By default it applies only to the transition that is running, and the next `setState` plays at normal speed. Pass `permanent = true` to keep the scale for every following transition.
 - `finish` sends every connection its last frame, with `current` equal to the next state's values and an `alpha` of `1`, before it returns. It works while the handler is paused.
 - [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
 - Connections with different durations finish at different times, so the event waits for the slowest one.

@@ -74,7 +74,7 @@ return function <S>(
             return 0
         end
 
-        return state.scale
+        return state.scale * state.baseScale
     end
 
     local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)

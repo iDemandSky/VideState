@@ -2,7 +2,7 @@ const Types = require("../Types")
 const State = require("./Transition/State")
 
 export type ScaleSpeed = {
-    -- Plays the running transition faster. The next transition plays at normal speed.
+    -- Scales the speed of the running transition, or of every transition with `permanent`.
     read scaleSpeed: (options: Types.ScaleSpeedOptions) -> (),
 }
 
@@ -18,8 +18,8 @@ const function isValidScale(value: unknown): boolean
     return isNotNaN and isPositive and isNotInfinite
 end
 
--- Validates the options of `scaleSpeed` and returns the speed scale.
-const function parse(options: unknown): number
+-- Validates the options of `scaleSpeed` and returns the speed scale and whether it is permanent.
+const function parse(options: unknown): (number, boolean)
     if typeof(options) ~= "table" then
         error("scaleSpeed options must be a table", 0)
     end
@@ -27,7 +27,10 @@ const function parse(options: unknown): number
     local fields = options :: { [any]: unknown }
 
     for key in fields do
-        if key ~= "speed" then
+        local isSpeed = key == "speed"
+        local isPermanent = key == "permanent"
+
+        if not isSpeed and not isPermanent then
             error("scaleSpeed options has an unknown key " .. tostring(key), 0)
         end
     end
@@ -38,15 +41,27 @@ const function parse(options: unknown): number
         error("scaleSpeed speed must be a finite number above 0", 0)
     end
 
-    return speed :: number
+    local permanent = fields.permanent
+
+    if permanent ~= nil and type(permanent) ~= "boolean" then
+        error("scaleSpeed permanent must be a boolean", 0)
+    end
+
+    return speed :: number, permanent == true
 end
 
 -- The `scaleSpeed` function of a handler. It sets the scale that every connection of the running transition
--- multiplies its own speed by, and the next transition resets it.
+-- multiplies its own speed by. A scale without `permanent` is reset by the next transition, and a permanent one stays.
 return function <T>(state: State.State<T>): ScaleSpeed
     local controls: ScaleSpeed = {
         scaleSpeed = function(options: Types.ScaleSpeedOptions)
-            state.scale = parse(options)
+            local speed, permanent = parse(options)
+
+            if permanent then
+                state.baseScale = speed
+            else
+                state.scale = speed
+            end
         end,
     }
 

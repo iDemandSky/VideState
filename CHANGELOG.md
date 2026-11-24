@@ -11,6 +11,10 @@ version can contain breaking changes.
 
 - `handler.fastForward` is now `handler.scaleSpeed`, and `FastForwardOptions` is now `ScaleSpeedOptions`. The name is neutral because a `speed` below `1` slows the running transition down. Breaking: rename the calls.
 
+### Added
+
+- A `permanent` option for `handler.scaleSpeed`. With `permanent = true` the scale stays for every following transition. Without it, the scale applies only to the running transition, as before.
+
 ## [0.2.1] - 2026-11-24
 
 ### Changed
