@@ -109,8 +109,8 @@ Handler.onTransition(
 
 Runs `callback` with a `current` value that moves from the previous state to the next one, and the
 `alpha` that shows how far along it is. Each animatable field is tweened with
-[Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as booleans,
-strings, and enums, switch to their next value at the start of the transition. The tween settings
+[Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as strings,
+booleans, and enums, are not transitioned: they switch to their next value at the start of the transition. The tween settings
 come from the handler's [`onTransition` option](#handleroptions), so every listener of a handler
 sees the same values at the same time. See [Transitions](/guide/transitions) for the full behavior.
 

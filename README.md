@@ -84,7 +84,8 @@ Handlers expose `sources`, a reactive `currentState` source, and `setState`.
 `onTransition` receives the previous value, the next value, `current`, the eased
 value to render, and `alpha`, the eased progress from 0 to 1, over 0.25 seconds by default.
 Each handler tweens its animatable fields once and broadcasts the result to every transition
-listener. Set the shared easing, duration, and speed per handler with the optional third `new`
+listener. Strings cannot be tweened, so string, boolean, and enum fields switch to their next value
+at the start of the transition. Set the shared easing, duration, and speed per handler with the optional third `new`
 argument: `PanelRule.new(states, "Idle", { onTransition = { duration = 0.4 } })`. Both methods
 return a disconnect callback, and listeners fire only for future state changes.
 Unknown state names and invalid state values raise errors before the active state

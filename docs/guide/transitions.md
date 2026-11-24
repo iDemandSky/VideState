@@ -14,6 +14,15 @@ The tween settings belong to the handler, not to each listener. A handler tweens
 transition and sends the same `current` and `alpha` to every listener, so all listeners stay in step.
 Set them with the `onTransition` key of the handler's [`HandlerOptions`](/guide/handlers#handleroptions).
 
+::: warning Strings cannot be transitioned
+Only numbers, vectors and the other [animatable types](#animatable-fields) are tweened. A `string`
+field cannot be, so it does not change gradually. It switches to its next value at the **start** of the
+transition, and the same is true for booleans, enums, and any other value that is not animatable. For
+example, a label's text changes immediately while its transparency fades.
+
+If you need a gradual effect on text, such as a typewriter reveal, build it yourself from `alpha`.
+:::
+
 ## Behavior
 
 - Each animatable field is tweened from its previous value to its next value.
@@ -24,8 +33,15 @@ Set them with the `onTransition` key of the handler's [`HandlerOptions`](/guide/
 - A listener added during a transition receives updates from the next transition.
 - Every easing starts at the previous value and ends at the next one. `back` and `elastic` easings overshoot, so numeric values can go below the start or above the end. Clamp them in your callback if your UI needs a fixed range.
 
+### Animatable fields
+
 Animatable fields are numbers, vectors, `Vector2`, `Vector3`, `CFrame`, `Color3`, `UDim`, `UDim2`,
-`Rect`, and tables whose values are numbers, vectors, or `Vector3`s with the same keys.
+`Rect`, and tables whose values are numbers, vectors, or `Vector3`s with the same keys. Everything else
+is not tweened and switches at the start of the transition. That includes `string`, `boolean`, `enum`,
+and `optional` fields.
+
+`current` is not validated against the schema again. A tweened `integer` field can hold a fractional
+value in the middle of a transition, so round it in your callback if you need a whole number.
 
 ## alpha
 

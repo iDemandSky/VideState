@@ -104,6 +104,12 @@ Accepts finite numbers, including whole numbers.
 
 ### string
 
+::: warning Strings are not transitioned
+A `string` field cannot be tweened by [`onTransition`](/guide/handlers#ontransition). When the state
+changes, it switches to the new text at the start of the transition. See
+[Transitions](/guide/transitions).
+:::
+
 ```luau
 VideState.string(
     options: {
