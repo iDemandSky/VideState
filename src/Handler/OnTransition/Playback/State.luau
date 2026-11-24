@@ -2,27 +2,17 @@ const Types = require("../../../Types")
 const Options = require("../Config/Options")
 const Group = require("../Tween/Group")
 
-export type Callback<T> = Types.OnTransitionCallback<T>
-
--- One `setState` that has listeners. It is finished when every connection that was playing it has ended.
-export type Transition = {
-    generation: number,
-    pending: number,
-    completed: boolean,
-    fired: boolean,
-}
-
 -- What one connection plays for one transition. `ended` is set when it finishes, is finished early, or disconnects.
 export type Run<T> = {
     group: Group.Group<T>,
     from: T,
     to: T,
     ended: boolean,
-    transition: Transition,
+    transition: Types.Transition,
 }
 
 export type Connection<T> = {
-    callback: Callback<T>,
+    callback: Types.OnTransitionCallback<T>,
     settings: Options.Settings,
     -- The last run and the last value it sent. A new transition that starts before this run ends
     -- continues from that value instead of jumping back to the previous state.
@@ -37,7 +27,7 @@ export type State<T> = {
     -- Counts the transitions. A running transition is stale once this moves past its own number.
     generation: number,
     startedAt: number?,
-    currentTransition: Transition?,
+    currentTransition: Types.Transition?,
     -- The scale that `fastForward` puts on the running transition. A new transition resets it.
     scale: number,
 }

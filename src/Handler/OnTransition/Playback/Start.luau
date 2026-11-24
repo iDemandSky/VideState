@@ -1,3 +1,4 @@
+const Types = require("../../../Types")
 const Group = require("../Tween/Group")
 const Scheduler = require("./Scheduler")
 const State = require("./State")
@@ -5,13 +6,13 @@ const State = require("./State")
 -- Starts the run of one connection for a transition.
 const function play<T>(
     state: State.State<T>,
-    transition: State.Transition,
+    transition: Types.Transition,
     id: number,
     connection: State.Connection<T>,
     from: T,
     to: T,
     getRate: () -> number,
-    settle: (transition: State.Transition, completed: boolean) -> ()
+    settle: Types.SettleTransition
 )
     local previousRun = connection.run
     local previousCurrent = connection.current
@@ -58,8 +59,8 @@ end
 return function<T>(
     state: State.State<T>,
     getRate: () -> number,
-    settle: (transition: State.Transition, completed: boolean) -> ()
-): (from: T, to: T) -> ()
+    settle: Types.SettleTransition
+): Types.StateEmitter<T>
     return function(from: T, to: T)
         state.generation += 1
         state.startedAt = os.clock()
@@ -72,7 +73,7 @@ return function<T>(
             table.insert(ids, id)
         end
 
-        local transition: State.Transition = {
+        local transition: Types.Transition = {
             generation = state.generation,
             pending = #ids,
             completed = false,

@@ -24,7 +24,7 @@ export type Controls = {
 -- `Lifecycle` ends one, and `Pause` holds and releases them all.
 return function <T>(
     options: Types.TransitionOptions?
-): ((callback: State.Callback<T>, options: Types.TransitionOptions?) -> Disconnect, (from: T, to: T) -> (), Controls)
+): (Types.ConnectTransition<T>, Types.StateEmitter<T>, Controls)
     local handlerSettings = Options.parse(options)
     local state = State.create<<T>>()
 

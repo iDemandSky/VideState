@@ -1,12 +1,13 @@
 const Vide = require("@packages/Vide")
 
+const Types = require("../Types")
 const Validation = require("../Validation")
 
 return function <T>(
     readState: (stateName: string) -> T,
     currentState: Vide.Source<string>,
-    emitChange: (from: T, to: T) -> (),
-    emitTransition: (from: T, to: T) -> ()
+    emitChange: Types.StateEmitter<T>,
+    emitTransition: Types.StateEmitter<T>
 )
     return function(stateName: string)
         Validation.stateName(stateName, "state name")

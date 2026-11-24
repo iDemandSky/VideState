@@ -51,6 +51,19 @@ export type TransitionOptions = {
 }
 --- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
+--- Starts listening for transitions. A connection can pass options to override the tween settings of its handler. Returns a function that removes the listener.
+export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect
+--- Sends a state change to the listeners, with the previous and the new value.
+export type StateEmitter<T> = (from: T, to: T) -> ()
+--- One `setState` that has listeners. It is finished when every connection that was playing it has ended.
+export type Transition = {
+    generation: number,
+    pending: number,
+    completed: boolean,
+    fired: boolean,
+}
+--- Counts one connection of a transition as ended. `completed` is true when it reached its end.
+export type SettleTransition = (transition: Transition, completed: boolean) -> ()
 --- Called when a handler is paused, with the `os.clock()` time at which its most recent transition started. If no transition has started yet, it is the time of the call.
 export type OnPauseCallback = (startedAt: number) -> ()
 --- Called when a handler is resumed, with the `os.clock()` time at which its most recent transition started.
@@ -74,7 +87,7 @@ export type Handler<T> = {
     read currentState: () -> string,
     read setState: (stateName: string) -> (),
     read onChange: (callback: OnChangeCallback<T>) -> Disconnect,
-    read onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
+    read onTransition: ConnectTransition<T>,
     read pause: () -> (),
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,

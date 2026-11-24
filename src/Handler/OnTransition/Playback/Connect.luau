@@ -9,9 +9,9 @@ type Disconnect = Types.Disconnect
 return function<T>(
     state: State.State<T>,
     handlerSettings: Options.Settings,
-    settle: (transition: State.Transition, completed: boolean) -> ()
-): (callback: State.Callback<T>, options: Types.TransitionOptions?) -> Disconnect
-    return function(callback: State.Callback<T>, connectionOptions: Types.TransitionOptions?): Disconnect
+    settle: Types.SettleTransition
+): Types.ConnectTransition<T>
+    return function(callback: Types.OnTransitionCallback<T>, connectionOptions: Types.TransitionOptions?): Disconnect
         if typeof(callback) ~= "function" then
             error("onTransition callback must be a function", 2)
         end

@@ -6,7 +6,7 @@ type Disconnect = Types.Disconnect
 
 export type Lifecycle = {
     -- Counts one connection of a transition as ended.
-    read settle: (transition: State.Transition, completed: boolean) -> (),
+    read settle: Types.SettleTransition,
     -- Sends the last frame to every connection that is still playing the current transition, and ends it.
     read finish: () -> (),
     read onFinish: (callback: Types.OnFinishCallback) -> Disconnect,
@@ -18,7 +18,7 @@ return function<T>(state: State.State<T>): Lifecycle
 
     -- The finish event fires once, when the last connection ends, if at least one of them reached its end
     -- and no newer transition replaced this one.
-    const function settle(transition: State.Transition, completed: boolean)
+    const function settle(transition: Types.Transition, completed: boolean)
         transition.pending -= 1
 
         if completed then
