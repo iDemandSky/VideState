@@ -13,7 +13,7 @@ version can contain breaking changes.
 
 ### Added
 
-- `VideState.every.handler` with `scaleSpeed`, `pause`, `resume`, and `finish`, which act on every handler at once. `scaleSpeed` takes the same options as the handler's, so `once = true` scales only the transitions that are running now. Without `once` the scale also applies to later transitions and to handlers created later.
+- `VideState.every.handler` with `scaleSpeed`, `pause`, `resume`, `finish`, and `destroy`, which act on every handler at once, and `withTags(...)`, which limits them to the handlers whose rule has all the tags. The `EveryHandlerGroup` type. `scaleSpeed` takes the same options as the handler's, so `once = true` scales only the transitions that are running now. Without `once` the scale also applies to later transitions and to handlers created later.
 - A `once` option for `handler.scaleSpeed`. It defaults to `false`, so the scale stays for every following transition. With `once = true` the scale applies only to the running transition. Breaking: `fastForward` applied only to the running transition, so pass `once = true` to keep that.
 
 ## [0.2.1] - 2026-11-24

@@ -4,10 +4,13 @@ const VideState = require("@VideState")
 
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
-const function createHandler(name: string)
+const function createHandler(name: string, tags: { string }?)
     return VideState.rule({
         opacity = VideState.float(),
-    }, { name = name }).new({
+    }, {
+        name = name,
+        tags = tags,
+    }).new({
         Idle = { opacity = Vide.source(0) },
         Active = { opacity = Vide.source(1) },
     }, "Idle", {
@@ -170,6 +173,89 @@ describe("every handler", function()
         expect(resumedCount >= 2).toBe(true)
         expect(finished).toBe(2)
         expect(secondAlpha).toBe(1)
+    end)
+
+    it("scopes the functions to handlers whose rule has all the tags", function()
+        local menu = createHandler("EveryTagMenuPanel", { "EveryTagMenu", "EveryTagShared" })
+        local hud = createHandler("EveryTagHudPanel", { "EveryTagHud", "EveryTagShared" })
+        local menuAlpha = 0
+        local hudAlpha = 0
+
+        menu.onTransition(function(_, _, _, frameAlpha)
+            menuAlpha = frameAlpha
+        end)
+
+        hud.onTransition(function(_, _, _, frameAlpha)
+            hudAlpha = frameAlpha
+        end)
+
+        menu.setState("Active")
+        hud.setState("Active")
+        task.wait(0.1)
+        VideState.every.handler.withTags("EveryTagMenu").scaleSpeed({ speed = 20 })
+        task.wait(0.3)
+
+        local menuFinished = menuAlpha
+        local hudHeld = hudAlpha
+
+        -- Both tags are required, so no handler matches this group.
+        VideState.every.handler.withTags("EveryTagMenu", "EveryTagHud").finish()
+
+        local hudAfterNoMatch = hudAlpha
+
+        VideState.every.handler.withTags("EveryTagShared").finish()
+
+        expect(menuFinished).toBe(1)
+        expect(hudHeld < 0.9).toBe(true)
+        expect(hudAfterNoMatch < 1).toBe(true)
+        expect(hudAlpha).toBe(1)
+    end)
+
+    it("destroys the handlers in scope and leaves the others alone", function()
+        local doomed = createHandler("EveryDestroyDoomedPanel", { "EveryDestroyTag" })
+        local safe = createHandler("EveryDestroySafePanel")
+
+        VideState.every.handler.withTags("EveryDestroyTag").destroy()
+
+        expect(function()
+            doomed.setState("Active")
+        end).toThrow()
+
+        safe.setState("Active")
+
+        expect(safe.currentState()).toBe("Active")
+
+        -- Destroying again does nothing, because a destroyed handler has left the list.
+        VideState.every.handler.withTags("EveryDestroyTag").destroy()
+    end)
+
+    it("destroys every handler", function()
+        local first = createHandler("EveryDestroyAllFirstPanel")
+        local second = createHandler("EveryDestroyAllSecondPanel")
+
+        VideState.every.handler.destroy()
+
+        expect(function()
+            first.setState("Active")
+        end).toThrow()
+
+        expect(function()
+            second.setState("Active")
+        end).toThrow()
+    end)
+
+    it("rejects invalid tags", function()
+        expect(function()
+            VideState.every.handler.withTags()
+        end).toThrow("every.handler.withTags requires at least one tag")
+
+        expect(function()
+            VideState.every.handler.withTags("EveryTagMenu", 2 :: any)
+        end).toThrow("every.handler.withTags tag 2 must be a string, got number")
+
+        expect(function()
+            VideState.every.handler.withTags("EveryTagMenu").scaleSpeed({ speed = 0 })
+        end).toThrow("every.handler.withTags.scaleSpeed speed must be a finite number above 0")
     end)
 
     it("rejects invalid options", function()

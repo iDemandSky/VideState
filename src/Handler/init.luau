@@ -81,6 +81,7 @@ return function <S>(
 
     local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
     local destroyed = false
+    local registered: EveryRegistry.Controls? = nil
 
     -- Stops every transition and removes every listener. `setState` raises an error afterwards.
     const function destroy()
@@ -89,6 +90,11 @@ return function <S>(
         end
 
         destroyed = true
+
+        if registered ~= nil then
+            EveryRegistry.remove(registered)
+        end
+
         transition.stop()
         change.clear()
         stateEvents.clear()
@@ -154,6 +160,7 @@ return function <S>(
     })
 
     DebugRegistry.register(handler, inspect)
+    registered = handler
     EveryRegistry.add(handler, ruleName)
 
     return handler

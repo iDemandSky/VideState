@@ -11,6 +11,7 @@ export type OnPauseCallback = Types.OnPauseCallback
 export type OnResumeCallback = Types.OnResumeCallback
 export type OnFinishCallback = Types.OnFinishCallback
 export type ScaleSpeedOptions = Types.ScaleSpeedOptions
+export type EveryHandlerGroup = Types.EveryHandlerGroup
 export type SetStateOptions = Types.SetStateOptions
 export type OnEnterCallback = Types.OnEnterCallback
 export type OnExitCallback = Types.OnExitCallback

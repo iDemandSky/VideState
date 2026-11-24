@@ -90,6 +90,19 @@ export type ScaleSpeedOptions = {
     --- When true, the scale applies only to the running transition, and the next `setState` plays at normal speed. When false, it also applies to every following transition, until `scaleSpeed` is called again. Defaults to false.
     once: boolean?,
 }
+--- The functions of `every.handler`, and of the group that `every.handler.withTags` returns.
+export type EveryHandlerGroup = {
+    --- Scales the speed of the handlers in scope. See `ScaleSpeedOptions`.
+    read scaleSpeed: (options: ScaleSpeedOptions) -> (),
+    --- Calls `pause` on every handler in scope.
+    read pause: () -> (),
+    --- Calls `resume` on every handler in scope.
+    read resume: () -> (),
+    --- Calls `finish` on every handler in scope.
+    read finish: () -> (),
+    --- Calls `destroy` on every handler in scope.
+    read destroy: () -> (),
+}
 --- What the debug tools report about one handler at one moment.
 export type DebugSnapshot = {
     --- The label passed to `debug.track`, or the rule name.

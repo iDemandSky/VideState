@@ -21,7 +21,8 @@ VideState change their properties whenever the state changes.
   An interrupted transition continues from its current value.
 - **Transition controls**: `pause`, `resume`, `scaleSpeed`, `finish`, `onFinish`, `waitForFinish`, and
   `setState(name, { instant = true })`.
-- **Every handler at once**: `VideState.every.handler` has `scaleSpeed`, `pause`, `resume`, and `finish`.
+- **Every handler at once**: `VideState.every.handler` has `scaleSpeed`, `pause`, `resume`, `finish`, and `destroy`, and
+  `withTags` limits them to the rules that have all the tags.
 - **Cleanup** with `destroy`.
 - **Debug tools**: `VideState.debug` lists tracked handlers, and its `view` is a Vide component.
 
