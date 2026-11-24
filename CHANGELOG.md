@@ -7,6 +7,12 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-24
+
+### Changed
+
+- Rewrote the README as an introduction for users, with the documentation link, install command, and a quick start. Development notes moved to `CONTRIBUTING.md`, which is not published.
+
 ## [0.1.0] - 2026-11-24
 
 ### Added
