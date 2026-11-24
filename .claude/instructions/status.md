@@ -5,26 +5,17 @@ Update this file when a release ships, a limit is found or fixed, or an idea is 
 ## Released
 
 The latest release is 0.2.0 (2026-11-24). Versions 0.1.0 to 0.1.2 are deprecated on Ember, because 0.2.0 changes some
-existing features.
+existing features. 0.2.0 added per-connection `onTransition` options, pause and resume, `fastForward`, `finish`,
+`onFinish`, `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, the `delay`
+option, the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its UI Labs story in
+`stories/`. See `CHANGELOG.md`.
 
 ## Unreleased on `dev`
 
-`ember.toml` is already set to 0.2.0, so the package can be tested locally with `embr publish --local`. It is not
-released: `CHANGELOG.md` still lists these changes under `## [Unreleased]`, and the doc badges call it 0.2.0.
+Nothing yet. `dev` is at the 0.2.0 release commit, tagged `v0.2.0`.
 
-- Per-connection `onTransition` options.
-- `pause`, `resume`, `onPause`, `onResume`.
-- `fastForward`, `finish`, `onFinish`.
-- An interrupted transition continues from its current value.
-- Refactors: handler features as separate modules, shared types in `src/Types.luau`, and every combined condition
-  named.
-
-`main` has not been updated since 0.1.2, because the user asked not to push to `main` for this work. The docs site
-deploys from `main`, so it does not show these features yet.
-
-Also unreleased: `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, the
-`delay` transition option, the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its
-UI Labs story in `stories/`. The story was opened in UI Labs (v1.6.1) and the view lists the three demo handlers with their state, timer, and connection count.
+`main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.2.0 only once the user
+has pushed it there.
 
 ## Known limits
 
@@ -33,7 +24,7 @@ UI Labs story in `stories/`. The story was opened in UI Labs (v1.6.1) and the vi
 - `onTransition` callbacks must not yield, because one shared loop steps every transition.
 - A paused transition stays on the shared loop and is stepped without moving.
 - `ember.toml` ships raw `src/`. That works because `src/` requires its dependencies with relative paths. A local
-  install of 0.2.0 resolved every require on disk, but it has not been run in Studio yet.
+  install of 0.2.0 resolved every require on disk and was tested by the user.
 
 ## Ideas not started
 
