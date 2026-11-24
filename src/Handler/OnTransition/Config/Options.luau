@@ -98,10 +98,12 @@ const function fallbackSpeed(value: unknown): number
     return Constants.DEFAULT_SPEED
 end
 
--- Validates the `onTransition` handler options and returns readers for each setting.
-const function parse(options: Types.TransitionOptions?): Settings
-    local easing: unknown = Constants.DEFAULT_EASING
-    local duration: unknown = Constants.DEFAULT_DURATION
+-- Validates `onTransition` options and returns readers for each setting. A setting that `options` leaves out
+-- is read from `base`, which is how a connection inherits the settings of its handler. With no `base`, it
+-- takes the default.
+const function parse(options: Types.TransitionOptions?, base: Settings?): Settings
+    local easing: unknown = nil
+    local duration: unknown = nil
     local speed: unknown = nil
 
     if options ~= nil then
@@ -123,19 +125,47 @@ const function parse(options: Types.TransitionOptions?): Settings
         end
     end
 
-    local getSpeed: () -> number = if speed == nil
-        then function(): number
-            return Constants.DEFAULT_SPEED
-        end
-        else createReader(speed, isValidSpeed, fallbackSpeed)
+    local getEasing: () -> Types.TweenName
+    local getDuration: () -> number
+    local getSpeed: () -> number
 
-    return table.freeze({
+    if easing ~= nil then
         getEasing = createReader<<Types.TweenName>>(easing, isValidEasing, function(): Types.TweenName
             return Constants.DEFAULT_EASING :: Types.TweenName
-        end),
+        end)
+    elseif base ~= nil then
+        getEasing = base.getEasing
+    else
+        getEasing = function(): Types.TweenName
+            return Constants.DEFAULT_EASING :: Types.TweenName
+        end
+    end
+
+    if duration ~= nil then
         getDuration = createReader<<number>>(duration, isValidDuration, function(): number
             return Constants.DEFAULT_DURATION
-        end),
+        end)
+    elseif base ~= nil then
+        getDuration = base.getDuration
+    else
+        getDuration = function(): number
+            return Constants.DEFAULT_DURATION
+        end
+    end
+
+    if speed ~= nil then
+        getSpeed = createReader<<number>>(speed, isValidSpeed, fallbackSpeed)
+    elseif base ~= nil then
+        getSpeed = base.getSpeed
+    else
+        getSpeed = function(): number
+            return Constants.DEFAULT_SPEED
+        end
+    end
+
+    return table.freeze({
+        getEasing = getEasing,
+        getDuration = getDuration,
         getSpeed = getSpeed,
     })
 end

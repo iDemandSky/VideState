@@ -94,7 +94,7 @@ is registered.
 | --- | --- |
 | [`Disconnect`](#disconnect) | Call it to stop receiving changes. |
 
-### onTransition <Badge type="tip" text="Added in 0.1.0" />
+### onTransition <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
 
 ```luau
 Handler.onTransition(
@@ -103,22 +103,26 @@ Handler.onTransition(
         to: T, -- The next state's values
         current: T, -- The values to render on this frame
         alpha: number -- The eased progress, from 0 to 1
-    ) -> ()
+    ) -> (),
+    options: TransitionOptions? -- Tween settings for this connection only
 ) -> Disconnect
 ```
+
+Changed in 0.2.0: takes an optional `options` argument, and every connection tweens on its own.
 
 Runs `callback` with a `current` value that moves from the previous state to the next one, and the
 `alpha` that shows how far along it is. Each animatable field is tweened with
 [Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as strings,
-booleans, and enums, are not transitioned: they switch to their next value at the start of the transition. The tween settings
-come from the handler's [`onTransition` option](#handleroptions), so every listener of a handler
-sees the same values at the same time. See [Transitions](/guide/transitions) for the full behavior.
+booleans, and enums, are not transitioned: they switch to their next value at the start of the transition. Each connection has its own tween. Its
+settings come from `options`, and any setting it leaves out comes from the handler's
+[`onTransition` option](#handleroptions), then from the default. See [Transitions](/guide/transitions) for the full behavior.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
 | `callback` | `(from: T, to: T, current: T, alpha: number) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The easing, duration, and speed of this connection. Each field left out is inherited from the handler. |
 
 **Returns**
 
@@ -131,6 +135,7 @@ sees the same values at the same time. See [Transitions](/guide/transitions) for
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onTransition callback must be a function` |
+| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as the handler's [`onTransition` option](/guide/rules#errors), such as `onTransition easing must be a known easing name` |
 
 ## Types
 
@@ -138,13 +143,13 @@ sees the same values at the same time. See [Transitions](/guide/transitions) for
 
 ```luau
 type HandlerOptions = {
-    onTransition: TransitionOptions? -- Tween settings shared by every onTransition listener
+    onTransition: TransitionOptions? -- Default tween settings of every onTransition connection
 }
 ```
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1` | The easing, duration, and speed of the handler's transitions. An invalid value raises an error when the handler is created. |
+| `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1` | The default easing, duration, and speed of the handler's transition connections. A connection can override them. An invalid value raises an error when the handler is created. |
 
 ### Handler <Badge type="tip" text="Added in 0.1.0" />
 
@@ -154,7 +159,7 @@ type Handler<T> = {
     currentState: () -> string,
     setState: (stateName: string) -> (),
     onChange: (callback: OnChangeCallback<T>) -> Disconnect,
-    onTransition: (callback: OnTransitionCallback<T>) -> Disconnect,
+    onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
 }
 ```
 

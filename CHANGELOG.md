@@ -7,6 +7,10 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- `handler.onTransition(callback, options)` takes optional `TransitionOptions`, so each connection can have its own easing, duration, and speed. Settings it leaves out are inherited from the handler's `onTransition` option. Every connection now tweens on its own instead of sharing one tween per handler.
+
 ## [0.1.2] - 2026-11-24
 
 ### Changed

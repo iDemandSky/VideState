@@ -40,7 +40,7 @@ export type TweenName =
     | "expoIn" | "expoOut" | "expoInOut"
     | "backIn" | "backOut" | "backInOut"
     | "elasticIn" | "elasticOut" | "elasticInOut"
---- Settings for how `onTransition` animates between states. Each field accepts a plain value or a Vide source. A source is read every frame, so changing it affects the running transition and later ones.
+--- Settings for how `onTransition` animates between states. A field left out is inherited from the handler options, then from the default. Each field accepts a plain value or a Vide source. A source is read every frame, so changing it affects the running transition and later ones.
 export type TransitionOptions = {
     --- The Ripple easing applied to animatable fields and to `alpha`. Defaults to linear.
     easing: (TweenName | Source<TweenName>)?,
@@ -53,7 +53,7 @@ export type TransitionOptions = {
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
---- Options for creating a handler. `onTransition` sets the tween settings shared by every `onTransition` listener of the handler.
+--- Options for creating a handler. `onTransition` sets the default tween settings of its `onTransition` listeners. A listener can override them with its own options.
 export type HandlerOptions = {
     onTransition: TransitionOptions?,
 }
@@ -63,7 +63,7 @@ export type Handler<T> = {
     read currentState: () -> string,
     read setState: (stateName: string) -> (),
     read onChange: (callback: OnChangeCallback<T>) -> Disconnect,
-    read onTransition: (callback: OnTransitionCallback<T>) -> Disconnect,
+    read onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
 }
 --- Metadata passed to `VideState.rule`. `name` must be unique across all rules.
 export type RuleMetadata<S> = {

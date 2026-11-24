@@ -94,6 +94,46 @@ describe("rule handlers", function()
         expect(#currents).toBe(countAfterDisconnect)
     end)
 
+    it("gives each transition connection its own settings", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PerConnectionPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.6,
+            },
+        })
+
+        local inheritedAlphas: { number } = {}
+        local overriddenAlphas: { number } = {}
+
+        handler.onTransition(function(_, _, _, alpha)
+            table.insert(inheritedAlphas, alpha)
+        end)
+        handler.onTransition(function(_, _, _, alpha)
+            table.insert(overriddenAlphas, alpha)
+        end, {
+            duration = 0.05,
+        })
+
+        handler.setState("Active")
+        task.wait(0.3)
+
+        -- The override finished, and the connection with no options still runs on the handler's duration.
+        expect(overriddenAlphas[#overriddenAlphas]).toBe(1)
+        expect(inheritedAlphas[#inheritedAlphas] < 1).toBe(true)
+
+        task.wait(0.6)
+
+        expect(inheritedAlphas[#inheritedAlphas]).toBe(1)
+
+        expect(function()
+            handler.onTransition(function() end, { easing = "bounce" } :: any)
+        end).toThrow("onTransition easing must be a known easing name")
+    end)
+
     it("tweens numeric fields and snaps other fields at the start of a transition", function()
         local handler = VideState.rule({
             visible = VideState.boolean(),

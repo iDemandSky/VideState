@@ -10,9 +10,18 @@ outline: [2, 3]
 runs repeatedly with a `current` value that moves from the previous state to the next one, and an
 `alpha` that shows the progress. This page covers how transitions behave and the settings that control them.
 
-The tween settings belong to the handler, not to each listener. A handler tweens its fields once per
-transition and sends the same `current` and `alpha` to every listener, so all listeners stay in step.
-Set them with the `onTransition` key of the handler's [`HandlerOptions`](/guide/handlers#handleroptions).
+Every `onTransition` connection has its own tween, so each one can animate with its own settings.
+Pass them as the second argument of [`onTransition`](/guide/handlers#ontransition). A setting a connection
+leaves out is inherited from the `onTransition` key of the handler's
+[`HandlerOptions`](/guide/handlers#handleroptions), and then from the default.
+
+```luau
+handler.onTransition(fade, { duration = 0.2, easing = "quadOut" })
+handler.onTransition(slide, { duration = 0.5, easing = "backOut" })
+```
+
+Connections with the same settings still start together and stay in step. Each connection costs its own
+set of tweens, so connect only the listeners that need to animate.
 
 ::: warning Strings cannot be transitioned
 Only numbers, vectors and the other [animatable types](#animatable-fields) are tweened. A `string`
@@ -73,7 +82,7 @@ type TransitionOptions = {
 }
 ```
 
-Settings for the transitions of one handler. The tween is created by [Ripple](https://github.com/littensy/ripple).
+Settings for the transitions of one handler or one connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |

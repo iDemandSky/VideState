@@ -6,23 +6,35 @@ const Scheduler = require("@self/Playback/Scheduler")
 type Callback<T> = Types.OnTransitionCallback<T>
 type Disconnect = Types.Disconnect
 
-return function <T>(options: Types.TransitionOptions?)
-    local settings = Options.parse(options)
+type Connection<T> = {
+    callback: Callback<T>,
+    settings: Options.Settings,
+}
 
-    local listeners: { [number]: Callback<T> } = {}
+-- Every connection tweens on its own, with its own settings. A setting the connection leaves out is read from
+-- the handler options, which are the defaults for all of its connections.
+return function <T>(options: Types.TransitionOptions?)
+    local handlerSettings = Options.parse(options)
+
+    local connections: { [number]: Connection<T> } = {}
     local nextId = 0
     local generation = 0
 
-    return function(callback: Callback<T>): Disconnect
+    return function(callback: Callback<T>, connectionOptions: Types.TransitionOptions?): Disconnect
         if typeof(callback) ~= "function" then
             error("onTransition callback must be a function", 2)
         end
+
+        local settings = Options.parse(connectionOptions, handlerSettings)
 
         nextId += 1
 
         local id = nextId
 
-        listeners[id] = callback
+        connections[id] = {
+            callback = callback,
+            settings = settings,
+        }
 
         local connected = true
 
@@ -32,41 +44,46 @@ return function <T>(options: Types.TransitionOptions?)
             end
 
             connected = false
-            listeners[id] = nil
+            connections[id] = nil
         end
     end, function(from: T, to: T)
         generation += 1
 
         local currentGeneration = generation
 
-        -- A listener added during a transition receives updates from the next transition.
+        -- A connection added during a transition receives updates from the next transition.
         local ids: { number } = {}
 
-        for id in listeners do
+        for id in connections do
             table.insert(ids, id)
         end
 
-        if #ids == 0 then
-            return
-        end
+        for _, id in ids do
+            local connection = connections[id]
 
-        local group = Group.create(from, to, settings.getEasing(), settings.getDuration())
-
-        Scheduler(group, settings, function(current: T, alpha: number): number
-            local remaining = 0
-
-            for _, id in ids do
-                local callback = listeners[id]
-
-                if callback ~= nil then
-                    remaining += 1
-                    callback(from, to, current, alpha)
-                end
+            if connection == nil then
+                continue
             end
 
-            return remaining
-        end, function()
-            return generation ~= currentGeneration
-        end)
+            local group = Group.create(
+                from,
+                to,
+                connection.settings.getEasing(),
+                connection.settings.getDuration()
+            )
+
+            Scheduler(group, connection.settings, function(current: T, alpha: number): number
+                -- A connection that was disconnected is no longer in the table, so its loop stops.
+                if connections[id] ~= connection then
+                    return 0
+                end
+
+                connection.callback(from, to, current, alpha)
+
+                return 1
+            end, function()
+                return generation ~= currentGeneration
+            end)
+        end
     end
 end
