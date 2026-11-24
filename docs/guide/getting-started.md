@@ -8,6 +8,12 @@ description: Install VideState and create your first rule and handler.
 VideState validates source values and manages their state changes. Vide creates
 the UI Instances; VideState owns the values those Instances bind to.
 
+::: warning Not tested for production
+VideState has not been benchmarked, and it has not been tested in production. Use it wisely: measure
+it in your own project, especially with many handlers or transitions running at once, before you
+depend on it.
+:::
+
 ## Require the library
 
 ```luau
