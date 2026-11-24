@@ -37,7 +37,7 @@ If you need a gradual effect on text, such as a typewriter reveal, build it your
 - Each animatable field is tweened from its previous value to its next value.
 - Fields that cannot be tweened, such as booleans, strings, and enums, switch to their next value at the start of the transition.
 - A duration of `0` calls the callback once with `current` equal to the next value and an `alpha` of `1`.
-- Calling `setState` again before a transition finishes stops the earlier animation and starts a new one.
+- Calling `setState` again before a transition finishes stops the earlier animation and starts a new one. The new one starts from the value the earlier animation had reached, so `current` does not jump. The `from` argument of the callback is still the previous state's values.
 - No animation runs while there are no `onTransition` listeners, and a transition stops once every listener has disconnected.
 - A listener added during a transition receives updates from the next transition.
 - Every easing starts at the previous value and ends at the next one. `back` and `elastic` easings overshoot, so numeric values can go below the start or above the end. Clamp them in your callback if your UI needs a fixed range.

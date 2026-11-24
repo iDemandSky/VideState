@@ -9,6 +9,10 @@ type Disconnect = Types.Disconnect
 type Connection<T> = {
     callback: Callback<T>,
     settings: Options.Settings,
+    -- The transition this connection is playing, and the last value it sent. A new transition that starts
+    -- before this one finishes continues from that value instead of jumping back to the previous state.
+    group: Group.Group<T>?,
+    current: T?,
 }
 
 -- Every connection tweens on its own, with its own settings. A setting the connection leaves out is read from
@@ -34,6 +38,8 @@ return function <T>(options: Types.TransitionOptions?)
         connections[id] = {
             callback = callback,
             settings = settings,
+            group = nil,
+            current = nil,
         }
 
         local connected = true
@@ -65,12 +71,19 @@ return function <T>(options: Types.TransitionOptions?)
                 continue
             end
 
+            local previousGroup = connection.group
+            local previousCurrent = connection.current
+            local isInterrupted = previousGroup ~= nil and previousCurrent ~= nil and not Group.isDone(previousGroup)
+            local start = if isInterrupted then previousCurrent :: T else from
+
             local group = Group.create(
-                from,
+                start,
                 to,
                 connection.settings.getEasing(),
                 connection.settings.getDuration()
             )
+
+            connection.group = group
 
             Scheduler(group, connection.settings, function(current: T, alpha: number): number
                 -- A connection that was disconnected is no longer in the table, so its loop stops.
@@ -78,6 +91,7 @@ return function <T>(options: Types.TransitionOptions?)
                     return 0
                 end
 
+                connection.current = current
                 connection.callback(from, to, current, alpha)
 
                 return 1

@@ -7,6 +7,10 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- A transition that is interrupted by another `setState` now continues from the value it had reached. Before, the new transition started from the previous state's values, so `current` jumped.
+
 ### Changed
 
 - `handler.onTransition(callback, options)` takes optional `TransitionOptions`, so each connection can have its own easing, duration, and speed. Settings it leaves out are inherited from the handler's `onTransition` option. Every connection now tweens on its own instead of sharing one tween per handler.

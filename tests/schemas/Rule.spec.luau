@@ -262,6 +262,44 @@ describe("rule handlers", function()
         expect(lastTo).toBe(0)
     end)
 
+    it("continues from the current value when a transition is interrupted", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "InterruptPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.6,
+            },
+        })
+
+        local values: { number } = {}
+
+        handler.onTransition(function(_, _, current)
+            table.insert(values, current.opacity)
+        end)
+
+        handler.setState("Active")
+        task.wait(0.25)
+
+        local valueBeforeInterrupt = values[#values]
+        local countBeforeInterrupt = #values
+
+        handler.setState("Idle")
+
+        -- The new transition starts at the value the first one reached, not at the previous state's 1.
+        local firstValue = values[countBeforeInterrupt + 1]
+        local isBetween = valueBeforeInterrupt > 0.05 and valueBeforeInterrupt < 0.95
+
+        expect(isBetween).toBe(true)
+        expect(math.abs(firstValue - valueBeforeInterrupt) < 0.0001).toBe(true)
+
+        task.wait(0.9)
+
+        expect(values[#values]).toBe(0)
+    end)
+
     it("pauses a transition when the speed is 0", function()
         local speed = Vide.source(1)
         local handler = VideState.rule({
