@@ -44,3 +44,8 @@ larvae lint src tests # lints only the project code, not dist/, packages/ or .le
 - Larvae does not infer types. Its language server only offers formatting and code actions, and a deliberate type error (`local x: number = "a"`) produced no diagnostic. Do not treat a clean `larvae check` as proof that the types are right.
 - For inference, rely on `tests/types/RuleInferenceCheck.luau` and `tests/types/SchemaExports.luau`. They need strict Luau analysis with the new type solver, so run them with `luau-analyze` or `luau-lsp` when one is available, and otherwise report the types as unverified.
 - Treat new lint warnings in `src/` and `tests/` as problems. Warnings in vendored or generated code can be ignored.
+
+## Requires
+
+- Modules inside `src/` require each other relatively, never through the `@VideState` alias. In a normal file use `./Sibling` and `../Parent`. In an `init.luau`, `./` and `../` are relative to the folder's own parent, so reach its children with `@self/Child`.
+- Aliases are only for dependencies, such as `@packages/Vide` and `@luau-packages/TypedCore`.

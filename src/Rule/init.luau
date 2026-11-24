@@ -1,8 +1,8 @@
-const Types = require("@VideState/Types")
-const Validation = require("@VideState/Validation")
-const Handler = require("@VideState/Handler")
-const Info = require("@VideState/Info")
-const Table = require("@VideState/Schemas/Primitives/Table")
+const Types = require("./Types")
+const Validation = require("./Validation")
+const Handler = require("./Handler")
+const Info = require("./Info")
+const Table = require("./Schemas/Primitives/Table")
 
 type Infer<S> = Types.Infer<S>
 type States<S> = { [string]: Types.Sources<Infer<S>> }

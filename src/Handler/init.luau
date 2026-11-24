@@ -1,11 +1,11 @@
 const Vide = require("@packages/Vide")
 const TypedCore = require("@luau-packages/TypedCore")
 
-const Types = require("@VideState/Types")
-const Validation = require("@VideState/Validation")
-const OnChange = require("@VideState/Handler/OnChange")
-const OnTransition = require("@VideState/Handler/OnTransition")
-const SetState = require("@VideState/Handler/SetState")
+const Types = require("./Types")
+const Validation = require("./Validation")
+const OnChange = require("@self/OnChange")
+const OnTransition = require("@self/OnTransition")
+const SetState = require("@self/SetState")
 
 type Sources<T> = Types.Sources<T>
 type Handler<T> = Types.Handler<T>

@@ -1,4 +1,4 @@
-const Constants = require("@VideState/Handler/OnTransition/Config/Constants")
+const Constants = require("../Config/Constants")
 
 const function isAnimatablePrimitive(value: unknown): boolean
     local valueType = typeof(value)

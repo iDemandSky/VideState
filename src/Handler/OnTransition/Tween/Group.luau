@@ -1,6 +1,6 @@
 const Ripple = require("@packages/Ripple")
-const Types = require("@VideState/Types")
-const FieldTweens = require("@VideState/Handler/OnTransition/Tween/FieldTweens")
+const Types = require("../../../Types")
+const FieldTweens = require("./FieldTweens")
 
 -- The tweens of one transition: one per animatable field, plus one from 0 to 1 that reports the alpha.
 -- Every tween shares the same settings and is stepped with the same delta time, so they stay in step.

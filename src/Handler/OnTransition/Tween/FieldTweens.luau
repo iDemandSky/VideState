@@ -1,6 +1,6 @@
 const Ripple = require("@packages/Ripple")
-const Types = require("@VideState/Types")
-const CanTween = require("@VideState/Handler/OnTransition/Tween/CanTween")
+const Types = require("../../../Types")
+const CanTween = require("./CanTween")
 
 export type FieldTweens = { [string]: Ripple.Tween<any> }
 

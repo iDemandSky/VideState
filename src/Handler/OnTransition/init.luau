@@ -1,7 +1,7 @@
-const Types = require("@VideState/Types")
-const Options = require("@VideState/Handler/OnTransition/Config/Options")
-const Group = require("@VideState/Handler/OnTransition/Tween/Group")
-const Scheduler = require("@VideState/Handler/OnTransition/Playback/Scheduler")
+const Types = require("../Types")
+const Options = require("@self/Config/Options")
+const Group = require("@self/Tween/Group")
+const Scheduler = require("@self/Playback/Scheduler")
 
 type Callback<T> = Types.OnTransitionCallback<T>
 type Disconnect = Types.Disconnect

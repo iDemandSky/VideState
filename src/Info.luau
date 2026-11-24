@@ -1,4 +1,4 @@
-const Types = require("@VideState/Types")
+const Types = require("./Types")
 
 type RuleMetadata = Types.RuleMetadata<string>
 

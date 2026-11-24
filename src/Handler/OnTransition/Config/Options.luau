@@ -1,5 +1,5 @@
-const Types = require("@VideState/Types")
-const Constants = require("@VideState/Handler/OnTransition/Config/Constants")
+const Types = require("../../../Types")
+const Constants = require("./Constants")
 
 -- The settings of one handler, read when a transition starts and again every frame.
 export type Settings = {
