@@ -15,8 +15,8 @@ released: `CHANGELOG.md` still lists these changes under `## [Unreleased]`, and 
 - `pause`, `resume`, `onPause`, `onResume`.
 - `fastForward`, `finish`, `onFinish`.
 - An interrupted transition continues from its current value.
-- Refactors: handler features as separate modules, shared types in `src/Types.luau`, and dependencies required through
-  aliases.
+- Refactors: handler features as separate modules, shared types in `src/Types.luau`, and every combined condition
+  named.
 
 `main` has not been updated since 0.1.2, because the user asked not to push to `main` for this work. The docs site
 deploys from `main`, so it does not show these features yet.
@@ -26,7 +26,8 @@ deploys from `main`, so it does not show these features yet.
 - Not benchmarked, and not tested in production. The README and the docs say so.
 - Strings, booleans, enums, and other non-animatable fields cannot be transitioned. They switch at the start.
 - Every connection runs its own frame loop, and a paused handler's loops keep running without moving anything.
-- `ember.toml` ships raw `src/`. See [release.md](release.md) before publishing.
+- `ember.toml` ships raw `src/`. That works because `src/` requires its dependencies with relative paths. A local
+  install of 0.2.0 resolved every require on disk, but it has not been run in Studio yet.
 
 ## Ideas not started
 

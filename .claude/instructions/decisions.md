@@ -26,10 +26,12 @@ user settles a new one.
 
 ## Code and tooling
 
-- **Requires use the `@packages` and `@luau-packages` aliases** for dependencies. Larvae rewrites them, and the processed
-  output is the same as with relative paths.
-- **`.luaurc` stays.** `.config.luau` was tried, but Lest only reads aliases from `.luaurc`, so the tests could not
-  resolve `@Lest`, `@packages`, or `@VideState`.
+- **Dependencies are required with relative paths in `src/`,** such as `../packages/roblox/Vide`. The `@packages` aliases
+  were tried and broke the installed package, because a package cannot ship its aliases and `embr` does not rewrite them.
+  The relative paths resolve to the link files `embr` puts inside the installed package. See [requires.md](requires.md).
+- **`.luaurc` stays.** `embr` supports `.config.luau` and writes into its `luau.aliases` table when the file exists. But
+  with the aliases at the top level, Lest cannot resolve them, and with them under `luau`, Larvae cannot either. Never
+  keep both files, because `embr` then writes no aliases.
 - **Each handler feature has its own module** under `src/Handler/`, so a developer can look a function up by feature
   name. A folder is used only when the feature has children.
 - **Every combined condition is named.** See the code style rules in `~/.claude/CLAUDE.md`.

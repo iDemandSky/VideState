@@ -80,7 +80,8 @@ Shared types go in `src/Types.luau`, and `src/Utils/StartTimeEvent.luau` is the 
 
 ## Conventions
 
-- Modules inside `src/` require each other relatively, never through the `@VideState` alias. Aliases are only for dependencies, such as `@packages/Vide` and `@luau-packages/TypedCore`. Larvae rewrites them when it processes the project.
-- The Rojo project names the packages folder `packages` in lowercase, to match the `@packages` and `@luau-packages` aliases in `.luaurc`. Do not rename it to `Packages`.
+- Modules inside `src/` require each other relatively, never through the `@VideState` alias.
+- Dependencies are required relatively too, such as `require("../packages/roblox/Vide")`, never through the `@packages` or `@luau-packages` aliases. An installed package gets its own `packages/` link files, so these paths resolve after `embr install`, while an alias would not. The aliases in `.luaurc` are only for `tests/` and the tools.
+- The Rojo project names the packages folder `packages` in lowercase, to match those relative requires. Do not rename it to `Packages`.
 - Schema helpers and individual schema modules are internal. Users should use the builders on `VideState`.
 - Update the docs and `CHANGELOG.md` with every API change.

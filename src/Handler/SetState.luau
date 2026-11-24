@@ -1,4 +1,4 @@
-const Vide = require("@packages/Vide")
+const Vide = require("../../packages/roblox/Vide")
 
 const Types = require("../Types")
 const Validation = require("../Validation")

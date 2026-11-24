@@ -8,9 +8,11 @@ Release only when the user asks. Publishing, tags, and GitHub releases are never
   so a new feature or a behavior change bumps the minor version and a fix or README-only change bumps the patch.
 - Check that every version badge in `docs/` that says `Added in`, `Changed in`, or `Removed in` the next version matches
   the version you are about to set. The badges are written ahead of time, so they can disagree with `ember.toml`.
-- Check what the package ships. `includes` in `ember.toml` lists the published files. Source in `src/` requires
-  dependencies through aliases that only `larvae process` rewrites, so a package that ships raw `src/` may break on
-  install. Confirm what consumers receive before publishing, and tell the user if it ships unprocessed code.
+- Check what the package ships with `embr publish --dry-run`. `includes` in `ember.toml` lists the published files, and
+  it ships raw `src/`. That only works while `src/` requires its dependencies with relative paths, as described in
+  [requires.md](requires.md). Shipping `dist/` would not help, because Larvae rewrites the requires to
+  `@game/ReplicatedStorage/...`, which does not exist in a consumer's game.
+- Test the install with `embr publish --local` and a scratch project, as described in [requires.md](requires.md).
 - Run every check in [larvae-checks.md](larvae-checks.md) and [testing.md](testing.md).
 
 ## Steps
