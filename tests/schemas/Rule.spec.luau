@@ -300,6 +300,117 @@ describe("rule handlers", function()
         expect(values[#values]).toBe(0)
     end)
 
+    it("pauses and resumes every running transition of the handler", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PauseAllPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.5,
+            },
+        })
+
+        local first: { number } = {}
+        local second: { number } = {}
+        local pauseTimes: { number } = {}
+        local resumeTimes: { number } = {}
+
+        handler.onTransition(function(_, _, current)
+            table.insert(first, current.opacity)
+        end)
+        handler.onTransition(function(_, _, current)
+            table.insert(second, current.opacity)
+        end, {
+            duration = 0.4,
+        })
+
+        local disconnectPause = handler.onPause(function(startedAt)
+            table.insert(pauseTimes, startedAt)
+        end)
+
+        handler.onResume(function(startedAt)
+            table.insert(resumeTimes, startedAt)
+        end)
+
+        local before = os.clock()
+
+        handler.setState("Active")
+        task.wait(0.15)
+        handler.pause()
+        handler.pause()
+
+        local after = os.clock()
+        local firstCount = #first
+        local secondCount = #second
+
+        task.wait(0.3)
+
+        -- Nothing moved while paused, and a second pause call did not fire the event again.
+        expect(#first).toBe(firstCount)
+        expect(#second).toBe(secondCount)
+        expect(#pauseTimes).toBe(1)
+
+        local isStartInRange = pauseTimes[1] >= before and pauseTimes[1] <= after
+
+        expect(isStartInRange).toBe(true)
+
+        handler.resume()
+        handler.resume()
+        task.wait(0.8)
+
+        expect(first[#first]).toBe(1)
+        expect(second[#second]).toBe(1)
+        expect(#resumeTimes).toBe(1)
+        expect(resumeTimes[1]).toBe(pauseTimes[1])
+
+        disconnectPause()
+        handler.pause()
+        handler.resume()
+
+        expect(#pauseTimes).toBe(1)
+
+        expect(function()
+            handler.onPause(1 :: any)
+        end).toThrow("onPause callback must be a function")
+
+        expect(function()
+            handler.onResume(1 :: any)
+        end).toThrow("onResume callback must be a function")
+    end)
+
+    it("keeps a new transition at its first frame while the handler is paused", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PausedStartPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.2,
+            },
+        })
+
+        local values: { number } = {}
+
+        handler.onTransition(function(_, _, current)
+            table.insert(values, current.opacity)
+        end)
+
+        handler.pause()
+        handler.setState("Active")
+        task.wait(0.4)
+
+        expect(#values).toBe(1)
+        expect(values[1]).toBe(0)
+
+        handler.resume()
+        task.wait(0.4)
+
+        expect(values[#values]).toBe(1)
+    end)
+
     it("pauses a transition when the speed is 0", function()
         local speed = Vide.source(1)
         local handler = VideState.rule({

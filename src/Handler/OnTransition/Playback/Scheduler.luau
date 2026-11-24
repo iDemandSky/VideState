@@ -4,9 +4,11 @@ const Group = require("../Tween/Group")
 -- Calls `emit` with the first frame, then steps the group every frame until it is done.
 -- `emit` returns how many listeners are still connected, and the loop stops when none are.
 -- Stops as soon as `isStale` reports that a newer transition replaced this one.
+-- While `isPaused` returns true the group does not move, and the first frame is still sent.
 return function <T>(
     group: Group.Group<T>,
     settings: Options.Settings,
+    isPaused: () -> boolean,
     emit: (current: T, alpha: number) -> number,
     isStale: () -> boolean
 )
@@ -25,7 +27,7 @@ return function <T>(
                 return
             end
 
-            local scaledDelta = deltaTime * settings.getSpeed()
+            local scaledDelta = if isPaused() then 0 else deltaTime * settings.getSpeed()
 
             -- A paused transition keeps its values, so the listeners are not called again.
             if scaledDelta > 0 then

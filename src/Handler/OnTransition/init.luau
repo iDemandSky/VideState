@@ -2,6 +2,7 @@ const Types = require("../Types")
 const Options = require("@self/Config/Options")
 const Group = require("@self/Tween/Group")
 const Scheduler = require("@self/Playback/Scheduler")
+const CreatePause = require("@self/Playback/Pause")
 
 type Callback<T> = Types.OnTransitionCallback<T>
 type Disconnect = Types.Disconnect
@@ -19,6 +20,7 @@ type Connection<T> = {
 -- the handler options, which are the defaults for all of its connections.
 return function <T>(options: Types.TransitionOptions?)
     local handlerSettings = Options.parse(options)
+    local pause = CreatePause()
 
     local connections: { [number]: Connection<T> } = {}
     local nextId = 0
@@ -54,6 +56,7 @@ return function <T>(options: Types.TransitionOptions?)
         end
     end, function(from: T, to: T)
         generation += 1
+        pause.markStarted()
 
         local currentGeneration = generation
 
@@ -85,7 +88,7 @@ return function <T>(options: Types.TransitionOptions?)
 
             connection.group = group
 
-            Scheduler(group, connection.settings, function(current: T, alpha: number): number
+            Scheduler(group, connection.settings, pause.isPaused, function(current: T, alpha: number): number
                 -- A connection that was disconnected is no longer in the table, so its loop stops.
                 if connections[id] ~= connection then
                     return 0
@@ -99,5 +102,5 @@ return function <T>(options: Types.TransitionOptions?)
                 return generation ~= currentGeneration
             end)
         end
-    end
+    end, pause
 end

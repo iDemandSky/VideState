@@ -51,6 +51,10 @@ export type TransitionOptions = {
 }
 --- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
+--- Called when a handler is paused, with the `os.clock()` time at which its most recent transition started. If no transition has started yet, it is the time of the call.
+export type OnPauseCallback = (startedAt: number) -> ()
+--- Called when a handler is resumed, with the `os.clock()` time at which its most recent transition started.
+export type OnResumeCallback = (startedAt: number) -> ()
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
 --- Options for creating a handler. `onTransition` sets the default tween settings of its `onTransition` listeners. A listener can override them with its own options.
@@ -64,6 +68,10 @@ export type Handler<T> = {
     read setState: (stateName: string) -> (),
     read onChange: (callback: OnChangeCallback<T>) -> Disconnect,
     read onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
+    read pause: () -> (),
+    read resume: () -> (),
+    read onPause: (callback: OnPauseCallback) -> Disconnect,
+    read onResume: (callback: OnResumeCallback) -> Disconnect,
 }
 --- Metadata passed to `VideState.rule`. `name` must be unique across all rules.
 export type RuleMetadata<S> = {

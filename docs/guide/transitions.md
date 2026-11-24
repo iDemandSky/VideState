@@ -63,6 +63,27 @@ transition and settles at exactly `1` when it ends. This is expected, because th
 the tweened fields past their start or end. Clamp it with `math.clamp(alpha, 0, 1)` if you need a
 fixed range.
 
+## Pausing
+
+[`pause`](/guide/handlers#pause) freezes every transition of a handler, and [`resume`](/guide/handlers#resume)
+continues them from the same values. [`onPause`](/guide/handlers#onpause) and
+[`onResume`](/guide/handlers#onresume) report the `os.clock()` time at which the most recent transition
+started, so you can work out how long it has been running.
+
+```luau
+handler.onPause(function(startedAt)
+    print("paused after", os.clock() - startedAt, "seconds")
+end)
+
+handler.pause()
+handler.resume()
+```
+
+- A paused transition keeps its values and its listeners are not called again.
+- `setState` while paused starts the new transition, sends its first frame, and holds it there until `resume`.
+- Pausing applies to the whole handler. To pause or slow a single connection, use a `speed` source in that connection's options. A `speed` of `0` pauses only that connection and does not fire `onPause`.
+- If `speed` is also `0`, the transition stays frozen after `resume` until the speed is above `0`.
+
 ## Changing settings during a transition
 
 When a setting is a Vide source, it is read every frame. Changing it affects the running transition,

@@ -7,6 +7,12 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- `handler.pause()` and `handler.resume()` pause and continue every transition of a handler.
+- `handler.onPause(callback)` and `handler.onResume(callback)` report those events and pass the `os.clock()` time at which the most recent transition started.
+- The `OnPauseCallback` and `OnResumeCallback` types.
+
 ### Fixed
 
 - A transition that is interrupted by another `setState` now continues from the value it had reached. Before, the new transition started from the previous state's values, so `current` jumped.

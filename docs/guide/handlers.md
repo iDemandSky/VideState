@@ -137,6 +137,90 @@ settings come from `options`, and any setting it leaves out comes from the handl
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onTransition callback must be a function` |
 | <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as the handler's [`onTransition`](/guide/rules#errors) option, such as `onTransition easing must be a known easing name` |
 
+### pause <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.pause() -> ()
+```
+
+Pauses every transition of the handler at once, across all of its [`onTransition`](#ontransition)
+connections. Each transition keeps its current values and its listeners are not called again until
+[`resume`](#resume). Calling it while the handler is already paused does nothing.
+
+A transition that starts while the handler is paused sends its first frame, then waits for `resume`.
+See [Pausing](/guide/transitions#pausing) for how this differs from a `speed` of `0`.
+
+### resume <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.resume() -> ()
+```
+
+Continues the transitions that [`pause`](#pause) stopped, from the values they had reached. Calling it
+while the handler is not paused does nothing.
+
+### onPause <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.onPause(
+    callback: (
+        startedAt: number -- The os.clock() time at which the most recent transition started
+    ) -> ()
+) -> Disconnect
+```
+
+Runs `callback` each time the handler goes from running to paused. A repeated [`pause`](#pause) call
+does not run it again.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `callback` | [`OnPauseCallback`](#onpausecallback) | Called with the `os.clock()` time at which the most recent transition started. If no transition has started yet, it is the time of the `pause` call. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Disconnect`](#disconnect) | Call it to stop receiving pause events. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `callback` is not a function | `onPause callback must be a function` |
+
+### onResume <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.onResume(
+    callback: (
+        startedAt: number -- The os.clock() time at which the most recent transition started
+    ) -> ()
+) -> Disconnect
+```
+
+Runs `callback` each time the handler goes from paused to running. A repeated [`resume`](#resume) call
+does not run it again.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `callback` | [`OnResumeCallback`](#onresumecallback) | Called with the `os.clock()` time at which the most recent transition started. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Disconnect`](#disconnect) | Call it to stop receiving resume events. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `callback` is not a function | `onResume callback must be a function` |
+
 ## Types
 
 ### HandlerOptions <Badge type="tip" text="Added in 0.1.0" />
@@ -160,6 +244,10 @@ type Handler<T> = {
     setState: (stateName: string) -> (),
     onChange: (callback: OnChangeCallback<T>) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
+    pause: () -> (),
+    resume: () -> (),
+    onPause: (callback: OnPauseCallback) -> Disconnect,
+    onResume: (callback: OnResumeCallback) -> Disconnect,
 }
 ```
 
@@ -198,6 +286,26 @@ type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 | `to` | `T` | The next state's values. |
 | `current` | `T` | The values to render on this frame. |
 | `alpha` | `number` | The eased progress, from 0 to 1. With `back` and `elastic` easings it can go below 0 or above 1. See [alpha](/guide/transitions#alpha). |
+
+### OnPauseCallback <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type OnPauseCallback = (startedAt: number) -> ()
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `startedAt` | `number` | The `os.clock()` time at which the handler's most recent transition started. If no transition has started yet, it is the time of the `pause` call. |
+
+### OnResumeCallback <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type OnResumeCallback = (startedAt: number) -> ()
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `startedAt` | `number` | The `os.clock()` time at which the handler's most recent transition started. |
 
 ### Disconnect <Badge type="tip" text="Added in 0.1.0" />
 
