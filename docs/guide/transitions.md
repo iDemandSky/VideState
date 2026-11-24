@@ -78,7 +78,7 @@ end
 ```
 
 - The connection sends nothing while it waits. Its first frame starts from the beginning of the tween.
-- The wait is scaled time: [`pause`](/guide/handlers#pause), a `speed` of `0`, and `fastForward` apply to it too.
+- The wait is scaled time: [`pause`](/guide/handlers#pause), a `speed` of `0`, and `scaleSpeed` apply to it too.
 - `setState(name, { instant = true })` skips the delay, and [`finish`](/guide/handlers#finish) ends a connection that
   is still waiting.
 - The transition finishes, and [`onFinish`](/guide/handlers#onfinish) runs, only after the most delayed connection ends.
@@ -104,9 +104,9 @@ handler.resume()
 - Pausing applies to the whole handler. To pause or slow a single connection, use a `speed` source in that connection's options. A `speed` of `0` pauses only that connection and does not fire `onPause`.
 - If `speed` is also `0`, the transition stays frozen after `resume` until the speed is above `0`.
 
-## Fast-forwarding and finishing
+## Scaling the speed and finishing
 
-[`fastForward`](/guide/handlers#fastforward) plays the running transition faster, and
+[`scaleSpeed`](/guide/handlers#scalespeed) plays the running transition faster or slower, and
 [`finish`](/guide/handlers#finish) ends it at once. Use them to let a player skip an animation.
 
 ```luau
@@ -114,11 +114,11 @@ handler.onFinish(function(startedAt)
     print("took", os.clock() - startedAt, "seconds")
 end)
 
-handler.fastForward({ speed = 4 })
+handler.scaleSpeed({ speed = 4 })
 handler.finish()
 ```
 
-- `fastForward` multiplies each connection's own `speed`, and only for the transition that is running. The next `setState` plays at normal speed.
+- `scaleSpeed` multiplies each connection's own `speed`, and only for the transition that is running. The next `setState` plays at normal speed.
 - `finish` sends every connection its last frame, with `current` equal to the next state's values and an `alpha` of `1`, before it returns. It works while the handler is paused.
 - [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
 - Connections with different durations finish at different times, so the event waits for the slowest one.

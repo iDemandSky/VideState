@@ -9,7 +9,7 @@ const StateEvents = require("@self/StateEvents")
 const Transition = require("@self/Transition")
 const TransitionState = require("@self/Transition/State")
 const Pause = require("@self/Pause")
-const FastForward = require("@self/FastForward")
+const ScaleSpeed = require("@self/ScaleSpeed")
 const Finish = require("@self/Finish")
 const SetState = require("@self/SetState")
 
@@ -21,7 +21,7 @@ type Handler<T> = Types.Handler<T>
 --   StateEvents onEnter, onExit
 --   Transition  onTransition
 --   Pause       pause, resume, onPause, onResume
---   FastForward fastForward
+--   ScaleSpeed scaleSpeed
 --   Finish      finish, onFinish, waitForFinish
 --   SetState    setState
 -- `destroy` is defined here, because it stops every feature, and so is the inspect function for the debug tools.
@@ -65,7 +65,7 @@ return function <S>(
     local pause = Pause(function(): number
         return TransitionState.getStartedAt<<Values>>(state)
     end)
-    local fastForward = FastForward<<Values>>(state)
+    local scaleSpeed = ScaleSpeed<<Values>>(state)
     local finish = Finish<<Values>>(state)
 
     -- 0 holds every transition while the handler is paused.
@@ -144,7 +144,7 @@ return function <S>(
         resume = pause.resume,
         onPause = pause.onPause,
         onResume = pause.onResume,
-        fastForward = fastForward.fastForward,
+        scaleSpeed = scaleSpeed.scaleSpeed,
         finish = finish.finish,
         onFinish = finish.onFinish,
         waitForFinish = finish.waitForFinish,

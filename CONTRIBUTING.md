@@ -102,7 +102,7 @@ Each feature of a handler has its own module under `src/Handler/`, with the func
 | `StateEvents.luau` | `onEnter`, `onExit` | Runs when the handler enters or leaves one state. |
 | `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` wraps Ripple. |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` | Pause state for every transition of the handler. |
-| `FastForward.luau` | `fastForward` | Speed scale for the running transition. |
+| `ScaleSpeed.luau` | `scaleSpeed` | Speed scale for the running transition. |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` | How a transition ends. |
 | `SetState.luau` | `setState` | Changes the state and starts the change and transition events. |
 

@@ -28,7 +28,7 @@ export type State<T> = {
     generation: number,
     startedAt: number?,
     currentTransition: Types.Transition?,
-    -- The scale that `fastForward` puts on the running transition. A new transition resets it.
+    -- The scale that `scaleSpeed` puts on the running transition. A new transition resets it.
     scale: number,
 }
 

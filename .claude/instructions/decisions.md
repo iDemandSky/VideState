@@ -16,8 +16,8 @@ user settles a new one.
 - **`resume` and `onResume` exist** because a `pause` with no way back would leave transitions stuck.
 - **The events pass `startedAt`,** the `os.clock()` time the most recent transition started. Before any transition, it
   is the time of the call.
-- **`fastForward` scales only the running transition,** and the next `setState` resets it. It multiplies each
-  connection's own speed. It is not called `snapTransition`, because "snap" suggests an instant jump.
+- **`scaleSpeed` scales only the running transition,** and the next `setState` resets it. It multiplies each
+  connection's own speed. It was called `fastForward` in 0.2.0 and renamed because a scale below 1 slows it down. It is not called `snapTransition`, because "snap" suggests an instant jump.
 - **`finish` is the instant jump.** It sends the last frame before it returns, and works while paused.
 - **`onFinish` fires once per transition,** when the last connection ends and at least one reached its end. A
   transition that a newer `setState` replaces never finishes.

@@ -83,8 +83,8 @@ export type OnPauseCallback = (startedAt: number) -> ()
 export type OnResumeCallback = (startedAt: number) -> ()
 --- Called when every running transition of a handler has reached its end, with the `os.clock()` time at which the transition started. It also runs after `finish`.
 export type OnFinishCallback = (startedAt: number) -> ()
---- Options for `fastForward`.
-export type FastForwardOptions = {
+--- Options for `scaleSpeed`.
+export type ScaleSpeedOptions = {
     --- How many times faster the running transition plays. Must be a finite number above 0. It multiplies each connection's own speed.
     speed: number,
 }
@@ -126,7 +126,7 @@ export type Handler<T> = {
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,
     read onResume: (callback: OnResumeCallback) -> Disconnect,
-    read fastForward: (options: FastForwardOptions) -> (),
+    read scaleSpeed: (options: ScaleSpeedOptions) -> (),
     read finish: () -> (),
     read onFinish: (callback: OnFinishCallback) -> Disconnect,
     read waitForFinish: () -> (),

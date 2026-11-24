@@ -302,7 +302,7 @@ describe("transitions", function()
 
         -- Speed the rest up, so the test does not wait the whole 3 seconds.
         speed(1)
-        handler.fastForward({ speed = 20 })
+        handler.scaleSpeed({ speed = 20 })
         task.wait(0.5)
 
         expect(lastAlpha).toBe(1)
