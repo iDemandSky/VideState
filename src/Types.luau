@@ -55,6 +55,13 @@ export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number
 export type OnPauseCallback = (startedAt: number) -> ()
 --- Called when a handler is resumed, with the `os.clock()` time at which its most recent transition started.
 export type OnResumeCallback = (startedAt: number) -> ()
+--- Called when every running transition of a handler has reached its end, with the `os.clock()` time at which the transition started. It also runs after `finish`.
+export type OnFinishCallback = (startedAt: number) -> ()
+--- Options for `fastForward`.
+export type FastForwardOptions = {
+    --- How many times faster the running transition plays. Must be a finite number above 0. It multiplies each connection's own speed.
+    speed: number,
+}
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
 --- Options for creating a handler. `onTransition` sets the default tween settings of its `onTransition` listeners. A listener can override them with its own options.
@@ -72,6 +79,9 @@ export type Handler<T> = {
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,
     read onResume: (callback: OnResumeCallback) -> Disconnect,
+    read fastForward: (options: FastForwardOptions) -> (),
+    read finish: () -> (),
+    read onFinish: (callback: OnFinishCallback) -> Disconnect,
 }
 --- Metadata passed to `VideState.rule`. `name` must be unique across all rules.
 export type RuleMetadata<S> = {

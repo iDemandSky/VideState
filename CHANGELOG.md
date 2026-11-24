@@ -12,6 +12,9 @@ version can contain breaking changes.
 - `handler.pause()` and `handler.resume()` pause and continue every transition of a handler.
 - `handler.onPause(callback)` and `handler.onResume(callback)` report those events and pass the `os.clock()` time at which the most recent transition started.
 - The `OnPauseCallback` and `OnResumeCallback` types.
+- `handler.fastForward({ speed })` plays the running transition faster, and `handler.finish()` ends every running transition at once with its last frame.
+- `handler.onFinish(callback)` runs once when a transition has finished, and passes the `os.clock()` time at which it started.
+- The `OnFinishCallback` and `FastForwardOptions` types.
 
 ### Fixed
 

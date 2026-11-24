@@ -84,6 +84,25 @@ handler.resume()
 - Pausing applies to the whole handler. To pause or slow a single connection, use a `speed` source in that connection's options. A `speed` of `0` pauses only that connection and does not fire `onPause`.
 - If `speed` is also `0`, the transition stays frozen after `resume` until the speed is above `0`.
 
+## Fast-forwarding and finishing
+
+[`fastForward`](/guide/handlers#fastforward) plays the running transition faster, and
+[`finish`](/guide/handlers#finish) ends it at once. Use them to let a player skip an animation.
+
+```luau
+handler.onFinish(function(startedAt)
+    print("took", os.clock() - startedAt, "seconds")
+end)
+
+handler.fastForward({ speed = 4 })
+handler.finish()
+```
+
+- `fastForward` multiplies each connection's own `speed`, and only for the transition that is running. The next `setState` plays at normal speed.
+- `finish` sends every connection its last frame, with `current` equal to the next state's values and an `alpha` of `1`, before it returns. It works while the handler is paused.
+- [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
+- Connections with different durations finish at different times, so the event waits for the slowest one.
+
 ## Changing settings during a transition
 
 When a setting is a Vide source, it is read every frame. Changing it affects the running transition,

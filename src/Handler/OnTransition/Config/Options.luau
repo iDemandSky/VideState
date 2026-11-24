@@ -98,6 +98,33 @@ const function fallbackSpeed(value: unknown): number
     return Constants.DEFAULT_SPEED
 end
 
+const function isValidScale(value: unknown): boolean
+    return type(value) == "number" and value == value and value > 0 and value ~= math.huge
+end
+
+-- Validates the options of `fastForward` and returns the speed scale.
+const function parseFastForward(options: unknown): number
+    if typeof(options) ~= "table" then
+        error("fastForward options must be a table", 0)
+    end
+
+    local fields = options :: { [any]: unknown }
+
+    for key in fields do
+        if key ~= "speed" then
+            error("fastForward options has an unknown key " .. tostring(key), 0)
+        end
+    end
+
+    local speed = fields.speed
+
+    if not isValidScale(speed) then
+        error("fastForward speed must be a finite number above 0", 0)
+    end
+
+    return speed :: number
+end
+
 -- Validates `onTransition` options and returns readers for each setting. A setting that `options` leaves out
 -- is read from `base`, which is how a connection inherits the settings of its handler. With no `base`, it
 -- takes the default.
@@ -172,4 +199,5 @@ end
 
 return table.freeze({
     parse = parse,
+    parseFastForward = parseFastForward,
 })

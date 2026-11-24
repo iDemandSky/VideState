@@ -411,6 +411,186 @@ describe("rule handlers", function()
         expect(values[#values]).toBe(1)
     end)
 
+    it("fast-forwards only the running transition", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "FastForwardPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 1,
+            },
+        })
+
+        local alpha = 0
+
+        handler.onTransition(function(_, _, _, frameAlpha)
+            alpha = frameAlpha
+        end)
+
+        handler.setState("Active")
+        task.wait(0.1)
+        handler.fastForward({ speed = 20 })
+        task.wait(0.3)
+
+        -- Without the fast-forward, 0.4 of the 1 second would have played.
+        expect(alpha).toBe(1)
+
+        handler.setState("Idle")
+        task.wait(0.3)
+
+        -- The next transition plays at normal speed again.
+        expect(alpha < 0.9).toBe(true)
+
+        expect(function()
+            handler.fastForward({ speed = 0 })
+        end).toThrow("fastForward speed must be a finite number above 0")
+
+        expect(function()
+            handler.fastForward({ speed = 2, scale = 2 } :: any)
+        end).toThrow("fastForward options has an unknown key scale")
+
+        expect(function()
+            handler.fastForward(2 :: any)
+        end).toThrow("fastForward options must be a table")
+    end)
+
+    it("finishes every running transition at once", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "FinishPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 5,
+            },
+        })
+
+        local first: { number } = {}
+        local second: { number } = {}
+        local finishes: { number } = {}
+
+        handler.onTransition(function(_, _, current, alpha)
+            table.insert(first, alpha)
+            expect(current.opacity).toBe(alpha)
+        end)
+        handler.onTransition(function(_, _, current)
+            table.insert(second, current.opacity)
+        end, {
+            duration = 3,
+        })
+        handler.onFinish(function(startedAt)
+            table.insert(finishes, startedAt)
+        end)
+
+        local before = os.clock()
+
+        handler.setState("Active")
+        task.wait(0.1)
+        handler.finish()
+
+        -- The last frame arrived before finish returned.
+        expect(first[#first]).toBe(1)
+        expect(second[#second]).toBe(1)
+        expect(#finishes).toBe(1)
+
+        local isStartInRange = finishes[1] >= before and finishes[1] <= os.clock()
+
+        expect(isStartInRange).toBe(true)
+
+        local firstCount = #first
+
+        task.wait(0.2)
+        handler.finish()
+
+        -- Nothing runs after it, and a second call does not fire the event again.
+        expect(#first).toBe(firstCount)
+        expect(#finishes).toBe(1)
+    end)
+
+    it("fires the finish event once when the last connection reaches its end", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "FinishEventPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 0.1,
+            },
+        })
+
+        local finishes = 0
+        local disconnectFinish = handler.onFinish(function()
+            finishes += 1
+        end)
+
+        handler.onTransition(function() end)
+        handler.onTransition(function() end, {
+            duration = 0.5,
+        })
+
+        handler.setState("Active")
+        task.wait(0.3)
+
+        -- The short connection ended, but the long one is still playing.
+        expect(finishes).toBe(0)
+
+        task.wait(0.5)
+
+        expect(finishes).toBe(1)
+
+        -- A transition that another one replaces never finishes.
+        handler.setState("Idle")
+        task.wait(0.05)
+        handler.setState("Active")
+        task.wait(0.8)
+
+        expect(finishes).toBe(2)
+
+        disconnectFinish()
+        handler.setState("Idle")
+        task.wait(0.8)
+
+        expect(finishes).toBe(2)
+
+        expect(function()
+            handler.onFinish(1 :: any)
+        end).toThrow("onFinish callback must be a function")
+    end)
+
+    it("finishes a paused transition", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "PausedFinishPanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 1,
+            },
+        })
+
+        local lastAlpha = 0
+        local finishes = 0
+
+        handler.onTransition(function(_, _, _, alpha)
+            lastAlpha = alpha
+        end)
+        handler.onFinish(function()
+            finishes += 1
+        end)
+
+        handler.setState("Active")
+        handler.pause()
+        handler.finish()
+
+        expect(lastAlpha).toBe(1)
+        expect(finishes).toBe(1)
+    end)
+
     it("pauses a transition when the speed is 0", function()
         local speed = Vide.source(1)
         local handler = VideState.rule({

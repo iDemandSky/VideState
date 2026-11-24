@@ -39,7 +39,7 @@ return function <S>(
     local sources = table.freeze(derivedSources) :: Sources<Values>
     local onChange, emitChange = OnChange<<Values>>()
     local transitionOptions = if options == nil then nil else options.onTransition
-    local onTransition, emitTransition, pause = OnTransition<<Values>>(transitionOptions)
+    local onTransition, emitTransition, controls = OnTransition<<Values>>(transitionOptions)
     local setState = SetState<<Values>>(
         function(stateName: string): Values
             local stateSources = Validation.state(validatedStates, stateName, "selected")
@@ -58,9 +58,12 @@ return function <S>(
         setState = setState,
         onChange = onChange,
         onTransition = onTransition,
-        pause = pause.pause,
-        resume = pause.resume,
-        onPause = pause.onPause,
-        onResume = pause.onResume,
+        pause = controls.pause,
+        resume = controls.resume,
+        onPause = controls.onPause,
+        onResume = controls.onResume,
+        fastForward = controls.fastForward,
+        finish = controls.finish,
+        onFinish = controls.onFinish,
     })
 end

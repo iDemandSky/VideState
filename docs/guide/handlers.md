@@ -221,6 +221,77 @@ does not run it again.
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onResume callback must be a function` |
 
+### fastForward <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.fastForward(
+    options: FastForwardOptions -- How much faster the running transition plays
+) -> ()
+```
+
+Speeds up the transition that is running now. It affects every [`onTransition`](#ontransition)
+connection of the handler, and it multiplies each connection's own `speed`. A connection with a `speed`
+of `0.5` fast-forwarded by `4` plays at `2`. The next `setState` starts a transition at normal speed again.
+
+To jump straight to the end, use [`finish`](#finish).
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `options` | [`FastForwardOptions`](#fastforwardoptions) | Required. The speed scale. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `fastForward options must be a table` |
+| <Badge type="danger" text="Error" /> | `options` has an unknown key | `fastForward options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | `options.speed` is not a finite number above 0 | `fastForward speed must be a finite number above 0` |
+
+### finish <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.finish() -> ()
+```
+
+Ends every running transition at once. Each connection receives its last frame, with `current` equal to
+the next state's values and an `alpha` of `1`, before `finish` returns. Then [`onFinish`](#onfinish) runs.
+It works while the handler is paused. It does nothing when no transition is running.
+
+### onFinish <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+Handler.onFinish(
+    callback: (
+        startedAt: number -- The os.clock() time at which the transition started
+    ) -> ()
+) -> Disconnect
+```
+
+Runs `callback` once per transition, when every connection that was playing it has ended and at least
+one of them reached its end. This includes a transition that [`finish`](#finish) ended. A transition that
+another `setState` replaces does not finish. A transition with no [`onTransition`](#ontransition)
+connection does not run, so it does not finish either.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `callback` | [`OnFinishCallback`](#onfinishcallback) | Called with the `os.clock()` time at which the transition started. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Disconnect`](#disconnect) | Call it to stop receiving finish events. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `callback` is not a function | `onFinish callback must be a function` |
+
 ## Types
 
 ### HandlerOptions <Badge type="tip" text="Added in 0.1.0" />
@@ -248,6 +319,9 @@ type Handler<T> = {
     resume: () -> (),
     onPause: (callback: OnPauseCallback) -> Disconnect,
     onResume: (callback: OnResumeCallback) -> Disconnect,
+    fastForward: (options: FastForwardOptions) -> (),
+    finish: () -> (),
+    onFinish: (callback: OnFinishCallback) -> Disconnect,
 }
 ```
 
@@ -306,6 +380,28 @@ type OnResumeCallback = (startedAt: number) -> ()
 | Name | Type | Description |
 | --- | --- | --- |
 | `startedAt` | `number` | The `os.clock()` time at which the handler's most recent transition started. |
+
+### OnFinishCallback <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type OnFinishCallback = (startedAt: number) -> ()
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `startedAt` | `number` | The `os.clock()` time at which the transition that finished started. |
+
+### FastForwardOptions <Badge type="tip" text="Added in 0.2.0" />
+
+```luau
+type FastForwardOptions = {
+    speed: number, -- How many times faster the running transition plays
+}
+```
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `speed` | `number` | Yes | None | The speed scale. Must be a finite number above `0`. `1` is normal speed. |
 
 ### Disconnect <Badge type="tip" text="Added in 0.1.0" />
 
