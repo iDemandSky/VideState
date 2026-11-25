@@ -282,17 +282,17 @@ describe("every handler", function()
         const tagged = VideState.everyHandler.withTags("EveryFilterTag")
 
         expect(tagged.count()).toBe(3)
-        expect(tagged.inState("Active").count()).toBe(2)
-        expect(tagged.inState("Idle").count()).toBe(1)
+        expect(tagged.withStates("Active").count()).toBe(2)
+        expect(tagged.withStates("Idle").count()).toBe(1)
         expect(tagged.withRule("EveryFilterFirstPanel").count()).toBe(1)
-        expect(tagged.withRule("EveryFilterFirstPanel").inState("Active").count()).toBe(0)
-        expect(tagged.withTags("EveryFilterOther").inState("Active").count()).toBe(1)
+        expect(tagged.withRule("EveryFilterFirstPanel").withStates("Active").count()).toBe(0)
+        expect(tagged.withTags("EveryFilterOther").withStates("Active").count()).toBe(1)
         expect(VideState.everyHandler.withRule("EveryFilterMissingRule").count()).toBe(0)
 
         -- The filters are read each time, so a state change moves a handler in or out of the scope.
         first.setState("Active")
 
-        expect(tagged.inState("Active").count()).toBe(3)
+        expect(tagged.withStates("Active").count()).toBe(3)
     end)
 
     it("reports whether any handler in scope is running or paused", function()
@@ -339,7 +339,7 @@ describe("every handler", function()
         expect(second.currentState()).toBe("Active")
         expect(firstChanges).toBe(1)
 
-        VideState.everyHandler.withTags("EverySetStateTag").inState("Active").setState("Idle", { instant = true })
+        VideState.everyHandler.withTags("EverySetStateTag").withStates("Active").setState("Idle", { instant = true })
 
         expect(first.currentState()).toBe("Idle")
         expect(second.currentState()).toBe("Idle")
@@ -385,14 +385,131 @@ describe("every handler", function()
         end).toThrow("everyHandler.setState state name must be a string, got number")
     end)
 
+    it("excludes handlers by tag, rule and state", function()
+        local first = createHandler("EveryExcludeFirstPanel", { "EveryExcludeTag", "EveryExcludeHidden" })
+        local second = createHandler("EveryExcludeSecondPanel", { "EveryExcludeTag", "EveryExcludeDebug" })
+        local third = createHandler("EveryExcludeThirdPanel", { "EveryExcludeTag" })
+
+        third.setState("Active")
+
+        const tagged = VideState.everyHandler.withTags("EveryExcludeTag")
+
+        expect(tagged.count()).toBe(3)
+
+        -- A handler is dropped when its rule has any of the tags.
+        expect(tagged.withoutTags("EveryExcludeHidden").count()).toBe(2)
+        expect(tagged.withoutTags("EveryExcludeHidden", "EveryExcludeDebug").count()).toBe(1)
+        expect(tagged.withoutRule("EveryExcludeFirstPanel").count()).toBe(2)
+        expect(tagged.withoutRule("EveryExcludeFirstPanel").withoutRule("EveryExcludeSecondPanel").count()).toBe(1)
+        expect(tagged.withoutStates("Active").count()).toBe(2)
+        expect(tagged.withoutStates("Active", "Idle").count()).toBe(0)
+
+        -- withStates keeps a handler that is in any of the names.
+        expect(tagged.withStates("Active", "Idle").count()).toBe(3)
+        expect(tagged.withStates("Active", "Idle").withoutStates("Idle").count()).toBe(1)
+        expect(tagged.withStates("Active", "Idle").withStates("Idle", "Other").count()).toBe(2)
+
+        first.setState("Active")
+        second.setState("Active")
+
+        expect(tagged.withoutStates("Active").count()).toBe(0)
+    end)
+
+    it("raises one error for filters that cannot match any handler", function()
+        const tagged = VideState.everyHandler.withTags("EveryConflictMenu", "EveryConflictHud")
+
+        const function messageOf(action: () -> ()): string
+            const ok, message = pcall(action)
+
+            expect(ok).toBe(false)
+
+            return tostring(message)
+        end
+
+        expect(messageOf(function()
+            tagged.withoutTags("EveryConflictHud", "EveryConflictMenu", "EveryConflictOther")
+        end)).toBe(
+            'everyHandler.withoutTags conflicts with an earlier filter: tag "EveryConflictHud" is required by withTags; tag "EveryConflictMenu" is required by withTags. No handler could match'
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withoutTags("EveryConflictMenu").withTags("EveryConflictMenu")
+        end)).toBe(
+            'everyHandler.withTags conflicts with an earlier filter: tag "EveryConflictMenu" is excluded by withoutTags. No handler could match'
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withRule("EveryConflictA").withoutRule("EveryConflictA")
+        end)).toBe(
+            'everyHandler.withoutRule conflicts with an earlier filter: rule "EveryConflictA" is required by withRule. No handler could match'
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withoutRule("EveryConflictA").withRule("EveryConflictA")
+        end)).toBe(
+            'everyHandler.withRule conflicts with an earlier filter: rule "EveryConflictA" is excluded by withoutRule. No handler could match'
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withRule("EveryConflictA").withRule("EveryConflictB")
+        end)).toBe(
+            "everyHandler.withRule conflicts with an earlier filter: a handler has one rule, but withRule asks for EveryConflictA, EveryConflictB. No handler could match"
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withStates("Open", "Loading").withoutStates("Loading", "Open")
+        end)).toBe(
+            'everyHandler.withoutStates conflicts with an earlier filter: state "Loading" is required by withStates; state "Open" is required by withStates. No handler could match'
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withoutStates("Open").withStates("Open")
+        end)).toBe(
+            'everyHandler.withStates conflicts with an earlier filter: state "Open" is excluded by withoutStates. No handler could match'
+        )
+
+        expect(messageOf(function()
+            VideState.everyHandler.withStates("Open").withStates("Closed")
+        end)).toBe(
+            "everyHandler.withStates conflicts with an earlier filter: none of the states Closed is among the states already required by withStates. No handler could match"
+        )
+
+        -- Repeating a value, or excluding only some of the allowed states, is not a conflict.
+        expect(VideState.everyHandler.withTags("EveryConflictMenu").withTags("EveryConflictMenu").count()).toBe(0)
+        expect(VideState.everyHandler.withStates("NoSuchA", "NoSuchB").withoutStates("NoSuchA").count()).toBe(0)
+        expect(VideState.everyHandler.withStates("NoSuchA").withStates("NoSuchA").count()).toBe(0)
+    end)
+
+    it("rejects invalid exclusions", function()
+        expect(function()
+            VideState.everyHandler.withoutTags()
+        end).toThrow("everyHandler.withoutTags requires at least one tag")
+
+        expect(function()
+            VideState.everyHandler.withoutTags("EveryTagMenu", 2 :: any)
+        end).toThrow("everyHandler.withoutTags tag 2 must be a string, got number")
+
+        expect(function()
+            VideState.everyHandler.withoutRule(2 :: any)
+        end).toThrow("everyHandler.withoutRule rule name must be a string, got number")
+
+        expect(function()
+            VideState.everyHandler.withStates()
+        end).toThrow("everyHandler.withStates requires at least one state name")
+
+        expect(function()
+            VideState.everyHandler.withoutStates("Open", 3 :: any)
+        end).toThrow("everyHandler.withoutStates state name 2 must be a string, got number")
+    end)
+
     it("rejects invalid filters", function()
         expect(function()
             VideState.everyHandler.withRule(2 :: any)
         end).toThrow("everyHandler.withRule rule name must be a string, got number")
 
         expect(function()
-            VideState.everyHandler.inState(2 :: any)
-        end).toThrow("everyHandler.inState state name must be a string, got number")
+            VideState.everyHandler.withStates(2 :: any)
+        end).toThrow("everyHandler.withStates state name 1 must be a string, got number")
     end)
 
     it("rejects invalid options", function()

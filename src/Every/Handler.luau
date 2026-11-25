@@ -5,7 +5,124 @@ const SpeedScale = require("../Utils/SpeedScale")
 const Registry = require("./Registry")
 const Scale = require("./Scale")
 
-type Filter = (entry: Registry.Entry) -> boolean
+type Set = { [string]: boolean }
+
+-- Which handlers a group acts on. It is plain data, so the filters can be checked against each other.
+type Scope = {
+    -- Whether any filter was applied. A group with no filter is every handler.
+    filtered: boolean,
+    -- Tags the rule must have, all of them.
+    tags: Set,
+    -- Tags the rule must not have, none of them.
+    withoutTags: Set,
+    -- The rule the handler must come from. More than one name can never match.
+    rules: Set,
+    withoutRules: Set,
+    -- The states the handler may be in, or nil when `withStates` was never called.
+    states: Set?,
+    withoutStates: Set,
+}
+
+const EMPTY_SCOPE: Scope = {
+    filtered = false,
+    tags = {},
+    withoutTags = {},
+    rules = {},
+    withoutRules = {},
+    states = nil,
+    withoutStates = {},
+}
+
+const function toSet(names: { string }): Set
+    local set: Set = {}
+
+    for _, name in names do
+        set[name] = true
+    end
+
+    return set
+end
+
+const function union(first: Set, second: Set): Set
+    local merged = table.clone(first)
+
+    for name in second do
+        merged[name] = true
+    end
+
+    return merged
+end
+
+const function intersect(first: Set, second: Set): Set
+    local common: Set = {}
+
+    for name in first do
+        if second[name] then
+            common[name] = true
+        end
+    end
+
+    return common
+end
+
+const function without(first: Set, removed: Set): Set
+    local remaining: Set = {}
+
+    for name in first do
+        if not removed[name] then
+            remaining[name] = true
+        end
+    end
+
+    return remaining
+end
+
+const function isEmpty(set: Set): boolean
+    return next(set) == nil
+end
+
+-- The names of a set in alphabetical order, so a message does not depend on the order of the table.
+const function sorted(set: Set): { string }
+    local names: { string } = {}
+
+    for name in set do
+        table.insert(names, name)
+    end
+
+    table.sort(names)
+
+    return names
+end
+
+-- Reads the names that a filter was given. The error level of 3 points at the user's call to the filter.
+const function readNames(filterName: string, noun: string, ...: string): Set
+    const names = { ... }
+
+    if #names == 0 then
+        error(`everyHandler.{filterName} requires at least one {noun}`, 3)
+    end
+
+    for index, name in names do
+        if type(name) ~= "string" then
+            error(`everyHandler.{filterName} {noun} {index} must be a string, got {typeof(name)}`, 3)
+        end
+    end
+
+    return toSet(names)
+end
+
+-- Raises one error that lists every conflict between a filter and the filters before it. The error level of 3
+-- points at the user's call to the filter.
+const function failOnConflicts(filterName: string, conflicts: { string })
+    if #conflicts == 0 then
+        return
+    end
+
+    error(
+        `everyHandler.{filterName} conflicts with an earlier filter: {table.concat(conflicts, "; ")}. No handler could match`,
+        3
+    )
+end
 
 -- Calls `action` on each member. A handler that raises does not stop the others, and the first error is raised
 -- once every handler has run.
@@ -59,30 +176,53 @@ const function describeMissing(members: { Registry.Member }, stateName: string):
     return total, table.concat(parts, ", ")
 end
 
--- Builds the functions of one scope. A handler is in scope when it passes every filter, and the handlers are looked
--- up each time a function is called, so a handler created later is included. A group made with no filter is every
--- handler.
-const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
-    const function matches(entry: Registry.Entry): boolean
-        for _, filter in filters do
-            if not filter(entry) then
-                return false
-            end
+-- Whether a handler is in scope. The state is read from the handler only when a state filter needs it.
+const function isInScope(scope: Scope, entry: Registry.Entry): boolean
+    for tag in scope.tags do
+        if not Info.ruleHasTag(entry.ruleName, tag) then
+            return false
         end
+    end
 
+    for tag in scope.withoutTags do
+        if Info.ruleHasTag(entry.ruleName, tag) then
+            return false
+        end
+    end
+
+    for ruleName in scope.rules do
+        if entry.ruleName ~= ruleName then
+            return false
+        end
+    end
+
+    if scope.withoutRules[entry.ruleName] then
+        return false
+    end
+
+    const states = scope.states
+    const hasStateFilter = states ~= nil or not isEmpty(scope.withoutStates)
+
+    if not hasStateFilter then
         return true
     end
 
-    const function members(): { Registry.Member }
-        return Registry.list(matches)
+    const currentState = entry.inspect().state
+
+    if states ~= nil and not states[currentState] then
+        return false
     end
 
-    const function extend(filter: Filter): Types.EveryHandlerGroup
-        local extended = table.clone(filters)
+    return not scope.withoutStates[currentState]
+end
 
-        table.insert(extended, filter)
-
-        return createGroup(extended)
+-- Builds the functions of one scope. The handlers are looked up each time a function is called, so a handler created
+-- later is included, and a handler that changed state is matched by its new state.
+const function createGroup(scope: Scope): Types.EveryHandlerGroup
+    const function members(): { Registry.Member }
+        return Registry.list(function(entry)
+            return isInScope(scope, entry)
+        end)
     end
 
     const function pause()
@@ -115,7 +255,7 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
     const function scaleSpeed(options: Types.ScaleSpeedOptions)
         const speed, once = SpeedScale.parse(options, "everyHandler.scaleSpeed")
 
-        if #filters == 0 and not once then
+        if not scope.filtered and not once then
             Scale.set(speed)
 
             return
@@ -173,29 +313,49 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
         return false
     end
 
+    -- Returns the group of this scope with some of its fields replaced.
+    const function narrow(changes: { [string]: unknown }): Types.EveryHandlerGroup
+        local changed = table.clone(scope) :: any
+
+        for key, value in changes do
+            changed[key] = value
+        end
+
+        changed.filtered = true
+
+        return createGroup(changed :: Scope)
+    end
+
     -- Narrows the scope to the handlers whose rule has all of the tags. Tags are compared exactly as written.
     const function withTags(...: string): Types.EveryHandlerGroup
-        const tags = { ... }
+        const given = readNames("withTags", "tag", ...)
+        local conflicts: { string } = {}
 
-        if #tags == 0 then
-            error("everyHandler.withTags requires at least one tag", 2)
+        for _, tag in sorted(intersect(given, scope.withoutTags)) do
+            table.insert(conflicts, `tag "{tag}" is excluded by withoutTags`)
         end
 
-        for index, tag in tags do
-            if type(tag) ~= "string" then
-                error(`everyHandler.withTags tag {index} must be a string, got {typeof(tag)}`, 2)
-            end
+        failOnConflicts("withTags", conflicts)
+
+        return narrow({
+            tags = union(scope.tags, given),
+        })
+    end
+
+    -- Narrows the scope to the handlers whose rule has none of the tags.
+    const function withoutTags(...: string): Types.EveryHandlerGroup
+        const given = readNames("withoutTags", "tag", ...)
+        local conflicts: { string } = {}
+
+        for _, tag in sorted(intersect(given, scope.tags)) do
+            table.insert(conflicts, `tag "{tag}" is required by withTags`)
         end
 
-        return extend(function(entry)
-            for _, tag in tags do
-                if not Info.ruleHasTag(entry.ruleName, tag) then
-                    return false
-                end
-            end
+        failOnConflicts("withoutTags", conflicts)
 
-            return true
-        end)
+        return narrow({
+            withoutTags = union(scope.withoutTags, given),
+        })
     end
 
     -- Narrows the scope to the handlers of one rule.
@@ -204,20 +364,87 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
             error(`everyHandler.withRule rule name must be a string, got {typeof(ruleName)}`, 2)
         end
 
-        return extend(function(entry)
-            return entry.ruleName == ruleName
-        end)
-    end
+        const required = union(scope.rules, { [ruleName] = true })
+        local conflicts: { string } = {}
 
-    -- Narrows the scope to the handlers whose current state has this name.
-    const function inState(stateName: string): Types.EveryHandlerGroup
-        if type(stateName) ~= "string" then
-            error(`everyHandler.inState state name must be a string, got {typeof(stateName)}`, 2)
+        if scope.withoutRules[ruleName] then
+            table.insert(conflicts, `rule "{ruleName}" is excluded by withoutRule`)
         end
 
-        return extend(function(entry)
-            return entry.inspect().state == stateName
-        end)
+        if #sorted(required) > 1 then
+            table.insert(conflicts, `a handler has one rule, but withRule asks for {table.concat(sorted(required), ", ")}`)
+        end
+
+        failOnConflicts("withRule", conflicts)
+
+        return narrow({
+            rules = required,
+        })
+    end
+
+    -- Narrows the scope to the handlers that are not of the rule.
+    const function withoutRule(ruleName: string): Types.EveryHandlerGroup
+        if type(ruleName) ~= "string" then
+            error(`everyHandler.withoutRule rule name must be a string, got {typeof(ruleName)}`, 2)
+        end
+
+        local conflicts: { string } = {}
+
+        if scope.rules[ruleName] then
+            table.insert(conflicts, `rule "{ruleName}" is required by withRule`)
+        end
+
+        failOnConflicts("withoutRule", conflicts)
+
+        return narrow({
+            withoutRules = union(scope.withoutRules, { [ruleName] = true }),
+        })
+    end
+
+    -- Narrows the scope to the handlers whose current state is one of the names. A second call narrows it further,
+    -- to the states that both calls allow.
+    const function withStates(...: string): Types.EveryHandlerGroup
+        const given = readNames("withStates", "state name", ...)
+        const allowedBefore = scope.states
+        const allowed = if allowedBefore == nil then given else intersect(allowedBefore, given)
+        local conflicts: { string } = {}
+
+        if isEmpty(allowed) then
+            table.insert(
+                conflicts,
+                `none of the states {table.concat(sorted(given), ", ")} is among the states already required by withStates`
+            )
+        elseif isEmpty(without(allowed, scope.withoutStates)) then
+            for _, stateName in sorted(allowed) do
+                table.insert(conflicts, `state "{stateName}" is excluded by withoutStates`)
+            end
+        end
+
+        failOnConflicts("withStates", conflicts)
+
+        return narrow({
+            states = allowed,
+        })
+    end
+
+    -- Narrows the scope to the handlers whose current state is none of the names.
+    const function withoutStates(...: string): Types.EveryHandlerGroup
+        const given = readNames("withoutStates", "state name", ...)
+        const excluded = union(scope.withoutStates, given)
+        const allowedBefore = scope.states
+        local conflicts: { string } = {}
+
+        if allowedBefore ~= nil and isEmpty(without(allowedBefore, excluded)) then
+            for _, stateName in sorted(allowedBefore) do
+                table.insert(conflicts, `state "{stateName}" is required by withStates`)
+            end
+        end
+
+        failOnConflicts("withoutStates", conflicts)
+
+        return narrow({
+            withoutStates = excluded,
+        })
     end
 
     return table.freeze({
@@ -231,9 +458,12 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
         isAnyRunning = isAnyRunning,
         isAnyPaused = isAnyPaused,
         withTags = withTags,
+        withoutTags = withoutTags,
         withRule = withRule,
-        inState = inState,
+        withoutRule = withoutRule,
+        withStates = withStates,
+        withoutStates = withoutStates,
     })
 end
 
-return createGroup({})
+return createGroup(EMPTY_SCOPE)

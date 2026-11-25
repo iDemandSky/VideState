@@ -45,10 +45,16 @@ user settles a new one.
   handlers created later. With `once = true` it scales only the transitions running now. The speed is
   `global scale × handler scale × connection speed`.
 - **A filter returns a group with the same functions, so filters chain with "and".** They are `withTags(...)`,
-  `withRule(name)`, and `inState(name)`. `withTags` matches the rules that have all the tags, as
-  `Info.getAllRulesWithTags` does. The handlers are looked up on every call, so `inState` sees the current state.
+  `withRule(name)`, and `withStates(...)`, each with a `without` exclusion. `withTags` matches the rules that
+  have all the tags, as `Info.getAllRulesWithTags` does, and `withoutTags` drops a handler whose rule has any of them.
+  `withStates` keeps a handler in any of the names. The user chose these names to match each other, and
+  `withStates` replaced `inState`. The handlers are looked up on every call, so the states are current.
   The registry holds each handler's rule name, an inspect function, and a `hasState` function, and no entry may hold
   its handler, because the keys are weak.
+- **A filter that cannot match anything raises one batched error when the chain is built.** The user asked for
+  conflicts between nested filters to be checked. The scope is kept as plain data (sets of tags, rules, and
+  states), not as functions, so filters can be compared. Repeating a value is allowed, and the rule's own tags are not
+  read, because only what the user wrote is compared.
 - **`everyHandler.setState` checks every handler first.** The user asked for the handlers that lack the state to be
   batched into one error instead of one by one. It lists the rules with their handler counts, and changes no handler.
 - **No function returns the handlers themselves, and there is no snapshot list.** Handles would keep handlers alive

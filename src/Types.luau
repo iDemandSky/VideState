@@ -90,7 +90,7 @@ export type ScaleSpeedOptions = {
     --- When true, the scale applies only to the running transition, and the next `setState` plays at normal speed. When false, it also applies to every following transition, until `scaleSpeed` is called again. Defaults to false.
     once: boolean?,
 }
---- The functions of `everyHandler`, and of every group that `withTags`, `withRule`, and `inState` return.
+--- The functions of `everyHandler`, and of every group that a filter returns.
 export type EveryHandlerGroup = {
     --- Scales the speed of the handlers in scope. See `ScaleSpeedOptions`.
     read scaleSpeed: (options: ScaleSpeedOptions) -> (),
@@ -112,10 +112,16 @@ export type EveryHandlerGroup = {
     read isAnyPaused: () -> boolean,
     --- Narrows the scope to the handlers whose rule has all of the tags.
     read withTags: (...string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers whose rule has none of the tags.
+    read withoutTags: (...string) -> EveryHandlerGroup,
     --- Narrows the scope to the handlers of one rule.
     read withRule: (ruleName: string) -> EveryHandlerGroup,
-    --- Narrows the scope to the handlers whose current state has this name.
-    read inState: (stateName: string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers that are not of the rule.
+    read withoutRule: (ruleName: string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers whose current state is one of the names.
+    read withStates: (...string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers whose current state is none of the names.
+    read withoutStates: (...string) -> EveryHandlerGroup,
 }
 --- What the debug tools report about one handler at one moment.
 export type DebugSnapshot = {

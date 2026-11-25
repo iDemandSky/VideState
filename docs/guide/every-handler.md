@@ -16,7 +16,7 @@ VideState.everyHandler.pause() -- pause every handler
 VideState.everyHandler.finish() -- end every running transition
 
 -- Only some handlers: narrow the scope with filters, and chain as many as you need.
-VideState.everyHandler.withTags("Menu").inState("Open").setState("Closed")
+VideState.everyHandler.withTags("Menu").withoutStates("Closed").setState("Closed")
 ```
 
 `everyHandler` and every filtered scope have the same functions, called a [group](#everyhandlergroup). A group
@@ -35,6 +35,37 @@ once all of them have run.
 A filter returns a new group that is narrower than the one it was called on. Filters are combined with "and":
 a handler is in scope only when it passes every filter in the chain. Calling a filter does not look anything up
 yet, so you can keep a group in a variable and use it later.
+
+Each kind of filter has an inclusion and an exclusion: [`withTags`](#withtags) and [`withoutTags`](#withouttags),
+[`withRule`](#withrule) and [`withoutRule`](#withoutrule), and [`withStates`](#withstates) and
+[`withoutStates`](#withoutstates).
+
+### Conflicts
+
+A chain of filters that no handler could ever pass is a mistake, such as `withTags("Menu").withoutTags("Menu")`, so
+a filter checks itself against the filters before it. When it conflicts, the filter raises **one** error that lists
+every conflict, and it does so when you build the chain, not when you call an action.
+
+```luau
+-- Raises: everyHandler.withoutTags conflicts with an earlier filter: tag "Hud" is required by withTags; tag "Menu" is required by withTags. No handler could match
+VideState.everyHandler.withTags("Menu", "Hud").withoutTags("Hud", "Menu")
+```
+
+These are the conflicts:
+
+| Filter | Conflicts when |
+| --- | --- |
+| `withTags` | A tag is already in `withoutTags`. |
+| `withoutTags` | A tag is already in `withTags`. |
+| `withRule` | The rule is already in `withoutRule`, or `withRule` already asked for a different rule, because a handler has one rule. |
+| `withoutRule` | The rule is already in `withRule`. |
+| `withStates` | None of its states is allowed by an earlier `withStates`, or every state that is left is in `withoutStates`. |
+| `withoutStates` | It leaves no state that an earlier `withStates` allows. |
+
+Repeating a value, such as `withTags("Menu").withTags("Menu")`, is not a conflict. A `withStates` that keeps some
+of its states, such as `withStates("Open", "Closed").withoutStates("Open")`, is not one either. VideState compares
+what you wrote and does not read the tags of a rule you named, so `withRule("Panel").withoutTags("Menu")` is not
+checked against the tags that `Panel` has.
 
 ### withTags <Badge type="tip" text="Added in 0.3.0" />
 
@@ -66,6 +97,38 @@ rule's [metadata](/guide/rules#rulemetadata) and are matched exactly as written,
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | No tag was given | `everyHandler.withTags requires at least one tag` |
 | <Badge type="danger" text="Error" /> | A tag is not a string | `everyHandler.withTags tag <index> must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | A tag is in `withoutTags` | `everyHandler.withTags conflicts with an earlier filter: tag "<tag>" is excluded by withoutTags. No handler could match` |
+
+### withoutTags <Badge type="tip" text="Added in 0.3.0" />
+
+```luau
+Group.withoutTags(
+    ...: string -- The tags a rule must not have
+) -> EveryHandlerGroup
+```
+
+Narrows the scope to the handlers whose rule has **none** of the given tags. A handler is left out when its rule
+has any one of them. Tags are matched exactly as written.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `...` | `string` | Required. One or more tags. A rule that has any one of them is left out. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`EveryHandlerGroup`](#everyhandlergroup) | A group that acts on the matching handlers. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No tag was given | `everyHandler.withoutTags requires at least one tag` |
+| <Badge type="danger" text="Error" /> | A tag is not a string | `everyHandler.withoutTags tag <index> must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | A tag is in `withTags` | `everyHandler.withoutTags conflicts with an earlier filter: tag "<tag>" is required by withTags. No handler could match` |
 
 ### withRule <Badge type="tip" text="Added in 0.3.0" />
 
@@ -94,23 +157,25 @@ Narrows the scope to the handlers created from the rule with this name. A name t
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `ruleName` is not a string | `everyHandler.withRule rule name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | The rule is in `withoutRule` | `everyHandler.withRule conflicts with an earlier filter: rule "<rule>" is excluded by withoutRule. No handler could match` |
+| <Badge type="danger" text="Error" /> | An earlier `withRule` asked for another rule | `everyHandler.withRule conflicts with an earlier filter: a handler has one rule, but withRule asks for <rule>, <rule>. No handler could match` |
 
-### inState <Badge type="tip" text="Added in 0.3.0" />
+### withoutRule <Badge type="tip" text="Added in 0.3.0" />
 
 ```luau
-Group.inState(
-    stateName: string -- The name of the state
+Group.withoutRule(
+    ruleName: string -- The name of the rule
 ) -> EveryHandlerGroup
 ```
 
-Narrows the scope to the handlers whose [current state](/guide/handlers#currentstate) is `stateName`. The state is
-read each time you call a function of the group.
+Narrows the scope to the handlers that were **not** created from the rule with this name. Call it again to leave
+out more rules.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `stateName` | `string` | Required. The state a handler must be in. |
+| `ruleName` | `string` | Required. The `name` given in the rule's metadata. |
 
 **Returns**
 
@@ -122,7 +187,71 @@ read each time you call a function of the group.
 
 | | Cause | Message |
 | --- | --- | --- |
-| <Badge type="danger" text="Error" /> | `stateName` is not a string | `everyHandler.inState state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `ruleName` is not a string | `everyHandler.withoutRule rule name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | The rule is in `withRule` | `everyHandler.withoutRule conflicts with an earlier filter: rule "<rule>" is required by withRule. No handler could match` |
+
+### withStates <Badge type="tip" text="Added in 0.3.0" />
+
+```luau
+Group.withStates(
+    ...: string -- The states a handler may be in
+) -> EveryHandlerGroup
+```
+
+Narrows the scope to the handlers whose [current state](/guide/handlers#currentstate) is **one of** the given names.
+The state is read each time you call a function of the group. A second `withStates` narrows it further, to the
+states that both calls allow.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `...` | `string` | Required. One or more state names. A handler in any one of them stays in scope. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`EveryHandlerGroup`](#everyhandlergroup) | A group that acts on the matching handlers. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No state name was given | `everyHandler.withStates requires at least one state name` |
+| <Badge type="danger" text="Error" /> | A state name is not a string | `everyHandler.withStates state name <index> must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | No state is left | `everyHandler.withStates conflicts with an earlier filter: <conflict>. No handler could match` |
+
+### withoutStates <Badge type="tip" text="Added in 0.3.0" />
+
+```luau
+Group.withoutStates(
+    ...: string -- The states a handler must not be in
+) -> EveryHandlerGroup
+```
+
+Narrows the scope to the handlers whose current state is **none of** the given names. The state is read each time
+you call a function of the group.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `...` | `string` | Required. One or more state names. A handler in any one of them is left out. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`EveryHandlerGroup`](#everyhandlergroup) | A group that acts on the matching handlers. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No state name was given | `everyHandler.withoutStates requires at least one state name` |
+| <Badge type="danger" text="Error" /> | A state name is not a string | `everyHandler.withoutStates state name <index> must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | It leaves no state that `withStates` allows | `everyHandler.withoutStates conflicts with an earlier filter: state "<state>" is required by withStates. No handler could match` |
 
 ## Actions
 
@@ -282,9 +411,12 @@ Group.isAnyPaused() -> boolean
 
 ```luau
 type EveryHandlerGroup = {
-    withTags: (...string) -> EveryHandlerGroup, -- Narrows the scope by the tags of the rule
-    withRule: (ruleName: string) -> EveryHandlerGroup, -- Narrows the scope to one rule
-    inState: (stateName: string) -> EveryHandlerGroup, -- Narrows the scope by the current state
+    withTags: (...string) -> EveryHandlerGroup, -- Keeps the handlers whose rule has all of the tags
+    withoutTags: (...string) -> EveryHandlerGroup, -- Drops the handlers whose rule has any of the tags
+    withRule: (ruleName: string) -> EveryHandlerGroup, -- Keeps the handlers of one rule
+    withoutRule: (ruleName: string) -> EveryHandlerGroup, -- Drops the handlers of one rule
+    withStates: (...string) -> EveryHandlerGroup, -- Keeps the handlers in any of the states
+    withoutStates: (...string) -> EveryHandlerGroup, -- Drops the handlers in any of the states
     scaleSpeed: (options: ScaleSpeedOptions) -> (), -- Scales the speed of the handlers in scope
     pause: () -> (), -- Pauses the handlers in scope
     resume: () -> (), -- Resumes the handlers in scope
