@@ -83,10 +83,45 @@ export type OnPauseCallback = (startedAt: number) -> ()
 export type OnResumeCallback = (startedAt: number) -> ()
 --- Called when every running transition of a handler has reached its end, with the `os.clock()` time at which the transition started. It also runs after `finish`.
 export type OnFinishCallback = (startedAt: number) -> ()
---- Options for `fastForward`.
-export type FastForwardOptions = {
-    --- How many times faster the running transition plays. Must be a finite number above 0. It multiplies each connection's own speed.
+--- Options for `scaleSpeed`.
+export type ScaleSpeedOptions = {
+    --- How many times the speed is multiplied. Must be a finite number above 0. It multiplies each connection's own speed. Above 1 plays faster and below 1 plays slower.
     speed: number,
+    --- When true, the scale applies only to the running transition, and the next `setState` plays at normal speed. When false, it also applies to every following transition, until `scaleSpeed` is called again. Defaults to false.
+    once: boolean?,
+}
+--- The functions of `everyHandler`, and of every group that a filter returns.
+export type EveryHandlerGroup = {
+    --- Scales the speed of the handlers in scope. See `ScaleSpeedOptions`.
+    read scaleSpeed: (options: ScaleSpeedOptions) -> (),
+    --- Calls `pause` on every handler in scope.
+    read pause: () -> (),
+    --- Calls `resume` on every handler in scope.
+    read resume: () -> (),
+    --- Calls `finish` on every handler in scope.
+    read finish: () -> (),
+    --- Calls `destroy` on every handler in scope.
+    read destroy: () -> (),
+    --- Changes the state of every handler in scope. If any lacks the state, one error lists them and none changes.
+    read setState: (stateName: string, options: SetStateOptions?) -> (),
+    --- How many handlers are in scope.
+    read count: () -> number,
+    --- Whether any handler in scope has a running transition.
+    read isAnyRunning: () -> boolean,
+    --- Whether any handler in scope is paused.
+    read isAnyPaused: () -> boolean,
+    --- Narrows the scope to the handlers whose rule has all of the tags.
+    read withTags: (...string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers whose rule has none of the tags.
+    read withoutTags: (...string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers of one rule.
+    read withRule: (ruleName: string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers that are not of the rule.
+    read withoutRule: (ruleName: string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers whose current state is one of the names.
+    read withStates: (...string) -> EveryHandlerGroup,
+    --- Narrows the scope to the handlers whose current state is none of the names.
+    read withoutStates: (...string) -> EveryHandlerGroup,
 }
 --- What the debug tools report about one handler at one moment.
 export type DebugSnapshot = {
@@ -126,7 +161,7 @@ export type Handler<T> = {
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,
     read onResume: (callback: OnResumeCallback) -> Disconnect,
-    read fastForward: (options: FastForwardOptions) -> (),
+    read scaleSpeed: (options: ScaleSpeedOptions) -> (),
     read finish: () -> (),
     read onFinish: (callback: OnFinishCallback) -> Disconnect,
     read waitForFinish: () -> (),

@@ -16,8 +16,8 @@ user settles a new one.
 - **`resume` and `onResume` exist** because a `pause` with no way back would leave transitions stuck.
 - **The events pass `startedAt`,** the `os.clock()` time the most recent transition started. Before any transition, it
   is the time of the call.
-- **`fastForward` scales only the running transition,** and the next `setState` resets it. It multiplies each
-  connection's own speed. It is not called `snapTransition`, because "snap" suggests an instant jump.
+- **`scaleSpeed` keeps its scale for every following transition by default.** `once = true` limits it to the running transition, and the next `setState` resets it. The kept scale is a separate base scale that multiplies with the once scale. The user chose `once` as the option name and `false` as its default. It multiplies each
+  connection's own speed. It was called `fastForward` in 0.2.0 and renamed because a scale below 1 slows it down. It is not called `snapTransition`, because "snap" suggests an instant jump.
 - **`finish` is the instant jump.** It sends the last frame before it returns, and works while paused.
 - **`onFinish` fires once per transition,** when the last connection ends and at least one reached its end. A
   transition that a newer `setState` replaces never finishes.
@@ -33,6 +33,36 @@ user settles a new one.
   threads, and makes `setState` raise an error. The other functions do nothing afterwards.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
+
+## Every handler
+
+- **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`
+  as its first scope, then dropped the namespace for the flat `VideState.everyHandler`, because no other scope is
+  planned (`withRule` and `withTags` cover rules, and a transition always belongs to a handler). It has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`, the reads `count`, `isAnyRunning`, and
+  `isAnyPaused`, and no `waitForFinish`. The user asked for `destroy` after first leaving it out, and a destroyed
+  handler leaves the registry.
+- **Its `scaleSpeed` has the same options as a handler's.** Without `once` it sets a global scale that also reaches
+  handlers created later. With `once = true` it scales only the transitions running now. The speed is
+  `global scale × handler scale × connection speed`.
+- **A filter returns a group with the same functions, so filters chain with "and".** They are `withTags(...)`,
+  `withRule(name)`, and `withStates(...)`, each with a `without` exclusion. `withTags` matches the rules that
+  have all the tags, as `Info.getAllRulesWithTags` does, and `withoutTags` drops a handler whose rule has any of them.
+  `withStates` keeps a handler in any of the names. The user chose these names to match each other, and
+  `withStates` replaced `inState`. The handlers are looked up on every call, so the states are current.
+  The registry holds each handler's rule name, an inspect function, and a `hasState` function, and no entry may hold
+  its handler, because the keys are weak.
+- **A filter that cannot match anything raises one batched error when the chain is built.** The user asked for
+  conflicts between nested filters to be checked. The scope is kept as plain data (sets of tags, rules, and
+  states), not as functions, so filters can be compared. Repeating a value is allowed, and the rule's own tags are not
+  read, because only what the user wrote is compared.
+- **`everyHandler.setState` checks every handler first.** The user asked for the handlers that lack the state to be
+  batched into one error instead of one by one. It lists the rules with their handler counts, and changes no handler.
+- **No function returns the handlers themselves, and there is no snapshot list.** Handles would keep handlers alive
+  and the analyzer cannot type `Handler<any>`. `debug` stays the opt-in way to list handlers.
+- **A filtered group's `scaleSpeed` is not the global one.** Without `once` it
+  calls each matching handler's own `scaleSpeed`, so it does not reach handlers created later and it replaces the
+  scale the handler set itself. Only the unfiltered one sets the global scale.
+- **One handler failing does not stop the rest.** The first error is raised after every handler has run.
 
 ## Debug tools
 

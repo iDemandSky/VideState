@@ -9,9 +9,12 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | `StateEvents.luau` | `onEnter`, `onExit` |
 | `Transition/` | `onTransition`, and the `emit` that `setState` calls |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` |
-| `FastForward.luau` | `fastForward` |
+| `ScaleSpeed.luau` | `scaleSpeed` |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` |
 | `SetState.luau` | `setState` |
+
+`src/Every/` holds `VideState.everyHandler`, which acts on all handlers. Each handler adds itself to `Every/Registry.luau`
+when it is created and leaves it on `destroy`, and `Every/Scale.luau` is the global speed scale that `getRate` in `init.luau` multiplies in.
 
 The handler also has `sources` and `currentState`, which `init.luau` builds itself.
 
@@ -23,8 +26,8 @@ The handler also has `sources` and `currentState`, which `init.luau` builds itse
 - Types that several modules share go in `src/Types.luau`. A type that depends on `Group` or `Options` stays in
   `Transition/State.luau`, because those modules require `Types` and moving it would create a require cycle.
 - The analyzer cannot infer a generic over `TypedCore.infer<S>`. Pass the type explicitly in `Handler/init.luau`, such as
-  `FastForward<<Values>>(state)`.
+  `ScaleSpeed<<Values>>(state)`.
 - `onTransition` takes optional per-connection options. Each connection has its own tween, and a setting it leaves out is
   read from the handler options.
 - A new transition that starts before the running one ends continues from the value the earlier one reached.
-- `pause`, `fastForward` and `finish` act on the handler as a whole: every connection of the running transition.
+- `pause`, `scaleSpeed` and `finish` act on the handler as a whole: every connection of the running transition.

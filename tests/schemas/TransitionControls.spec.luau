@@ -264,10 +264,10 @@ describe("transition controls", function()
         end).toThrow("setState options must be a table")
     end)
 
-    it("fast-forwards only the running transition", function()
+    it("scales only the running transition", function()
         local handler = VideState.rule({
             opacity = VideState.float(),
-        }, { name = "FastForwardPanel" }).new({
+        }, { name = "ScaleSpeedPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
         }, "Idle", {
@@ -284,10 +284,10 @@ describe("transition controls", function()
 
         handler.setState("Active")
         task.wait(0.1)
-        handler.fastForward({ speed = 20 })
+        handler.scaleSpeed({ speed = 20, once = true })
         task.wait(0.3)
 
-        -- Without the fast-forward, 0.4 of the 1 second would have played.
+        -- Without the scale, 0.4 of the 1 second would have played.
         expect(alpha).toBe(1)
 
         handler.setState("Idle")
@@ -297,16 +297,57 @@ describe("transition controls", function()
         expect(alpha < 0.9).toBe(true)
 
         expect(function()
-            handler.fastForward({ speed = 0 })
-        end).toThrow("fastForward speed must be a finite number above 0")
+            handler.scaleSpeed({ speed = 0 })
+        end).toThrow("scaleSpeed speed must be a finite number above 0")
 
         expect(function()
-            handler.fastForward({ speed = 2, scale = 2 } :: any)
-        end).toThrow("fastForward options has an unknown key scale")
+            handler.scaleSpeed({ speed = 2, scale = 2 } :: any)
+        end).toThrow("scaleSpeed options has an unknown key scale")
 
         expect(function()
-            handler.fastForward(2 :: any)
-        end).toThrow("fastForward options must be a table")
+            handler.scaleSpeed(2 :: any)
+        end).toThrow("scaleSpeed options must be a table")
+    end)
+
+    it("keeps the scale for every following transition by default for every following transition", function()
+        local handler = VideState.rule({
+            opacity = VideState.float(),
+        }, { name = "KeptScalePanel" }).new({
+            Idle = { opacity = Vide.source(0) },
+            Active = { opacity = Vide.source(1) },
+        }, "Idle", {
+            onTransition = {
+                duration = 1,
+            },
+        })
+
+        local alpha = 0
+
+        handler.onTransition(function(_, _, _, frameAlpha)
+            alpha = frameAlpha
+        end)
+
+        handler.scaleSpeed({ speed = 20 })
+        handler.setState("Active")
+        task.wait(0.3)
+
+        expect(alpha).toBe(1)
+
+        handler.setState("Idle")
+        task.wait(0.3)
+
+        -- The scale is still in place for the second transition.
+        expect(alpha).toBe(1)
+
+        handler.scaleSpeed({ speed = 1 })
+        handler.setState("Active")
+        task.wait(0.3)
+
+        expect(alpha < 0.9).toBe(true)
+
+        expect(function()
+            handler.scaleSpeed({ speed = 2, once = "yes" :: any })
+        end).toThrow("scaleSpeed once must be a boolean")
     end)
 
     it("finishes every running transition at once", function()

@@ -19,8 +19,10 @@ VideState change their properties whenever the state changes.
 - **Events** for state changes: `onChange`, `onEnter`, `onExit`.
 - **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`.
   An interrupted transition continues from its current value.
-- **Transition controls**: `pause`, `resume`, `fastForward`, `finish`, `onFinish`, `waitForFinish`, and
+- **Transition controls**: `pause`, `resume`, `scaleSpeed`, `finish`, `onFinish`, `waitForFinish`, and
   `setState(name, { instant = true })`.
+- **Every handler at once**: `VideState.everyHandler` has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`,
+  plus `count`, `isAnyRunning`, and `isAnyPaused`. Chain `withTags`, `withRule`, and `withStates`, or their `without` forms, to pick the handlers.
 - **Cleanup** with `destroy`.
 - **Debug tools**: `VideState.debug` lists tracked handlers, and its `view` is a Vide component.
 

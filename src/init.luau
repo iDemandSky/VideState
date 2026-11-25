@@ -10,7 +10,8 @@ export type OnTransitionCallback<T> = Types.OnTransitionCallback<T>
 export type OnPauseCallback = Types.OnPauseCallback
 export type OnResumeCallback = Types.OnResumeCallback
 export type OnFinishCallback = Types.OnFinishCallback
-export type FastForwardOptions = Types.FastForwardOptions
+export type ScaleSpeedOptions = Types.ScaleSpeedOptions
+export type EveryHandlerGroup = Types.EveryHandlerGroup
 export type SetStateOptions = Types.SetStateOptions
 export type OnEnterCallback = Types.OnEnterCallback
 export type OnExitCallback = Types.OnExitCallback
@@ -37,6 +38,9 @@ return table.freeze({
 
     -- METHODS --
     rule = require("@self/Rule"),
+
+    -- EVERY HANDLER --
+    everyHandler = require("@self/Every"),
 
     -- INFO --
     info = require("@self/Info"),

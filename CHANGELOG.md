@@ -7,6 +7,17 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
+### Changed
+
+- `handler.fastForward` is now `handler.scaleSpeed`, and `FastForwardOptions` is now `ScaleSpeedOptions`. The name is neutral because a `speed` below `1` slows the running transition down. Breaking: rename the calls.
+
+### Added
+
+- `VideState.everyHandler` with `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`, which act on every handler at once, and `count`, `isAnyRunning`, and `isAnyPaused`, which read them. The filters `withTags`, `withRule`, and `withStates`, and their exclusions `withoutTags`, `withoutRule`, and `withoutStates`, narrow the scope and can be chained. A filter that cannot match any handler together with the earlier ones raises one error that lists every conflict. `setState` raises one error that lists every handler without the state, and changes none. The `EveryHandlerGroup` type. `scaleSpeed` takes the same options as the handler's, so `once = true` scales only the transitions that are running now. Without `once` the scale also applies to later transitions and to handlers created later.
+- A `once` option for `handler.scaleSpeed`. It defaults to `false`, so the scale stays for every following transition. With `once = true` the scale applies only to the running transition. Breaking: `fastForward` applied only to the running transition, so pass `once = true` to keep that.
+
 ## [0.2.1] - 2026-11-24
 
 ### Changed

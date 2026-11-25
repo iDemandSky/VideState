@@ -102,12 +102,16 @@ Each feature of a handler has its own module under `src/Handler/`, with the func
 | `StateEvents.luau` | `onEnter`, `onExit` | Runs when the handler enters or leaves one state. |
 | `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` wraps Ripple. |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` | Pause state for every transition of the handler. |
-| `FastForward.luau` | `fastForward` | Speed scale for the running transition. |
+| `ScaleSpeed.luau` | `scaleSpeed` | Speed scale for the running transition. |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` | How a transition ends. |
 | `SetState.luau` | `setState` | Changes the state and starts the change and transition events. |
 
 Shared types go in `src/Types.luau`, and `src/Utils/StartTimeEvent.luau` is the event that `Pause` and `Finish` use.
 `destroy` and the debug inspect function live in `src/Handler/init.luau`, because they read every feature.
+
+`src/Every/` holds `VideState.everyHandler`. Every handler adds itself to `Every/Registry.luau`, a weak table, when it is
+created and leaves it on `destroy`. `Every/Handler.luau` builds a group of filters over a snapshot of it, and `Every/Scale.luau` holds the global speed scale that every
+handler multiplies its rate by.
 
 `src/Debug/` holds `VideState.debug`. Every handler adds its inspect function to `Debug/Registry.luau`, a weak table,
 when it is created. `Debug/init.luau` tracks the handlers passed to `track`, and `Debug/View.luau` is the Vide

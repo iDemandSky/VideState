@@ -28,8 +28,10 @@ export type State<T> = {
     generation: number,
     startedAt: number?,
     currentTransition: Types.Transition?,
-    -- The scale that `fastForward` puts on the running transition. A new transition resets it.
+    -- The scale that `scaleSpeed` puts on the running transition. A new transition resets it.
     scale: number,
+    -- The scale that `scaleSpeed` keeps for every transition when `once` is false.
+    baseScale: number,
 }
 
 const function create<T>(): State<T>
@@ -40,6 +42,7 @@ const function create<T>(): State<T>
         startedAt = nil,
         currentTransition = nil,
         scale = 1,
+        baseScale = 1,
     }
 end
 
