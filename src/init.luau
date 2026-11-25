@@ -39,8 +39,8 @@ return table.freeze({
     -- METHODS --
     rule = require("@self/Rule"),
 
-    -- EVERY --
-    every = require("@self/Every"),
+    -- EVERY HANDLER --
+    everyHandler = require("@self/Every"),
 
     -- INFO --
     info = require("@self/Info"),

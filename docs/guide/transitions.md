@@ -118,7 +118,7 @@ handler.scaleSpeed({ speed = 4, once = true })
 handler.finish()
 ```
 
-- `scaleSpeed` multiplies each connection's own `speed`. By default it stays for every following transition, until you call `scaleSpeed` again. Pass `once = true` to apply it only to the transition that is running, so the next `setState` plays at normal speed. To scale, pause, or finish every handler at once, use [`VideState.every.handler`](/guide/every).
+- `scaleSpeed` multiplies each connection's own `speed`. By default it stays for every following transition, until you call `scaleSpeed` again. Pass `once = true` to apply it only to the transition that is running, so the next `setState` plays at normal speed. To scale, pause, or finish every handler at once, use [`VideState.everyHandler`](/guide/every-handler).
 - `finish` sends every connection its last frame, with `current` equal to the next state's values and an `alpha` of `1`, before it returns. It works while the handler is paused.
 - [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
 - Connections with different durations finish at different times, so the event waits for the slowest one.

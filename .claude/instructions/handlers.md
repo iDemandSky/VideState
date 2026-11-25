@@ -13,7 +13,7 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` |
 | `SetState.luau` | `setState` |
 
-`src/Every/` holds `VideState.every`, which acts on all handlers. Each handler adds itself to `Every/Registry.luau`
+`src/Every/` holds `VideState.everyHandler`, which acts on all handlers. Each handler adds itself to `Every/Registry.luau`
 when it is created and leaves it on `destroy`, and `Every/Scale.luau` is the global speed scale that `getRate` in `init.luau` multiplies in.
 
 The handler also has `sources` and `currentState`, which `init.luau` builds itself.

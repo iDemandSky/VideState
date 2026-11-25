@@ -1,4 +1,2 @@
--- The scopes that `VideState.every` can act on. Each scope has its own module.
-return table.freeze({
-    handler = require("@self/Handler"),
-})
+-- `VideState.everyHandler`: the group of every handler. Its filters narrow it to fewer handlers.
+return require("@self/Handler")

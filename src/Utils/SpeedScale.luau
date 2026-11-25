@@ -12,7 +12,7 @@ const function isValid(value: unknown): boolean
 end
 
 -- Validates the options of a `scaleSpeed` function and returns the speed scale and whether it applies once.
--- `name` starts every error message, such as `scaleSpeed` or `every.handler.scaleSpeed`.
+-- `name` starts every error message, such as `scaleSpeed` or `everyHandler.scaleSpeed`.
 const function parse(options: unknown, name: string): (number, boolean)
     if typeof(options) ~= "table" then
         error(`{name} options must be a table`, 0)

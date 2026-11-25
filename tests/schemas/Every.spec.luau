@@ -50,7 +50,7 @@ describe("every handler", function()
 
         first.setState("Active")
         task.wait(0.1)
-        VideState.every.handler.scaleSpeed({ speed = 20 })
+        VideState.everyHandler.scaleSpeed({ speed = 20 })
         task.wait(0.3)
 
         local runningFinished = firstAlpha
@@ -61,7 +61,7 @@ describe("every handler", function()
 
         local futureFinished = secondAlpha
 
-        VideState.every.handler.scaleSpeed({ speed = 1 })
+        VideState.everyHandler.scaleSpeed({ speed = 1 })
         first.setState("Idle")
         task.wait(0.3)
 
@@ -81,12 +81,12 @@ describe("every handler", function()
             alpha = frameAlpha
         end)
 
-        VideState.every.handler.scaleSpeed({ speed = 0.5 })
+        VideState.everyHandler.scaleSpeed({ speed = 0.5 })
         handler.scaleSpeed({ speed = 0.5 })
         handler.setState("Active")
         task.wait(0.5)
 
-        VideState.every.handler.scaleSpeed({ speed = 1 })
+        VideState.everyHandler.scaleSpeed({ speed = 1 })
 
         -- At a combined speed of 0.25, only about 0.125 of the 1 second has played.
         expect(alpha < 0.4).toBe(true)
@@ -109,7 +109,7 @@ describe("every handler", function()
         first.setState("Active")
         second.setState("Active")
         task.wait(0.1)
-        VideState.every.handler.scaleSpeed({
+        VideState.everyHandler.scaleSpeed({
             speed = 20,
             once = true,
         })
@@ -166,7 +166,7 @@ describe("every handler", function()
 
         first.setState("Active")
         second.setState("Active")
-        VideState.every.handler.pause()
+        VideState.everyHandler.pause()
         task.wait(0.2)
 
         local heldAlpha = secondAlpha
@@ -175,8 +175,8 @@ describe("every handler", function()
 
         local stillHeld = secondAlpha == heldAlpha
 
-        VideState.every.handler.resume()
-        VideState.every.handler.finish()
+        VideState.everyHandler.resume()
+        VideState.everyHandler.finish()
 
         local pausedCount = paused
         local resumedCount = resumed
@@ -205,18 +205,18 @@ describe("every handler", function()
         menu.setState("Active")
         hud.setState("Active")
         task.wait(0.1)
-        VideState.every.handler.withTags("EveryTagMenu").scaleSpeed({ speed = 20 })
+        VideState.everyHandler.withTags("EveryTagMenu").scaleSpeed({ speed = 20 })
         task.wait(0.3)
 
         local menuFinished = menuAlpha
         local hudHeld = hudAlpha
 
         -- Both tags are required, so no handler matches this group.
-        VideState.every.handler.withTags("EveryTagMenu", "EveryTagHud").finish()
+        VideState.everyHandler.withTags("EveryTagMenu", "EveryTagHud").finish()
 
         local hudAfterNoMatch = hudAlpha
 
-        VideState.every.handler.withTags("EveryTagShared").finish()
+        VideState.everyHandler.withTags("EveryTagShared").finish()
 
         expect(menuFinished).toBe(1)
         expect(hudHeld < 0.9).toBe(true)
@@ -228,7 +228,7 @@ describe("every handler", function()
         local doomed = createHandler("EveryDestroyDoomedPanel", { "EveryDestroyTag" })
         local safe = createHandler("EveryDestroySafePanel")
 
-        VideState.every.handler.withTags("EveryDestroyTag").destroy()
+        VideState.everyHandler.withTags("EveryDestroyTag").destroy()
 
         expect(function()
             doomed.setState("Active")
@@ -239,14 +239,14 @@ describe("every handler", function()
         expect(safe.currentState()).toBe("Active")
 
         -- Destroying again does nothing, because a destroyed handler has left the list.
-        VideState.every.handler.withTags("EveryDestroyTag").destroy()
+        VideState.everyHandler.withTags("EveryDestroyTag").destroy()
     end)
 
     it("destroys every handler", function()
         local first = createHandler("EveryDestroyAllFirstPanel")
         local second = createHandler("EveryDestroyAllSecondPanel")
 
-        VideState.every.handler.destroy()
+        VideState.everyHandler.destroy()
 
         expect(function()
             first.setState("Active")
@@ -259,16 +259,16 @@ describe("every handler", function()
 
     it("rejects invalid tags", function()
         expect(function()
-            VideState.every.handler.withTags()
-        end).toThrow("every.handler.withTags requires at least one tag")
+            VideState.everyHandler.withTags()
+        end).toThrow("everyHandler.withTags requires at least one tag")
 
         expect(function()
-            VideState.every.handler.withTags("EveryTagMenu", 2 :: any)
-        end).toThrow("every.handler.withTags tag 2 must be a string, got number")
+            VideState.everyHandler.withTags("EveryTagMenu", 2 :: any)
+        end).toThrow("everyHandler.withTags tag 2 must be a string, got number")
 
         expect(function()
-            VideState.every.handler.withTags("EveryTagMenu").scaleSpeed({ speed = 0 })
-        end).toThrow("every.handler.scaleSpeed speed must be a finite number above 0")
+            VideState.everyHandler.withTags("EveryTagMenu").scaleSpeed({ speed = 0 })
+        end).toThrow("everyHandler.scaleSpeed speed must be a finite number above 0")
     end)
 
     it("narrows the scope by rule and by state, and chains the filters", function()
@@ -279,7 +279,7 @@ describe("every handler", function()
         second.setState("Active")
         third.setState("Active")
 
-        const tagged = VideState.every.handler.withTags("EveryFilterTag")
+        const tagged = VideState.everyHandler.withTags("EveryFilterTag")
 
         expect(tagged.count()).toBe(3)
         expect(tagged.inState("Active").count()).toBe(2)
@@ -287,7 +287,7 @@ describe("every handler", function()
         expect(tagged.withRule("EveryFilterFirstPanel").count()).toBe(1)
         expect(tagged.withRule("EveryFilterFirstPanel").inState("Active").count()).toBe(0)
         expect(tagged.withTags("EveryFilterOther").inState("Active").count()).toBe(1)
-        expect(VideState.every.handler.withRule("EveryFilterMissingRule").count()).toBe(0)
+        expect(VideState.everyHandler.withRule("EveryFilterMissingRule").count()).toBe(0)
 
         -- The filters are read each time, so a state change moves a handler in or out of the scope.
         first.setState("Active")
@@ -302,7 +302,7 @@ describe("every handler", function()
         running.onTransition(function() end)
         idle.onTransition(function() end)
 
-        const tagged = VideState.every.handler.withTags("EveryReadTag")
+        const tagged = VideState.everyHandler.withTags("EveryReadTag")
 
         expect(tagged.isAnyRunning()).toBe(false)
         expect(tagged.isAnyPaused()).toBe(false)
@@ -321,7 +321,7 @@ describe("every handler", function()
         tagged.finish()
 
         expect(tagged.isAnyRunning()).toBe(false)
-        expect(VideState.every.handler.withTags("EveryReadNobody").isAnyRunning()).toBe(false)
+        expect(VideState.everyHandler.withTags("EveryReadNobody").isAnyRunning()).toBe(false)
     end)
 
     it("changes the state of every handler in scope", function()
@@ -333,13 +333,13 @@ describe("every handler", function()
             firstChanges += 1
         end)
 
-        VideState.every.handler.withTags("EverySetStateTag").setState("Active")
+        VideState.everyHandler.withTags("EverySetStateTag").setState("Active")
 
         expect(first.currentState()).toBe("Active")
         expect(second.currentState()).toBe("Active")
         expect(firstChanges).toBe(1)
 
-        VideState.every.handler.withTags("EverySetStateTag").inState("Active").setState("Idle", { instant = true })
+        VideState.everyHandler.withTags("EverySetStateTag").inState("Active").setState("Idle", { instant = true })
 
         expect(first.currentState()).toBe("Idle")
         expect(second.currentState()).toBe("Idle")
@@ -353,18 +353,18 @@ describe("every handler", function()
         local another = createClosableHandler("EveryMissingAnotherPanel", { "EveryMissingTag" })
 
         expect(function()
-            VideState.every.handler.withTags("EveryMissingTag").setState("Closed")
+            VideState.everyHandler.withTags("EveryMissingTag").setState("Closed")
         end).toThrow(
             "is missing in 3 handlers: EveryMissingFirstPanel (1), EveryMissingSecondPanel (1), EveryMissingThirdPanel (1)"
         )
 
         const ok, message = pcall(function()
-            VideState.every.handler.withTags("EveryMissingTag").setState("Active")
+            VideState.everyHandler.withTags("EveryMissingTag").setState("Active")
         end)
 
         expect(ok).toBe(false)
         expect(message).toBe(
-            'every.handler.setState state "Active" is missing in 2 handlers: EveryMissingAnotherPanel (1), EveryMissingClosablePanel (1). No handler changed state'
+            'everyHandler.setState state "Active" is missing in 2 handlers: EveryMissingAnotherPanel (1), EveryMissingClosablePanel (1). No handler changed state'
         )
 
         -- Nothing changed, not even the handlers that have the state.
@@ -375,41 +375,41 @@ describe("every handler", function()
         expect(another.currentState()).toBe("Idle")
 
         -- A scope that only has handlers with the state works.
-        VideState.every.handler.withTags("EveryMissingTag").withRule("EveryMissingClosablePanel").setState("Closed")
+        VideState.everyHandler.withTags("EveryMissingTag").withRule("EveryMissingClosablePanel").setState("Closed")
 
         expect(closable.currentState()).toBe("Closed")
         expect(another.currentState()).toBe("Idle")
 
         expect(function()
-            VideState.every.handler.setState(2 :: any)
-        end).toThrow("every.handler.setState state name must be a string, got number")
+            VideState.everyHandler.setState(2 :: any)
+        end).toThrow("everyHandler.setState state name must be a string, got number")
     end)
 
     it("rejects invalid filters", function()
         expect(function()
-            VideState.every.handler.withRule(2 :: any)
-        end).toThrow("every.handler.withRule rule name must be a string, got number")
+            VideState.everyHandler.withRule(2 :: any)
+        end).toThrow("everyHandler.withRule rule name must be a string, got number")
 
         expect(function()
-            VideState.every.handler.inState(2 :: any)
-        end).toThrow("every.handler.inState state name must be a string, got number")
+            VideState.everyHandler.inState(2 :: any)
+        end).toThrow("everyHandler.inState state name must be a string, got number")
     end)
 
     it("rejects invalid options", function()
         expect(function()
-            VideState.every.handler.scaleSpeed({ speed = 0 })
-        end).toThrow("every.handler.scaleSpeed speed must be a finite number above 0")
+            VideState.everyHandler.scaleSpeed({ speed = 0 })
+        end).toThrow("everyHandler.scaleSpeed speed must be a finite number above 0")
 
         expect(function()
-            VideState.every.handler.scaleSpeed({ speed = 2, scale = 2 } :: any)
-        end).toThrow("every.handler.scaleSpeed options has an unknown key scale")
+            VideState.everyHandler.scaleSpeed({ speed = 2, scale = 2 } :: any)
+        end).toThrow("everyHandler.scaleSpeed options has an unknown key scale")
 
         expect(function()
-            VideState.every.handler.scaleSpeed({ speed = 2, once = "yes" :: any })
-        end).toThrow("every.handler.scaleSpeed once must be a boolean")
+            VideState.everyHandler.scaleSpeed({ speed = 2, once = "yes" :: any })
+        end).toThrow("everyHandler.scaleSpeed once must be a boolean")
 
         expect(function()
-            VideState.every.handler.scaleSpeed(2 :: any)
-        end).toThrow("every.handler.scaleSpeed options must be a table")
+            VideState.everyHandler.scaleSpeed(2 :: any)
+        end).toThrow("everyHandler.scaleSpeed options must be a table")
     end)
 end)

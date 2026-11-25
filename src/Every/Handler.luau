@@ -113,7 +113,7 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
     -- created later. Otherwise it calls the `scaleSpeed` of each handler in scope, so a handler created later is not
     -- affected by a scale without `once`.
     const function scaleSpeed(options: Types.ScaleSpeedOptions)
-        const speed, once = SpeedScale.parse(options, "every.handler.scaleSpeed")
+        const speed, once = SpeedScale.parse(options, "everyHandler.scaleSpeed")
 
         if #filters == 0 and not once then
             Scale.set(speed)
@@ -132,14 +132,14 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
     -- Checks every handler in scope first. If any lacks the state, one error lists all of them and no handler
     -- changes state.
     const function setState(stateName: string, options: Types.SetStateOptions?)
-        Validation.stateName(stateName, "every.handler.setState state name")
+        Validation.stateName(stateName, "everyHandler.setState state name")
 
         const found = members()
         const missing, description = describeMissing(found, stateName)
 
         if missing > 0 then
             error(
-                `every.handler.setState state "{stateName}" is missing in {missing} handlers: {description}. No handler changed state`,
+                `everyHandler.setState state "{stateName}" is missing in {missing} handlers: {description}. No handler changed state`,
                 0
             )
         end
@@ -178,12 +178,12 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
         const tags = { ... }
 
         if #tags == 0 then
-            error("every.handler.withTags requires at least one tag", 2)
+            error("everyHandler.withTags requires at least one tag", 2)
         end
 
         for index, tag in tags do
             if type(tag) ~= "string" then
-                error(`every.handler.withTags tag {index} must be a string, got {typeof(tag)}`, 2)
+                error(`everyHandler.withTags tag {index} must be a string, got {typeof(tag)}`, 2)
             end
         end
 
@@ -201,7 +201,7 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
     -- Narrows the scope to the handlers of one rule.
     const function withRule(ruleName: string): Types.EveryHandlerGroup
         if type(ruleName) ~= "string" then
-            error(`every.handler.withRule rule name must be a string, got {typeof(ruleName)}`, 2)
+            error(`everyHandler.withRule rule name must be a string, got {typeof(ruleName)}`, 2)
         end
 
         return extend(function(entry)
@@ -212,7 +212,7 @@ const function createGroup(filters: { Filter }): Types.EveryHandlerGroup
     -- Narrows the scope to the handlers whose current state has this name.
     const function inState(stateName: string): Types.EveryHandlerGroup
         if type(stateName) ~= "string" then
-            error(`every.handler.inState state name must be a string, got {typeof(stateName)}`, 2)
+            error(`everyHandler.inState state name must be a string, got {typeof(stateName)}`, 2)
         end
 
         return extend(function(entry)

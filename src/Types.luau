@@ -90,7 +90,7 @@ export type ScaleSpeedOptions = {
     --- When true, the scale applies only to the running transition, and the next `setState` plays at normal speed. When false, it also applies to every following transition, until `scaleSpeed` is called again. Defaults to false.
     once: boolean?,
 }
---- The functions of `every.handler`, and of every group that `withTags`, `withRule`, and `inState` return.
+--- The functions of `everyHandler`, and of every group that `withTags`, `withRule`, and `inState` return.
 export type EveryHandlerGroup = {
     --- Scales the speed of the handlers in scope. See `ScaleSpeedOptions`.
     read scaleSpeed: (options: ScaleSpeedOptions) -> (),

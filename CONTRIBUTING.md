@@ -109,7 +109,7 @@ Each feature of a handler has its own module under `src/Handler/`, with the func
 Shared types go in `src/Types.luau`, and `src/Utils/StartTimeEvent.luau` is the event that `Pause` and `Finish` use.
 `destroy` and the debug inspect function live in `src/Handler/init.luau`, because they read every feature.
 
-`src/Every/` holds `VideState.every`. Every handler adds itself to `Every/Registry.luau`, a weak table, when it is
+`src/Every/` holds `VideState.everyHandler`. Every handler adds itself to `Every/Registry.luau`, a weak table, when it is
 created and leaves it on `destroy`. `Every/Handler.luau` builds a group of filters over a snapshot of it, and `Every/Scale.luau` holds the global speed scale that every
 handler multiplies its rate by.
 

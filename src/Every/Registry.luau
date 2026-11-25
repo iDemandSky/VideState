@@ -1,6 +1,6 @@
 const Types = require("../Types")
 
--- The functions of a handler that `every.handler` calls. A handler of any rule has them.
+-- The functions of a handler that `everyHandler` calls. A handler of any rule has them.
 export type Controls = {
     read pause: () -> (),
     read resume: () -> (),

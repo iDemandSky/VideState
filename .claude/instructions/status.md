@@ -13,9 +13,9 @@ option, the shared frame loop with its benchmark (`lest bench`), and `VideState.
 ## Unreleased on `dev`
 
 `fastForward` was renamed `scaleSpeed` (breaking, so the next version is 0.3.0).
-`scaleSpeed` has a `once` option (default `false`), and `VideState.every.handler` acts on all handlers with `scaleSpeed`,
+`scaleSpeed` has a `once` option (default `false`), and `VideState.everyHandler` acts on all handlers with `scaleSpeed`,
 `pause`, `resume`, and `finish`. `destroy`, `setState`, `count`, `isAnyRunning`, and `isAnyPaused` are included, and the filters `withTags`, `withRule`,
-and `inState` chain. `every` could get more scopes later, beside `handler`.
+and `inState` chain.
 
 `main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.2.0 only once the user
 has pushed it there.

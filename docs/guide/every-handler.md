@@ -1,25 +1,25 @@
 ---
-title: Every
+title: Every handler
 description: Control and query every handler at once, or the handlers that match a filter.
 outline: [2, 3]
 ---
 
-# Every
+# Every handler
 
-`VideState.every` acts on many handlers with one call. Each scope is a table on `every`, and `every.handler`
-acts on every [handler](/guide/handlers) that exists. Use it for settings and effects that belong to the whole
+`VideState.everyHandler` acts on many handlers with one call. It acts on every [handler](/guide/handlers) that
+exists, or on the ones that match a [filter](#filters). Use it for settings and effects that belong to the whole
 game, such as a pause menu, a game-wide animation speed, closing every menu, or skipping every animation on screen.
 
 ```luau
-VideState.every.handler.scaleSpeed({ speed = 0.5 }) -- slow motion for everything
-VideState.every.handler.pause() -- pause every handler
-VideState.every.handler.finish() -- end every running transition
+VideState.everyHandler.scaleSpeed({ speed = 0.5 }) -- slow motion for everything
+VideState.everyHandler.pause() -- pause every handler
+VideState.everyHandler.finish() -- end every running transition
 
 -- Only some handlers: narrow the scope with filters, and chain as many as you need.
-VideState.every.handler.withTags("Menu").inState("Open").setState("Closed")
+VideState.everyHandler.withTags("Menu").inState("Open").setState("Closed")
 ```
 
-`every.handler` and every filtered scope have the same functions, called a [group](#everyhandlergroup). A group
+`everyHandler` and every filtered scope have the same functions, called a [group](#everyhandlergroup). A group
 looks its handlers up each time you call a function, so a handler created later is included, and a handler that
 changed state since the last call is matched by its new state.
 
@@ -64,8 +64,8 @@ rule's [metadata](/guide/rules#rulemetadata) and are matched exactly as written,
 
 | | Cause | Message |
 | --- | --- | --- |
-| <Badge type="danger" text="Error" /> | No tag was given | `every.handler.withTags requires at least one tag` |
-| <Badge type="danger" text="Error" /> | A tag is not a string | `every.handler.withTags tag <index> must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | No tag was given | `everyHandler.withTags requires at least one tag` |
+| <Badge type="danger" text="Error" /> | A tag is not a string | `everyHandler.withTags tag <index> must be a string, got <type>` |
 
 ### withRule <Badge type="tip" text="Added in 0.3.0" />
 
@@ -93,7 +93,7 @@ Narrows the scope to the handlers created from the rule with this name. A name t
 
 | | Cause | Message |
 | --- | --- | --- |
-| <Badge type="danger" text="Error" /> | `ruleName` is not a string | `every.handler.withRule rule name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `ruleName` is not a string | `everyHandler.withRule rule name must be a string, got <type>` |
 
 ### inState <Badge type="tip" text="Added in 0.3.0" />
 
@@ -122,7 +122,7 @@ read each time you call a function of the group.
 
 | | Cause | Message |
 | --- | --- | --- |
-| <Badge type="danger" text="Error" /> | `stateName` is not a string | `every.handler.inState state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `stateName` is not a string | `everyHandler.inState state name must be a string, got <type>` |
 
 ## Actions
 
@@ -136,9 +136,9 @@ Group.scaleSpeed(
 
 Speeds up or slows down the handlers in scope. It multiplies with the scale of each handler (see the handler's
 [`scaleSpeed`](/guide/handlers#scalespeed)) and with each connection's own `speed`, so the speed of a
-connection is `every scale × handler scale × connection speed`.
+connection is `global scale × handler scale × connection speed`.
 
-On `every.handler` itself, the scale applies by default to the transitions that are running now and to every
+On `everyHandler` itself, the scale applies by default to the transitions that are running now and to every
 transition that starts later, including those of handlers created later, until you call `scaleSpeed` again. A
 `speed` of `1` removes it. With `once = true` it scales only the transitions that are running now: each handler goes
 back to normal speed at its next `setState`, and handlers created later are not affected.
@@ -157,10 +157,10 @@ set itself.
 
 | | Cause | Message |
 | --- | --- | --- |
-| <Badge type="danger" text="Error" /> | `options` is not a table | `every.handler.scaleSpeed options must be a table` |
-| <Badge type="danger" text="Error" /> | `options` has an unknown key | `every.handler.scaleSpeed options has an unknown key <key>` |
-| <Badge type="danger" text="Error" /> | `options.speed` is not a finite number above 0 | `every.handler.scaleSpeed speed must be a finite number above 0` |
-| <Badge type="danger" text="Error" /> | `options.once` is not a boolean | `every.handler.scaleSpeed once must be a boolean` |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `everyHandler.scaleSpeed options must be a table` |
+| <Badge type="danger" text="Error" /> | `options` has an unknown key | `everyHandler.scaleSpeed options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | `options.speed` is not a finite number above 0 | `everyHandler.scaleSpeed speed must be a finite number above 0` |
+| <Badge type="danger" text="Error" /> | `options.once` is not a boolean | `everyHandler.scaleSpeed once must be a boolean` |
 
 ### pause <Badge type="tip" text="Added in 0.3.0" />
 
@@ -205,8 +205,8 @@ the state, with how many of its handlers are in scope, and **no handler changes 
 a filter, such as [`withRule`](#withrule) or [`withTags`](#withtags), until every handler in it has the state.
 
 ```luau
--- Raises: every.handler.setState state "Closed" is missing in 3 handlers: Dialog (1), Panel (2). No handler changed state
-VideState.every.handler.setState("Closed")
+-- Raises: everyHandler.setState state "Closed" is missing in 3 handlers: Dialog (1), Panel (2). No handler changed state
+VideState.everyHandler.setState("Closed")
 ```
 
 **Parameters**
@@ -220,8 +220,8 @@ VideState.every.handler.setState("Closed")
 
 | | Cause | Message |
 | --- | --- | --- |
-| <Badge type="danger" text="Error" /> | `stateName` is not a string | `every.handler.setState state name must be a string, got <type>` |
-| <Badge type="danger" text="Error" /> | One or more handlers in scope lack the state | `every.handler.setState state "<stateName>" is missing in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
+| <Badge type="danger" text="Error" /> | `stateName` is not a string | `everyHandler.setState state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | One or more handlers in scope lack the state | `everyHandler.setState state "<stateName>" is missing in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 
 An invalid `options` raises the errors of the handler's [`setState`](/guide/handlers#setstate).
 
@@ -235,7 +235,7 @@ Calls [`destroy`](/guide/handlers#destroy) on every handler in scope. Each one s
 removes its listeners, and raises an error on its next `setState`. A destroyed handler leaves the list of
 handlers, so a later call skips it.
 
-On `every.handler` itself this ends every handler in the game, so use it when you tear everything down, such as when
+On `everyHandler` itself this ends every handler in the game, so use it when you tear everything down, such as when
 a test ends. To destroy only some handlers, use a filter.
 
 ## Queries
@@ -297,4 +297,4 @@ type EveryHandlerGroup = {
 }
 ```
 
-The functions of `every.handler`, and of every group that a filter returns. Each one is described above.
+The functions of `everyHandler`, and of every group that a filter returns. Each one is described above.

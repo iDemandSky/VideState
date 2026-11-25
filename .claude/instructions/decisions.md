@@ -36,20 +36,20 @@ user settles a new one.
 
 ## Every handler
 
-- **`VideState.every.handler` acts on all handlers.** The user chose the `every` namespace with `handler` as the first
-  scope, so scopes such as `every.rule(name)` or `withTags()` can be added later. The registry keeps the rule name of
-  each handler for that. It has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`, the reads `count`, `isAnyRunning`, and
+- **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`
+  as its first scope, then dropped the namespace for the flat `VideState.everyHandler`, because no other scope is
+  planned (`withRule` and `withTags` cover rules, and a transition always belongs to a handler). It has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`, the reads `count`, `isAnyRunning`, and
   `isAnyPaused`, and no `waitForFinish`. The user asked for `destroy` after first leaving it out, and a destroyed
   handler leaves the registry.
 - **Its `scaleSpeed` has the same options as a handler's.** Without `once` it sets a global scale that also reaches
   handlers created later. With `once = true` it scales only the transitions running now. The speed is
-  `every scale × handler scale × connection speed`.
+  `global scale × handler scale × connection speed`.
 - **A filter returns a group with the same functions, so filters chain with "and".** They are `withTags(...)`,
   `withRule(name)`, and `inState(name)`. `withTags` matches the rules that have all the tags, as
   `Info.getAllRulesWithTags` does. The handlers are looked up on every call, so `inState` sees the current state.
   The registry holds each handler's rule name, an inspect function, and a `hasState` function, and no entry may hold
   its handler, because the keys are weak.
-- **`every.handler.setState` checks every handler first.** The user asked for the handlers that lack the state to be
+- **`everyHandler.setState` checks every handler first.** The user asked for the handlers that lack the state to be
   batched into one error instead of one by one. It lists the rules with their handler counts, and changes no handler.
 - **No function returns the handlers themselves, and there is no snapshot list.** Handles would keep handlers alive
   and the analyzer cannot type `Handler<any>`. `debug` stays the opt-in way to list handlers.
