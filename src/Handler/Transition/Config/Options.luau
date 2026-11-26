@@ -52,7 +52,8 @@ const function isValidDelay(value: unknown): boolean
 end
 
 -- Rejects options with keys outside the allowed set, so a misspelled or outdated key fails instead of being ignored.
-const function checkKeys(options: unknown)
+-- A setting that used to sit at the top level now belongs in `tweenDefault`, and the error says so.
+const function checkOptions(options: unknown)
     if typeof(options) ~= "table" then
         error("onTransition options must be a table", 0)
     end
@@ -60,8 +61,31 @@ const function checkKeys(options: unknown)
     local fields = options :: { [any]: unknown }
 
     for key in fields do
-        if Constants.OPTION_KEYS[key :: any] ~= true then
-            error("onTransition options has an unknown key " .. tostring(key), 0)
+        local isOption = Constants.OPTION_KEYS[key :: any] == true
+        local isSetting = Constants.SETTING_KEYS[key :: any] == true
+
+        if isOption then
+            continue
+        end
+
+        if isSetting then
+            error(`onTransition options has an unknown key {key}. Put {key} inside tweenDefault`, 0)
+        end
+
+        error("onTransition options has an unknown key " .. tostring(key), 0)
+    end
+end
+
+const function checkSettings(settings: unknown)
+    if typeof(settings) ~= "table" then
+        error("onTransition tweenDefault must be a table", 0)
+    end
+
+    local fields = settings :: { [any]: unknown }
+
+    for key in fields do
+        if Constants.SETTING_KEYS[key :: any] ~= true then
+            error("onTransition tweenDefault has an unknown key " .. tostring(key), 0)
         end
     end
 end
@@ -137,36 +161,36 @@ const function fallbackSpeed(value: unknown): number
     return Constants.DEFAULT_SPEED
 end
 
--- Validates `onTransition` options and returns readers for each setting. A setting that `options` leaves out
--- is read from `base`, which is how a connection inherits the settings of its handler. With no `base`, it
--- takes the default.
-const function parse(options: Types.TransitionOptions?, base: Settings?): Settings
+-- Validates tween settings and returns readers for each one. A setting that `settings` leaves out is read from
+-- `base`, which is how an override inherits the settings of its connection. With no `base`, it takes the
+-- default.
+const function parseSettings(settings: Types.TweenSettings?, base: Settings?): Settings
     local easing: unknown = nil
     local duration: unknown = nil
     local speed: unknown = nil
     local delay: unknown = nil
 
-    if options ~= nil then
-        checkKeys(options)
+    if settings ~= nil then
+        checkSettings(settings)
 
-        if options.easing ~= nil then
-            validateEasing(options.easing)
-            easing = options.easing
+        if settings.easing ~= nil then
+            validateEasing(settings.easing)
+            easing = settings.easing
         end
 
-        if options.duration ~= nil then
-            validateDuration(options.duration)
-            duration = options.duration
+        if settings.duration ~= nil then
+            validateDuration(settings.duration)
+            duration = settings.duration
         end
 
-        if options.speed ~= nil then
-            validateSpeed(options.speed)
-            speed = options.speed
+        if settings.speed ~= nil then
+            validateSpeed(settings.speed)
+            speed = settings.speed
         end
 
-        if options.delay ~= nil then
-            validateDelay(options.delay)
-            delay = options.delay
+        if settings.delay ~= nil then
+            validateDelay(settings.delay)
+            delay = settings.delay
         end
     end
 
@@ -229,6 +253,18 @@ const function parse(options: Types.TransitionOptions?, base: Settings?): Settin
     })
 end
 
+-- Validates the options of `onTransition` and `animate` and returns the settings of `tweenDefault`.
+const function parse(options: Types.TransitionOptions?, base: Settings?): Settings
+    if options == nil then
+        return parseSettings(nil, base)
+    end
+
+    checkOptions(options)
+
+    return parseSettings(options.tweenDefault, base)
+end
+
 return table.freeze({
     parse = parse,
+    parseSettings = parseSettings,
 })

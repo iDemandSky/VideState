@@ -1,6 +1,6 @@
 ---
 title: Transitions
-description: Animate between states with onTransition, shared tween settings, and alpha.
+description: Animate between states with onTransition and animate, tween settings for each connection, and alpha.
 outline: [2, 3]
 ---
 
@@ -11,13 +11,24 @@ runs repeatedly with a `current` value that moves from the previous state to the
 `alpha` that shows the progress. This page covers how transitions behave and the settings that control them.
 
 Every `onTransition` connection has its own tween, so each one can animate with its own settings.
-Pass them as the second argument of [`onTransition`](/guide/handlers#ontransition). A setting a connection
-leaves out is inherited from the `onTransition` key of the handler's
-[`HandlerOptions`](/guide/handlers#handleroptions), and then from the default.
+Pass them as the second argument of [`onTransition`](/guide/handlers#ontransition), inside `tweenDefault`. A setting a
+connection leaves out takes the built-in default. A handler has no tween options of its own, so the settings belong to
+the connection that uses them.
 
 ```luau
-handler.onTransition(fade, { duration = 0.2, easing = "quadOut" })
-handler.onTransition(slide, { duration = 0.5, easing = "backOut" })
+handler.onTransition(fade, {
+    tweenDefault = {
+        duration = 0.2,
+        easing = "quadOut",
+    },
+})
+
+handler.onTransition(slide, {
+    tweenDefault = {
+        duration = 0.5,
+        easing = "backOut",
+    },
+})
 ```
 
 [`animate`](/guide/handlers#animate) is the same transition with Vide sources instead of a callback. It takes
@@ -82,7 +93,11 @@ such as list items that appear one after another:
 for index, item in items do
     handler.onTransition(function(_, _, current)
         item.Transparency = current.transparency
-    end, { delay = (index - 1) * 0.05 })
+    end, {
+        tweenDefault = {
+            delay = (index - 1) * 0.05,
+        },
+    })
 end
 ```
 
@@ -163,10 +178,31 @@ read once and never change.
 
 ## Types
 
-### TransitionOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
+### TransitionOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.4.0" />
 
 ```luau
 type TransitionOptions = {
+    tweenDefault: TweenSettings?, -- The tween settings of the connection
+}
+```
+
+Changed in 0.2.0: added `delay`, and the options can also be passed to one connection.
+
+Changed in 0.4.0: the settings moved into `tweenDefault`, and a handler no longer takes them.
+
+The options of one [`onTransition`](/guide/handlers#ontransition) or [`animate`](/guide/handlers#animate) connection.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `tweenDefault` | [`TweenSettings`](#tweensettings) | No | The tween settings of the connection. A setting left out takes the built-in default. |
+
+An unknown key, a non-table value, or a setting at the top level raises an error when the connection is made. A top-level
+setting such as `duration` gets the message `onTransition options has an unknown key duration. Put duration inside tweenDefault`.
+
+### TweenSettings <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+type TweenSettings = {
     easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
     duration: (number | Source<number>)?, -- The duration in seconds
     speed: Source<number>?, -- How fast the transition advances
@@ -174,9 +210,7 @@ type TransitionOptions = {
 }
 ```
 
-Changed in 0.2.0: added `delay`, and the options can also be passed to one connection.
-
-Settings for the transitions of one handler or one connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
+The tween settings of a connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
@@ -185,7 +219,7 @@ Settings for the transitions of one handler or one connection. The tween is crea
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
 | `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
 
-Invalid values raise an error when the handler is created. This includes an unknown key, a
+Invalid values raise an error when `onTransition` or `animate` is called. This includes an unknown key, a
 non-table value, a negative `speed`, and a `speed` that is not a source. A source is also checked on
 creation, using its current value.
 

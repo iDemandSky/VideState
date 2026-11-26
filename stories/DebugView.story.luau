@@ -29,14 +29,14 @@ const function createDemo(duration: number, delay: number)
             opacity = Vide.source(1),
             size = Vide.source(UDim2.fromScale(1, 1)),
         },
-    }, "Idle", {
-        onTransition = {
+    }, "Idle")
+
+    handler.onTransition(function() end, {
+        tweenDefault = {
             duration = duration,
             delay = delay,
         },
     })
-
-    handler.onTransition(function() end)
 
     return handler
 end

@@ -49,17 +49,19 @@ Creates a rule and registers its metadata under `metadata.name`.
 | <Badge type="danger" text="Error" /> | A rule with the same `metadata.name` already exists | `Duplicate rule name: <name>` |
 | <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
 
-## Creating handlers from a rule <Badge type="tip" text="Added in 0.1.0" />
+## Creating handlers from a rule <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.4.0" />
 
 Call `new` on a rule that [`rule`](#creating-a-rule) has already returned. It is not a function of `VideState`.
 
 ```luau
 Rule.new(
     states: { [string]: Sources<T> }, -- Vide sources for each state, keyed by state name
-    initialState: string, -- The state the handler starts in
-    options: HandlerOptions? -- Optional handler settings
+    initialState: string -- The state the handler starts in
 ) -> Handler<T>
 ```
+
+Changed in 0.4.0: a handler takes no options, so `new` has only the states and the initial state. The tween
+settings moved to [`onTransition`](/guide/handlers#ontransition) and [`animate`](/guide/handlers#animate).
 
 Creates a [handler](/guide/handlers) from the rule. Every state must provide a Vide source for each
 field in the rule, and each state's values are validated when `new` runs. A rule needs at least
@@ -71,7 +73,6 @@ two states.
 | --- | --- | --- |
 | `states` | `{ [string]: `[`Sources`](/guide/handlers#sources-1)`<T> }` | A dictionary of states. Each value is a record of Vide sources with one source per field. When `metadata.allowedStateNames` is set, every key must be in that list. |
 | `initialState` | `string` | The name of the state the handler starts in. Must be a key of `states`. |
-| `options` | [`HandlerOptions`](/guide/handlers#handleroptions)`?` | Optional. Settings for the handler. `onTransition` sets the easing, duration, and speed shared by its transition listeners. |
 
 **Returns**
 
@@ -91,14 +92,7 @@ two states.
 | <Badge type="danger" text="Error" /> | Fewer than two states | `rule requires at least 2 states` |
 | <Badge type="danger" text="Error" /> | A state name is not in `allowedStateNames` | `state "<state>" is not in allowedStateNames` |
 | <Badge type="danger" text="Error" /> | `initialState` is not one of the states | `unknown initial state "<state>"` |
-| <Badge type="danger" text="Error" /> | `onTransition` is not a table | `onTransition options must be a table` |
-| <Badge type="danger" text="Error" /> | `onTransition` has an unknown key | `onTransition options has an unknown key <key>` |
-| <Badge type="danger" text="Error" /> | `onTransition.easing` is not a known easing name | `onTransition easing must be a known easing name` |
-| <Badge type="danger" text="Error" /> | `onTransition.duration` is not a finite, non-negative number | `onTransition duration must be a finite non-negative number` |
-| <Badge type="danger" text="Error" /> | `onTransition.speed` is not a source | `onTransition speed must be a source` |
-| <Badge type="danger" text="Error" /> | `onTransition.speed` is negative | `onTransition speed must not be negative` |
-| <Badge type="danger" text="Error" /> | `onTransition.speed` is not finite | `onTransition speed must be a finite non-negative number` |
-| <Badge type="danger" text="Error" /> | `onTransition.delay` is not a finite, non-negative number | `onTransition delay must be a finite non-negative number` |
+| <Badge type="danger" text="Error" /> | A third argument is given | `new takes only the states and the initial state. Pass tweenDefault to onTransition or animate instead` |
 
 ## Tags
 
@@ -239,7 +233,7 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 ```luau
 type Rule<Fields> = {
     _schema: Schema<Fields>, -- The schema built from the fields
-    new: (states: { [string]: Sources<T> }, initialState: string, options: HandlerOptions?) -> Handler<T>,
+    new: (states: { [string]: Sources<T> }, initialState: string) -> Handler<T>,
     getTags: () -> { string },
     hasTag: (tag: string) -> boolean,
     addTags: (...string) -> boolean,

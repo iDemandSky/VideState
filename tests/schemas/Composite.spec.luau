@@ -4,18 +4,13 @@ const VideState = require("@VideState")
 
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
-const function createRangeHandler(name: string, duration: number, easing: string?)
+const function createRangeHandler(name: string)
     return VideState.rule({
         range = VideState.numberRange(),
     }, { name = name }).new({
         Idle = { range = Vide.source(NumberRange.new(10, 30)) },
         Active = { range = Vide.source(NumberRange.new(50, 90)) },
-    }, "Idle", {
-        onTransition = {
-            duration = duration,
-            easing = easing :: any,
-        },
-    })
+    }, "Idle")
 end
 
 describe("composite values", function()
@@ -29,8 +24,12 @@ describe("composite values", function()
     end)
 
     it("tweens the minimum and maximum of a NumberRange", function()
-        local handler = createRangeHandler("RangeTweenPanel", 3)
-        local animated = handler.animate()
+        local handler = createRangeHandler("RangeTweenPanel")
+        local animated = handler.animate({
+            tweenDefault = {
+                duration = 3,
+            },
+        })
 
         expect(animated.range().Min).toBe(10)
         expect(animated.range().Max).toBe(30)
@@ -55,12 +54,7 @@ describe("composite values", function()
         }, { name = "RangeOvershootPanel" }).new({
             Idle = { range = Vide.source(NumberRange.new(0, 100)) },
             Active = { range = Vide.source(NumberRange.new(40, 42)) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.3,
-                easing = "elasticOut",
-            },
-        })
+        }, "Idle")
 
         local frames = 0
         local last = NumberRange.new(0, 100)
@@ -68,7 +62,12 @@ describe("composite values", function()
         handler.onTransition(function(_, _, current)
             frames += 1
             last = current.range
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.3,
+                easing = "elasticOut",
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.8)
@@ -91,13 +90,13 @@ describe("composite values", function()
                 fade = Vide.source(NumberSequence.new(1, 1)),
                 tint = Vide.source(ColorSequence.new(Color3.new(1, 1, 1), Color3.new(1, 1, 1))),
             },
-        }, "Idle", {
-            onTransition = {
+        }, "Idle")
+
+        local animated = handler.animate({
+            tweenDefault = {
                 duration = 3,
             },
         })
-
-        local animated = handler.animate()
 
         handler.setState("Active")
         task.wait(0.3)
@@ -127,13 +126,13 @@ describe("composite values", function()
                     NumberSequenceKeypoint.new(1, 1),
                 })),
             },
-        }, "Idle", {
-            onTransition = {
+        }, "Idle")
+
+        local animated = handler.animate({
+            tweenDefault = {
                 duration = 3,
             },
         })
-
-        local animated = handler.animate()
 
         handler.setState("Active")
 

@@ -5,8 +5,9 @@ user settles a new one.
 
 ## Transitions
 
-- **Each `onTransition` connection has its own tween.** Handler options are the defaults, and a connection can pass its
-  own options to override each setting. The user wanted different settings per animated component.
+- **Each `onTransition` connection has its own tween.** The settings go in the connection's `tweenDefault`, and a handler
+  takes no options. 0.2.0 had handler options as the defaults, and 0.4.0 removed them. The user wanted different settings
+  per animated component, and found defaults on the handler confusing and extra lines to write.
 - **An interrupted transition continues from its current value.** When `setState` runs before a transition ends, the new
   tween starts from the last value that connection sent, not from the previous state's values. It builds a new tween
   from that value instead of retargeting the old Ripple tweens, because the animatable fields can differ between

@@ -33,7 +33,6 @@ return function <S>(
     schema: S,
     states: { [string]: Sources<TypedCore.infer<S>> },
     initialState: string,
-    options: Types.HandlerOptions?,
     allowedStateNames: { string }?,
     ruleName: string
 )
@@ -57,7 +56,6 @@ return function <S>(
     end
 
     local sources = table.freeze(derivedSources) :: Sources<Values>
-    local transitionOptions = if options == nil then nil else options.onTransition
 
     -- The transitions of the handler share this state, and the features below act on it.
     local state = TransitionState.create<<Values>>()
@@ -81,7 +79,7 @@ return function <S>(
         return state.scale * state.baseScale * EveryScale.get()
     end
 
-    local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
+    local transition = Transition<<Values>>(state, getRate, finish.settle)
     local animate = Animate<<Values>>(transition.onTransition, sources)
     local destroyed = false
     local registered: EveryRegistry.Controls? = nil

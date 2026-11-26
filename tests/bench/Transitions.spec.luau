@@ -38,15 +38,15 @@ const function measure(count: number): (number, number, number)
                 opacity = Vide.source(1),
                 size = Vide.source(UDim2.fromScale(1, 1)),
             },
-        }, "Idle", {
-            onTransition = {
-                duration = DURATION,
-            },
-        })
+        }, "Idle")
 
         handler.onTransition(function()
             received += 1
-        end)
+        end, {
+            tweenDefault = {
+                duration = DURATION,
+            },
+        })
 
         table.insert(handlers, handler)
     end

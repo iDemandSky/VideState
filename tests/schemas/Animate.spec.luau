@@ -4,7 +4,14 @@ const VideState = require("@VideState")
 
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
-const function createHandler(name: string, duration: number)
+-- A long transition, so a test can read values while it is still running.
+const SLOW = {
+    tweenDefault = {
+        duration = 3,
+    },
+}
+
+const function createHandler(name: string)
     return VideState.rule({
         opacity = VideState.float(),
         label = VideState.string(),
@@ -17,11 +24,7 @@ const function createHandler(name: string, duration: number)
             opacity = Vide.source(1),
             label = Vide.source("Active"),
         },
-    }, "Idle", {
-        onTransition = {
-            duration = duration,
-        },
-    })
+    }, "Idle")
 end
 
 describe("animate", function()
@@ -40,7 +43,11 @@ describe("animate", function()
             },
         }, "Idle")
 
-        local animated, disconnect = handler.animate({ duration = 0.05 })
+        local animated, disconnect = handler.animate({
+            tweenDefault = {
+                duration = 0.05,
+            },
+        })
 
         expect(animated.opacity()).toBe(0)
         expect(animated.visible()).toBe(false)
@@ -66,7 +73,11 @@ describe("animate", function()
             Active = { opacity = Vide.source(1) },
         }, "Idle")
 
-        local animated = handler.animate({ duration = 3 })
+        local animated = handler.animate({
+            tweenDefault = {
+                duration = 3,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.3)
@@ -80,19 +91,19 @@ describe("animate", function()
         expect(animated.opacity()).toBe(1)
     end)
 
-    it("uses its own options instead of the handler defaults", function()
+    it("uses the options it is given", function()
         local handler = VideState.rule({
             opacity = VideState.float(),
         }, { name = "AnimateOptionsPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 5,
+        }, "Idle")
+
+        local animated = handler.animate({
+            tweenDefault = {
+                duration = 0,
             },
         })
-
-        local animated = handler.animate({ duration = 0 })
 
         handler.setState("Active")
 
@@ -108,13 +119,17 @@ describe("animate", function()
         }, "Idle")
 
         expect(function()
-            handler.animate({ duration = -1 })
+            handler.animate({
+                tweenDefault = {
+                    duration = -1,
+                },
+            })
         end).toThrow("duration")
     end)
 
     it("holds the sources while paused and continues after resume", function()
-        local handler = createHandler("AnimatePausePanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimatePausePanel")
+        local animated = handler.animate(SLOW)
 
         handler.setState("Active")
         task.wait(0.3)
@@ -134,8 +149,8 @@ describe("animate", function()
     end)
 
     it("keeps the last value after destroy and stops following", function()
-        local handler = createHandler("AnimateDestroyPanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimateDestroyPanel")
+        local animated = handler.animate(SLOW)
 
         handler.setState("Active")
         task.wait(0.3)
@@ -153,9 +168,13 @@ describe("animate", function()
     end)
 
     it("gives each call its own options and its own sources", function()
-        local handler = createHandler("AnimateTwoPanel", 3)
-        local slow = handler.animate()
-        local fast = handler.animate({ duration = 0 })
+        local handler = createHandler("AnimateTwoPanel")
+        local slow = handler.animate(SLOW)
+        local fast = handler.animate({
+            tweenDefault = {
+                duration = 0,
+            },
+        })
 
         expect(slow.opacity == fast.opacity).toBe(false)
 
@@ -167,8 +186,8 @@ describe("animate", function()
     end)
 
     it("continues from the current value when the state changes mid-transition", function()
-        local handler = createHandler("AnimateInterruptPanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimateInterruptPanel")
+        local animated = handler.animate(SLOW)
 
         handler.setState("Active")
         task.wait(0.3)
@@ -185,8 +204,8 @@ describe("animate", function()
     end)
 
     it("jumps to the next values for an instant state change", function()
-        local handler = createHandler("AnimateInstantPanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimateInstantPanel")
+        local animated = handler.animate(SLOW)
 
         handler.setState("Active", { instant = true })
 
@@ -195,8 +214,8 @@ describe("animate", function()
     end)
 
     it("switches fields that cannot be tweened at the start", function()
-        local handler = createHandler("AnimateStringPanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimateStringPanel")
+        local animated = handler.animate(SLOW)
 
         expect(animated.label()).toBe("Idle")
 
@@ -207,19 +226,19 @@ describe("animate", function()
     end)
 
     it("starts from the current state, not the initial one", function()
-        local handler = createHandler("AnimateLateCallPanel", 3)
+        local handler = createHandler("AnimateLateCallPanel")
 
         handler.setState("Active")
 
-        local animated = handler.animate()
+        local animated = handler.animate(SLOW)
 
         expect(animated.opacity()).toBe(1)
         expect(animated.label()).toBe("Active")
     end)
 
     it("leaves the handler sources alone", function()
-        local handler = createHandler("AnimateSeparatePanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimateSeparatePanel")
+        local animated = handler.animate(SLOW)
 
         animated.opacity(0.5)
 
@@ -232,8 +251,8 @@ describe("animate", function()
     end)
 
     it("follows scaleSpeed like any other connection", function()
-        local handler = createHandler("AnimateScalePanel", 3)
-        local animated = handler.animate()
+        local handler = createHandler("AnimateScalePanel")
+        local animated = handler.animate(SLOW)
 
         handler.setState("Active")
         handler.scaleSpeed({ speed = 100 })

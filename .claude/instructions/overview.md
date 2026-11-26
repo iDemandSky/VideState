@@ -11,7 +11,7 @@ Instances.
 1. Create a rule with `VideState.rule(schema, metadata)`. The rule is the blueprint of a component: the properties it
    has and the states it can be in. A rule validates the values of every state, and a handler created from it
    inherits that.
-2. Create a handler with `rule.new(states, initialState, options)`. Each UI component gets its own handler, with its own
+2. Create a handler with `rule.new(states, initialState)`. Each UI component gets its own handler, with its own
    state, sources, and cleanup. The initial state must be chosen before the UI is declared through Vide.
 3. Bind `handler.sources.<field>` to Vide properties. They follow the active state.
 4. Change the state with `handler.setState(name)`, and react with the handler's events and transitions.

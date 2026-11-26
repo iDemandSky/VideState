@@ -12,11 +12,7 @@ describe("transitions", function()
         }, { name = "ValuePanel" }).new({
             Idle = { visible = Vide.source(false), opacity = Vide.source(0) },
             Active = { visible = Vide.source(true), opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.05,
-            },
-        })
+        }, "Idle")
 
         local currents = {}
         local alphas = {}
@@ -26,10 +22,18 @@ describe("transitions", function()
             expect(to.visible).toBe(true)
             table.insert(currents, current)
             table.insert(alphas, alpha)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.05,
+            },
+        })
         local disconnectSecond = handler.onTransition(function(_, _, current)
             table.insert(secondCurrents, current)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.05,
+            },
+        })
 
         handler.setState("Active")
         expect(currents[1].opacity).toBe(0)
@@ -59,37 +63,44 @@ describe("transitions", function()
         }, { name = "PerConnectionPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
+        }, "Idle")
+
+        local slowAlphas: { number } = {}
+        local fastAlphas: { number } = {}
+
+        handler.onTransition(function(_, _, _, alpha)
+            table.insert(slowAlphas, alpha)
+        end, {
+            tweenDefault = {
                 duration = 0.6,
             },
         })
-
-        local inheritedAlphas: { number } = {}
-        local overriddenAlphas: { number } = {}
-
         handler.onTransition(function(_, _, _, alpha)
-            table.insert(inheritedAlphas, alpha)
-        end)
-        handler.onTransition(function(_, _, _, alpha)
-            table.insert(overriddenAlphas, alpha)
+            table.insert(fastAlphas, alpha)
         end, {
-            duration = 0.05,
+            tweenDefault = {
+                duration = 0.05,
+            },
         })
 
         handler.setState("Active")
         task.wait(0.3)
 
         -- The override finished, and the connection with no options still runs on the handler's duration.
-        expect(overriddenAlphas[#overriddenAlphas]).toBe(1)
-        expect(inheritedAlphas[#inheritedAlphas] < 1).toBe(true)
+        expect(fastAlphas[#fastAlphas]).toBe(1)
+        expect(slowAlphas[#slowAlphas] < 1).toBe(true)
 
         task.wait(0.6)
 
-        expect(inheritedAlphas[#inheritedAlphas]).toBe(1)
+        expect(slowAlphas[#slowAlphas]).toBe(1)
 
         expect(function()
-            handler.onTransition(function() end, { easing = "bounce" } :: any)
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    duration = 0.6,
+                    easing = "bounce",
+                },
+            } :: any)
         end).toThrow("onTransition easing must be a known easing name")
     end)
 
@@ -100,13 +111,7 @@ describe("transitions", function()
         }, { name = "TweenValuePanel" }).new({
             Idle = { visible = Vide.source(false), opacity = Vide.source(0) },
             Active = { visible = Vide.source(true), opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                easing = "quadIn",
-                -- A long transition spans many frames, so a slow frame cannot skip every intermediate value.
-                duration = 0.4,
-            },
-        })
+        }, "Idle")
 
         local currents: { { visible: boolean, opacity: number } } = {}
         local alphas: { number } = {}
@@ -114,7 +119,13 @@ describe("transitions", function()
         handler.onTransition(function(_, _, current, alpha)
             table.insert(currents, current)
             table.insert(alphas, alpha)
-        end)
+        end, {
+            tweenDefault = {
+                easing = "quadIn",
+                -- A long transition spans many frames, so a slow frame cannot skip every intermediate value.
+                duration = 0.4,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.9)
@@ -147,12 +158,7 @@ describe("transitions", function()
         }, { name = "OvershootPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                easing = "backOut",
-                duration = 0.5,
-            },
-        })
+        }, "Idle")
 
         local highestAlpha = 0
         local lastAlpha = 0
@@ -160,7 +166,12 @@ describe("transitions", function()
         handler.onTransition(function(_, _, _, alpha)
             highestAlpha = math.max(highestAlpha, alpha)
             lastAlpha = alpha
-        end)
+        end, {
+            tweenDefault = {
+                easing = "backOut",
+                duration = 0.5,
+            },
+        })
 
         handler.setState("Active")
         task.wait(1)
@@ -175,16 +186,16 @@ describe("transitions", function()
         }, { name = "StopPanel" }).new({
             Idle = { visible = Vide.source(false) },
             Active = { visible = Vide.source(true) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.25,
-            },
-        })
+        }, "Idle")
 
         local calls = 0
         local disconnect = handler.onTransition(function()
             calls += 1
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.25,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.05)
@@ -203,17 +214,17 @@ describe("transitions", function()
         }, { name = "ReplacePanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.2,
-            },
-        })
+        }, "Idle")
 
         local lastTo = nil
 
         handler.onTransition(function(_, to)
             lastTo = to.opacity
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.2,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.05)
@@ -229,17 +240,17 @@ describe("transitions", function()
         }, { name = "InterruptPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.6,
-            },
-        })
+        }, "Idle")
 
         local values: { number } = {}
 
         handler.onTransition(function(_, _, current)
             table.insert(values, current.opacity)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.6,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.25)
@@ -270,13 +281,7 @@ describe("transitions", function()
         }, { name = "PausedPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                -- A long transition, so a slow first frame cannot finish it before the pause.
-                duration = 3,
-                speed = speed,
-            },
-        })
+        }, "Idle")
 
         local calls = 0
         local lastAlpha = 0
@@ -284,7 +289,12 @@ describe("transitions", function()
         handler.onTransition(function(_, _, _, alpha)
             calls += 1
             lastAlpha = alpha
-        end)
+        end, {
+            tweenDefault = {
+                duration = 3,
+                speed = speed,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.1)
@@ -314,11 +324,7 @@ describe("transitions", function()
         }, { name = "ErrorPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.3,
-            },
-        })
+        }, "Idle")
 
         local failingCalls = 0
         local lastAlpha = 0
@@ -331,10 +337,18 @@ describe("transitions", function()
             if failingCalls == 2 then
                 error("listener failed on purpose")
             end
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.3,
+            },
+        })
         handler.onTransition(function(_, _, _, alpha)
             lastAlpha = alpha
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.3,
+            },
+        })
         handler.onFinish(function()
             finishes += 1
         end)
@@ -355,18 +369,18 @@ describe("transitions", function()
         }, { name = "BackwardsPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.4,
-                speed = speed,
-            },
-        })
+        }, "Idle")
 
         local alphas: { number } = {}
 
         handler.onTransition(function(_, _, _, alpha)
             table.insert(alphas, alpha)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.4,
+                speed = speed,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.1)
@@ -385,17 +399,17 @@ describe("transitions", function()
         }, { name = "DynamicDurationPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = duration,
-            },
-        })
+        }, "Idle")
 
         local lastCurrent = nil
 
         handler.onTransition(function(_, _, current)
             lastCurrent = current.opacity
-        end)
+        end, {
+            tweenDefault = {
+                duration = duration,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.1)
@@ -412,33 +426,104 @@ describe("transitions", function()
         local rule = VideState.rule({
             visible = VideState.boolean(),
         }, { name = "BadOptionsPanel" })
+        local handler = rule.new({
+            Idle = { visible = Vide.source(false) },
+            Active = { visible = Vide.source(true) },
+        }, "Idle")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    easing = "bounce",
+                },
+            } :: any)
+        end).toThrow("onTransition easing must be a known easing name")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    duration = -1,
+                },
+            })
+        end).toThrow("onTransition duration must be a finite non-negative number")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    speed = Vide.source(-1),
+                },
+            })
+        end).toThrow("onTransition speed must not be negative")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    speed = 1 :: any,
+                },
+            })
+        end).toThrow("onTransition speed must be a source")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    tween = "quadIn",
+                },
+            } :: any)
+        end).toThrow("onTransition tweenDefault has an unknown key tween")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tween = "quadIn",
+            } :: any)
+        end).toThrow("onTransition options has an unknown key tween")
+
+        expect(function()
+            handler.onTransition(function() end, "quadIn" :: any)
+        end).toThrow("onTransition options must be a table")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                tweenDefault = "quadIn",
+            } :: any)
+        end).toThrow("onTransition tweenDefault must be a table")
+    end)
+
+    it("points a setting at the top level to tweenDefault", function()
+        local handler = VideState.rule({
+            visible = VideState.boolean(),
+        }, { name = "OldOptionsPanel" }).new({
+            Idle = { visible = Vide.source(false) },
+            Active = { visible = Vide.source(true) },
+        }, "Idle")
+
+        expect(function()
+            handler.onTransition(function() end, {
+                duration = 1,
+            } :: any)
+        end).toThrow("Put duration inside tweenDefault")
+
+        expect(function()
+            handler.animate({
+                easing = "quadIn",
+            } :: any)
+        end).toThrow("Put easing inside tweenDefault")
+    end)
+
+    it("rejects options passed to new, because a handler takes none", function()
+        local rule = VideState.rule({
+            visible = VideState.boolean(),
+        }, { name = "NoHandlerOptionsPanel" })
         local states = {
             Idle = { visible = Vide.source(false) },
             Active = { visible = Vide.source(true) },
         }
 
         expect(function()
-            rule.new(states, "Idle", { onTransition = { easing = "bounce" } :: any })
-        end).toThrow("onTransition easing must be a known easing name")
-
-        expect(function()
-            rule.new(states, "Idle", { onTransition = { duration = -1 } })
-        end).toThrow("onTransition duration must be a finite non-negative number")
-
-        expect(function()
-            rule.new(states, "Idle", { onTransition = { speed = Vide.source(-1) } })
-        end).toThrow("onTransition speed must not be negative")
-
-        expect(function()
-            rule.new(states, "Idle", { onTransition = { speed = 1 :: any } })
-        end).toThrow("onTransition speed must be a source")
-
-        expect(function()
-            rule.new(states, "Idle", { onTransition = { tween = "quadIn" } :: any })
-        end).toThrow("onTransition options has an unknown key tween")
-
-        expect(function()
-            rule.new(states, "Idle", { onTransition = "quadIn" :: any })
-        end).toThrow("onTransition options must be a table")
+            (rule.new :: any)(states, "Idle", {
+                onTransition = {
+                    duration = 1,
+                },
+            })
+        end).toThrow("new takes only the states and the initial state")
     end)
 end)

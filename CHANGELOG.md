@@ -7,6 +7,10 @@ version can contain breaking changes.
 
 ## [0.4.0] - Unreleased
 
+### Changed
+
+- A handler takes no options. `rule.new(states, initialState)` is all it needs, and `HandlerOptions` is removed. The tween settings are passed to `onTransition` and `animate` instead, inside `tweenDefault`: `handler.onTransition(callback, { tweenDefault = { duration = 0.2 } })`. A setting that is left out takes the built-in default. Breaking: a third argument to `new` raises an error, and a setting at the top level of the options raises an error that points to `tweenDefault`.
+
 ### Added
 
 - The schemas `numberRange`, `numberSequence`, and `colorSequence`. A transition tweens a `NumberRange` by its minimum and maximum, and keeps the minimum at or below the maximum. It tweens a `NumberSequence` or a `ColorSequence` keypoint by keypoint when both values have the same number of keypoints, and switches at the start when they differ.

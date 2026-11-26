@@ -4,11 +4,10 @@ const State = require("./State")
 
 type Disconnect = Types.Disconnect
 
--- Creates `onTransition`. A connection keeps its own settings, and a setting it leaves out is read from
--- the handler options, which are the defaults for all of its connections.
+-- Creates `onTransition`. A connection keeps its own settings, and a setting it leaves out takes the built-in
+-- default.
 return function<T>(
     state: State.State<T>,
-    handlerSettings: Options.Settings,
     settle: Types.SettleTransition
 ): Types.ConnectTransition<T>
     return function(callback: Types.OnTransitionCallback<T>, connectionOptions: Types.TransitionOptions?): Disconnect
@@ -16,7 +15,7 @@ return function<T>(
             error("onTransition callback must be a function", 2)
         end
 
-        local settings = Options.parse(connectionOptions, handlerSettings)
+        local settings = Options.parse(connectionOptions)
 
         state.nextId += 1
 

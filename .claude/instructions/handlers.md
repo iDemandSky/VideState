@@ -28,7 +28,7 @@ The handler also has `sources` and `currentState`, which `init.luau` builds itse
   `Transition/State.luau`, because those modules require `Types` and moving it would create a require cycle.
 - The analyzer cannot infer a generic over `TypedCore.infer<S>`. Pass the type explicitly in `Handler/init.luau`, such as
   `ScaleSpeed<<Values>>(state)`.
-- `onTransition` takes optional per-connection options. Each connection has its own tween, and a setting it leaves out is
-  read from the handler options.
+- `onTransition` and `animate` take optional options with a `tweenDefault`. Each connection has its own tween, and a
+  setting it leaves out takes the built-in default. A handler takes no options.
 - A new transition that starts before the running one ends continues from the value the earlier one reached.
 - `pause`, `scaleSpeed` and `finish` act on the handler as a whole: every connection of the running transition.

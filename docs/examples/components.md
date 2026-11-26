@@ -117,14 +117,14 @@ button's component instance. The button starts in `Idle`, or in `Disabled` when 
 
 ```luau
 const function createButton(label: string, design: Design, enabled: boolean)
-    local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled", {
-        onTransition = {
+    local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled")
+
+    -- The state sources change instantly. `animate` returns sources that fade between the states instead.
+    local animated = handler.animate({
+        tweenDefault = {
             duration = 0.15,
         },
     })
-
-    -- The state sources change instantly. `animate` returns sources that fade between the states instead.
-    local animated = handler.animate()
 
     local button = Vide.create "TextButton" {
         Name = label,

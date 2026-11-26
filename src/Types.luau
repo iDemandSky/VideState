@@ -40,8 +40,8 @@ export type TweenName =
     | "expoIn" | "expoOut" | "expoInOut"
     | "backIn" | "backOut" | "backInOut"
     | "elasticIn" | "elasticOut" | "elasticInOut"
---- Settings for how `onTransition` animates between states. A field left out is inherited from the handler options, then from the default. Each field accepts a plain value or a Vide source. A source is read every frame, so changing it affects the running transition and later ones.
-export type TransitionOptions = {
+--- The tween settings of one connection. A setting left out takes the built-in default. Each setting accepts a plain value or a Vide source, except `speed`, which is a source. A source is read every frame, so changing it affects the running transition and later ones.
+export type TweenSettings = {
     --- The Ripple easing applied to animatable fields and to `alpha`. Defaults to linear.
     easing: (TweenName | Source<TweenName>)?,
     --- The duration in seconds. Must be finite and non-negative. Defaults to 0.25.
@@ -50,6 +50,11 @@ export type TransitionOptions = {
     speed: Source<number>?,
     --- How long a connection waits before its tween starts, in seconds. Read when a transition starts. The wait is scaled by the speed, so pausing holds it. Defaults to 0.
     delay: (number | Source<number>)?,
+}
+--- Options for `onTransition` and `animate`.
+export type TransitionOptions = {
+    --- The tween settings of the connection.
+    tweenDefault: TweenSettings?,
 }
 --- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
@@ -146,10 +151,6 @@ export type DebugSnapshot = {
 }
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
---- Options for creating a handler. `onTransition` sets the default tween settings of its `onTransition` listeners. A listener can override them with its own options.
-export type HandlerOptions = {
-    onTransition: TransitionOptions?,
-}
 --- A handler created from a rule. Each handler owns its state, sources, and cleanup.
 export type Handler<T> = {
     read sources: Sources<T>,

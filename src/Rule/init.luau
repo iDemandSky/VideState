@@ -97,12 +97,13 @@ return function <Fields>(fields: Fields, metadata: RuleMetadata)
             return changed
         end,
 
-        new = function(
-            states: States<typeof(schema)>,
-            initialState: string,
-            options: Types.HandlerOptions?
-        )
-            return Handler(schema, states, initialState, options, metadata.allowedStateNames, metadata.name)
+        new = function(states: States<typeof(schema)>, initialState: string, ...: never)
+            -- The options of a handler were removed. Failing here is better than ignoring durations that were set.
+            if select("#", ...) > 0 then
+                error("new takes only the states and the initial state. Pass tweenDefault to onTransition or animate instead", 2)
+            end
+
+            return Handler(schema, states, initialState, metadata.allowedStateNames, metadata.name)
         end,
     })
 end
