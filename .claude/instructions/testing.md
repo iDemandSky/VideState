@@ -3,7 +3,7 @@
 - `lest` does not rebuild its test place, so it can silently run stale code. Always rebuild first, then run:
   ```sh
   larvae process
-  rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
+  argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
   lest schemas
   ```
   Use `lest schemas -t "<text>"` to run only tests whose name contains the text.

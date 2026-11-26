@@ -43,7 +43,7 @@ Warnings in `.lest/`, `dist/`, and `packages/` come from generated or vendored c
 
 ```sh
 larvae process
-rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
+argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
 lest schemas
 ```
 
@@ -61,7 +61,7 @@ default:
 
 ```sh
 larvae process
-rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
+argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
 lest bench
 ```
 
@@ -77,7 +77,7 @@ intentionally invalid assignments and uses `--!nocheck` so they do not show up a
 The Luau LSP extension ships an analyzer that can run them:
 
 ```sh
-rojo sourcemap default.project.json -o <scratch>/sourcemap.json
+argon sourcemap default.project.json --output <scratch>/sourcemap.json
 <server> analyze --flag:LuauSolverV2=true \
     --definitions=@roblox=<globalStorage>/johnnymorganz.luau-lsp/globalTypes.PluginSecurity.d.luau \
     --sourcemap <scratch>/sourcemap.json --platform roblox \
