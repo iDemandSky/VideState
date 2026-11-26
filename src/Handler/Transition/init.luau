@@ -16,11 +16,12 @@ export type Transition<T> = {
 -- `getRate` scales the time that passes, and `settle` counts a connection of a transition as ended.
 return function <T>(
     state: State.State<T>,
+    stateNames: { string },
     getRate: () -> number,
     settle: Types.SettleTransition
 ): Transition<T>
     local transition: Transition<T> = {
-        onTransition = Connect(state, settle),
+        onTransition = Connect(state, stateNames, settle),
         emit = Start(state, getRate, settle),
         stop = function()
             -- A new generation makes every running loop stale, so each one stops on its next frame.

@@ -60,18 +60,27 @@ If you need a gradual effect on text, such as a typewriter reveal, build it your
 
 ### Animatable fields
 
-Animatable fields are numbers, vectors, `Vector2`, `Vector3`, `CFrame`, `Color3`, `UDim`, `UDim2`,
-`Rect`, `NumberRange`, and tables whose values are numbers, vectors, or `Vector3`s with the same keys.
-`NumberSequence` and `ColorSequence` are tweened keypoint by keypoint, so both values need the same number of
-keypoints. Everything else is not tweened and switches at the start of the transition. That includes `string`,
-`boolean`, `enum`, and `optional` fields, and a sequence whose keypoint count changes.
+These types are tweened:
 
-A `NumberRange` tweens its minimum and its maximum separately. An easing that overshoots, such as `back`, can push
-the minimum above the maximum, so the range is clamped to keep the minimum at or below the maximum. A sequence keeps
-its first keypoint at time `0` and its last at `1`, and its other times stay in order.
+- Numbers and vectors, including `Vector2` and `Vector3`.
+- `CFrame`, `Color3`, `UDim`, `UDim2`, and `Rect`.
+- `NumberRange`. Its minimum and its maximum are tweened separately.
+- `NumberSequence` and `ColorSequence`, keypoint by keypoint. Both values need the same number of keypoints.
+- Tables whose values are numbers, vectors, or `Vector3`s with the same keys.
 
-`current` is not validated against the schema again. A tweened `integer` field can hold a fractional
-value in the middle of a transition, so round it in your callback if you need a whole number.
+These are not tweened. They switch to their next value at the start of the transition:
+
+- `string`, `boolean`, `enum`, and `optional` fields.
+- A `NumberSequence` or `ColorSequence` whose keypoint count changes.
+- Every other type.
+
+A few things to know:
+
+- An easing that overshoots, such as `back`, can push the minimum of a `NumberRange` above its maximum. The range is
+  clamped to keep the minimum at or below the maximum.
+- A sequence keeps its first keypoint at time `0` and its last at `1`, and its other times stay in order.
+- `current` is not validated against the schema again. A tweened `integer` field can hold a fractional value in the
+  middle of a transition, so round it in your callback if you need a whole number.
 
 ## alpha
 
@@ -83,6 +92,62 @@ it to drive values that Ripple cannot tween.
 transition and settles at exactly `1` when it ends. This is expected, because the same curve moves
 the tweened fields past their start or end. Clamp it with `math.clamp(alpha, 0, 1)` if you need a
 fixed range.
+
+## Overrides for state changes <Badge type="tip" text="Added in 0.4.0" />
+
+A connection can use other tween settings for particular state changes. A state change is the state the handler
+leaves and the state it enters. `tweenOverrides` is an array of entries, and each entry names those states and the
+settings to use for them:
+
+```luau
+handler.animate({
+    tweenDefault = {
+        duration = 0.15,
+        easing = "quadOut",
+    },
+    tweenOverrides = {
+        {
+            from = {
+                "Idle",
+                "Hovered",
+            },
+            to = {
+                "Pressed",
+            },
+            tween = {
+                duration = 0.05,
+                easing = "linear",
+            },
+        },
+        {
+            -- from is left out, so it means every state
+            to = {
+                "Disabled",
+            },
+            tween = {
+                duration = 0.5,
+                easing = "sineInOut",
+            },
+        },
+    },
+})
+```
+
+- `from` and `to` are arrays of state names. A side that is left out means every state.
+- `tween` takes the same settings as `tweenDefault`. A setting it leaves out keeps the one of `tweenDefault`.
+- A state change that no entry matches uses `tweenDefault`.
+- At most one entry may match a state change, so the order of the array does not matter. An overlap raises an error
+  when `onTransition` or `animate` is called. The error lists every problem together: overlaps, a state the handler does
+  not have, an empty array, an entry that leaves out both sides, an entry that only matches a state to itself, and an
+  entry with no `tween`.
+- The settings are picked when `setState` starts the transition, once for each connection. A connection with no
+  overrides does no extra work. A source inside the settings is still read every frame.
+- When a transition is interrupted, the entry is picked for the state the handler was heading to and the new state. The
+  value still continues from where it is.
+- The speed works as it does without overrides: the duration is divided by the speed of the connection, then by the
+  global speed, as `(duration / localSpeed) / globalSpeed`.
+- A different tween for one field is another connection. Call `animate` or `onTransition` again with the settings that
+  field needs.
 
 ## Delays
 
@@ -183,6 +248,7 @@ read once and never change.
 ```luau
 type TransitionOptions = {
     tweenDefault: TweenSettings?, -- The tween settings of the connection
+    tweenOverrides: { TweenOverride }?, -- Tween settings for particular state changes
 }
 ```
 
@@ -195,6 +261,7 @@ The options of one [`onTransition`](/guide/handlers#ontransition) or [`animate`]
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `tweenDefault` | [`TweenSettings`](#tweensettings) | No | The tween settings of the connection. A setting left out takes the built-in default. |
+| `tweenOverrides` | `{ `[`TweenOverride`](#tweenoverride)` }` | No | Tween settings for particular state changes. See [Overrides for state changes](#overrides-for-state-changes). |
 
 An unknown key, a non-table value, or a setting at the top level raises an error when the connection is made. A top-level
 setting such as `duration` gets the message `onTransition options has an unknown key duration. Put duration inside tweenDefault`.
@@ -227,6 +294,37 @@ If a source later returns an invalid value, the transition keeps running instead
 error: `easing` falls back to `"linear"`, `duration` to `0.25`, and `delay` to `0`. A negative `speed` is treated as `0`,
 which pauses the transition, and any other invalid `speed` is treated as `1`. A paused transition keeps
 its values and does not call listeners again until the speed is above `0`.
+
+### TweenOverride <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+type TweenOverride = {
+    from: { string }?, -- The states the handler leaves
+    to: { string }?, -- The states the handler enters
+    tween: TweenSettings, -- The settings for the state changes that match
+}
+```
+
+One entry of `tweenOverrides`.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `from` | `{ string }` | No | The states the handler leaves. Every name must be a state of the handler. Left out means every state. |
+| `to` | `{ string }` | No | The states the handler enters. Every name must be a state of the handler. Left out means every state. |
+| `tween` | [`TweenSettings`](#tweensettings) | Yes | The settings for the matching state changes. A setting left out keeps the one of `tweenDefault`. |
+
+`onTransition` and `animate` raise one error that starts with `onTransition tweenOverrides has <n> problems:` and lists
+each problem on its own line:
+
+- `entry <n> must be a table`
+- `entry <n> has an unknown key <key>`
+- `entry <n> from has an unknown state "<state>"`, and the same for `to`
+- `entry <n> from is empty, so it matches nothing`, and the same for `to`
+- `entry <n> leaves out both from and to, so it matches every state change. Use tweenDefault for that`
+- `entry <n> only matches <state> to <state>, which is not a state change`
+- `entry <n> needs a tween table`
+- `entry <n>: <message>` for an invalid setting, such as `onTransition duration must be a finite non-negative number`
+- `entries <a> and <b> both match <state> to <state>`
 
 ### TweenName <Badge type="tip" text="Added in 0.1.0" />
 

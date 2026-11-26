@@ -23,6 +23,7 @@ const TWEEN_NAMES: { [string]: boolean } = {
 -- Keys allowed in the options of `onTransition` and `animate`.
 const OPTION_KEYS: { [string]: boolean } = {
     tweenDefault = true,
+    tweenOverrides = true,
 }
 
 -- Keys allowed in the tween settings, such as `tweenDefault`.

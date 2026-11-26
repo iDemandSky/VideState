@@ -17,7 +17,7 @@ user settles a new one.
 - **`resume` and `onResume` exist** because a `pause` with no way back would leave transitions stuck.
 - **The events pass `startedAt`,** the `os.clock()` time the most recent transition started. Before any transition, it
   is the time of the call.
-- **Tween settings are chosen per state pair, and a handler takes no options (agreed, not built).** `rule.new(states,
+- **Tween settings are chosen per state pair, and a handler takes no options (built in 0.4.0).** `rule.new(states,
   initialState)` has no third argument. The tween options go to `onTransition` and `animate`: `tweenDefault = {
   duration, easing, speed, delay }`, and `tweenOverrides`, an array of entries `{ from = { names }, to = { names },
   tween = { ... } }`. A side that is left out means every state. Any overlap between entries raises one batched error

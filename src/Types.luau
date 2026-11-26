@@ -51,10 +51,21 @@ export type TweenSettings = {
     --- How long a connection waits before its tween starts, in seconds. Read when a transition starts. The wait is scaled by the speed, so pausing holds it. Defaults to 0.
     delay: (number | Source<number>)?,
 }
+--- Tween settings for some of the state changes of a handler. A state change is a state the handler leaves and a state it enters. At most one override of a connection may match a state change.
+export type TweenOverride = {
+    --- The states the handler leaves. Left out means every state.
+    from: { string }?,
+    --- The states the handler enters. Left out means every state.
+    to: { string }?,
+    --- The tween settings for the state changes that match. A setting left out keeps the one of `tweenDefault`.
+    tween: TweenSettings,
+}
 --- Options for `onTransition` and `animate`.
 export type TransitionOptions = {
     --- The tween settings of the connection.
     tweenDefault: TweenSettings?,
+    --- Tween settings for particular state changes. An override replaces the settings of `tweenDefault` for the state changes it matches.
+    tweenOverrides: { TweenOverride }?,
 }
 --- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
@@ -64,8 +75,8 @@ export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: 
 export type Animate<T> = (options: TransitionOptions?) -> (Sources<T>, Disconnect)
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
---- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame.
-export type StartTransition<T> = (from: T, to: T, instant: boolean) -> ()
+--- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
+export type StartTransition<T> = (from: T, to: T, instant: boolean, fromState: string, toState: string) -> ()
 --- Options for one `setState` call.
 export type SetStateOptions = {
     --- Skips the animation. Every `onTransition` connection receives the next state's values at once, with an alpha of 1. Defaults to false.

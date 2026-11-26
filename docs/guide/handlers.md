@@ -209,7 +209,7 @@ settings come from the `tweenDefault` of `options`, and any setting it leaves ou
 | Name | Type | Description |
 | --- | --- | --- |
 | `callback` | `(from: T, to: T, current: T, alpha: number) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
-| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`. Each setting left out takes the built-in default. |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
 
 **Returns**
 
@@ -261,7 +261,7 @@ property. Pause, [`scaleSpeed`](#scalespeed), and [`finish`](#finish) act on it 
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`. Each setting left out takes the built-in default. |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
 
 **Returns**
 

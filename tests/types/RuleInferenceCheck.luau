@@ -26,8 +26,22 @@ local settings: VideState.TweenSettings = {
     duration = 0.25,
     speed = Vide.source(1),
 }
+local override: VideState.TweenOverride = {
+    from = {
+        "Idle",
+    },
+    to = {
+        "Active",
+    },
+    tween = {
+        duration = 0.1,
+    },
+}
 local options: VideState.TransitionOptions = {
     tweenDefault = settings,
+    tweenOverrides = {
+        override,
+    },
 }
 local ruleValues: VideState.InferRule<typeof(rule)> = values
 local typedHandler: VideState.Handler<VideState.InferRule<typeof(rule)>> = panel

@@ -56,6 +56,13 @@ return function <S>(
     end
 
     local sources = table.freeze(derivedSources) :: Sources<Values>
+    local stateNames: { string } = {}
+
+    for stateName in validatedStates do
+        table.insert(stateNames, stateName)
+    end
+
+    table.sort(stateNames)
 
     -- The transitions of the handler share this state, and the features below act on it.
     local state = TransitionState.create<<Values>>()
@@ -79,7 +86,7 @@ return function <S>(
         return state.scale * state.baseScale * EveryScale.get()
     end
 
-    local transition = Transition<<Values>>(state, getRate, finish.settle)
+    local transition = Transition<<Values>>(state, stateNames, getRate, finish.settle)
     local animate = Animate<<Values>>(transition.onTransition, sources)
     local destroyed = false
     local registered: EveryRegistry.Controls? = nil

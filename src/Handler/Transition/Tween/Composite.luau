@@ -52,7 +52,10 @@ const function canTweenRange(from: unknown, to: unknown): boolean
 end
 
 const function canTweenNumberSequence(from: unknown, to: unknown): boolean
-    if typeof(from) ~= "NumberSequence" or typeof(to) ~= "NumberSequence" then
+    local isFromSequence = typeof(from) == "NumberSequence"
+    local isToSequence = typeof(to) == "NumberSequence"
+
+    if not isFromSequence or not isToSequence then
         return false
     end
 
@@ -60,7 +63,10 @@ const function canTweenNumberSequence(from: unknown, to: unknown): boolean
 end
 
 const function canTweenColorSequence(from: unknown, to: unknown): boolean
-    if typeof(from) ~= "ColorSequence" or typeof(to) ~= "ColorSequence" then
+    local isFromSequence = typeof(from) == "ColorSequence"
+    local isToSequence = typeof(to) == "ColorSequence"
+
+    if not isFromSequence or not isToSequence then
         return false
     end
 

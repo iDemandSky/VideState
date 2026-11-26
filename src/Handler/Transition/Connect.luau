@@ -1,5 +1,6 @@
 const Types = require("../../Types")
 const Options = require("./Config/Options")
+const Overrides = require("./Config/Overrides")
 const State = require("./State")
 
 type Disconnect = Types.Disconnect
@@ -8,6 +9,7 @@ type Disconnect = Types.Disconnect
 -- default.
 return function<T>(
     state: State.State<T>,
+    stateNames: { string },
     settle: Types.SettleTransition
 ): Types.ConnectTransition<T>
     return function(callback: Types.OnTransitionCallback<T>, connectionOptions: Types.TransitionOptions?): Disconnect
@@ -16,6 +18,11 @@ return function<T>(
         end
 
         local settings = Options.parse(connectionOptions)
+        local overrides = Overrides.parse(
+            if connectionOptions == nil then nil else connectionOptions.tweenOverrides,
+            stateNames,
+            settings
+        )
 
         state.nextId += 1
 
@@ -24,6 +31,7 @@ return function<T>(
         state.connections[id] = {
             callback = callback,
             settings = settings,
+            overrides = overrides,
             run = nil,
             current = nil,
         }

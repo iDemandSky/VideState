@@ -16,6 +16,7 @@ export type SetStateOptions = Types.SetStateOptions
 export type OnEnterCallback = Types.OnEnterCallback
 export type OnExitCallback = Types.OnExitCallback
 export type TweenSettings = Types.TweenSettings
+export type TweenOverride = Types.TweenOverride
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
 export type TransitionOptions = Types.TransitionOptions

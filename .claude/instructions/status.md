@@ -14,7 +14,7 @@ the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` w
 
 ## Unreleased on `dev` (0.4.0)
 
-`rule.hasTag`, `rule.addTags`, `rule.removeTags`, and `handler.animate` (Vide sources for a transition), and the schemas `numberRange`, `numberSequence`, and `colorSequence`. The tooling moved from Rojo to Argon, and `serve.cmd` and `docs.cmd` replaced the old launchers.
+`rule.hasTag`, `rule.addTags`, `rule.removeTags`, and `handler.animate` (Vide sources for a transition), and the schemas `numberRange`, `numberSequence`, and `colorSequence`. `tweenDefault` and `tweenOverrides` (tween settings per state change), with the handler options removed, a breaking change. The tooling moved from Rojo to Argon, and `serve.cmd` and `docs.cmd` replaced the old launchers.
 
 `main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.3.0 only once the user
 has pushed it there.
@@ -30,8 +30,6 @@ has pushed it there.
 
 ## Ideas not started
 
-- Tween settings per state pair: the design is settled (see [decisions.md](decisions.md)) and not built. It removes the
-  handler options, a breaking change for 0.4.0. Per field is dropped.
 - A spring option, using Ripple's springs.
 - More 2D schemas, such as a `union`. Not `Vector3`; see
   [decisions.md](decisions.md).

@@ -1,5 +1,6 @@
 const Types = require("../../Types")
 const Options = require("./Config/Options")
+const Overrides = require("./Config/Overrides")
 const Group = require("./Tween/Group")
 
 -- What one connection plays for one transition. `ended` is set when it finishes, is finished early, or disconnects.
@@ -14,6 +15,8 @@ export type Run<T> = {
 export type Connection<T> = {
     callback: Types.OnTransitionCallback<T>,
     settings: Options.Settings,
+    -- Finds the override for a state change. Nil when the connection has no overrides, so it costs nothing then.
+    overrides: Overrides.Resolver?,
     -- The last run and the last value it sent. A new transition that starts before this run ends
     -- continues from that value instead of jumping back to the previous state.
     run: Run<T>?,

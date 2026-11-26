@@ -17,7 +17,8 @@ VideState change their properties whenever the state changes.
   `optional`, `table`, `record`, `color3`, `numberRange`, `numberSequence`, `colorSequence`, `udim`, `udim2`, `vector2`), and validate every state.
 - **Handlers** hold one component's state, with `sources` that follow the active state and bind to Vide properties.
 - **Events** for state changes: `onChange`, `onEnter`, `onExit`.
-- **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`.
+- **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`, and can use other
+  settings for particular state changes with `tweenOverrides`.
   An interrupted transition continues from its current value. `animate` gives the same transition as Vide sources.
 - **Transition controls**: `pause`, `resume`, `scaleSpeed`, `finish`, `onFinish`, `waitForFinish`, and
   `setState(name, { instant = true })`.
