@@ -43,6 +43,11 @@ return function <Fields>(fields: Fields, metadata: RuleMetadata)
     return table.freeze({
         _schema = schema,
 
+        -- Returns whether the rule has the exact tag.
+        hasTag = function(tag: string): boolean
+            return Info.ruleHasTag(ruleName, tag)
+        end,
+
         -- Adds tags to the rule. Returns true when at least one tag was new.
         addTags = function(...: string): boolean
             const given = readTags("addTags", ...)

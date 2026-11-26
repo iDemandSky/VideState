@@ -9,7 +9,7 @@ version can contain breaking changes.
 
 ### Added
 
-- `rule.addTags` and `rule.removeTags`, which add or remove tags on a rule after it was created. Both take any number of tags and return whether the rule's tags changed. `info` and the `everyHandler` filters see the change at once.
+- `rule.hasTag`, `rule.addTags`, and `rule.removeTags`, which check a tag on a rule and add or remove tags after it was created. `addTags` and `removeTags` take any number of tags and return whether the rule's tags changed. `info` and the `everyHandler` filters see the change at once.
 
 ## [0.3.0] - 2026-11-25
 
