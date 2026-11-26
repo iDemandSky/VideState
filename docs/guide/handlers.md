@@ -222,6 +222,53 @@ settings come from `options`, and any setting it leaves out comes from the handl
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onTransition callback must be a function` |
 | <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as the handler's [`onTransition`](/guide/rules#errors) option, such as `onTransition easing must be a known easing name` |
 
+### animate <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+Handler.animate(
+    options: TransitionOptions? -- Tween settings for this connection only
+) -> (Sources<T>, Disconnect)
+```
+
+Returns a Vide source for every field, and the sources follow the transition. It is
+[`onTransition`](#ontransition) in the form Vide expects: `onTransition` pushes each frame into a callback
+that you write, while `animate` gives you sources to bind to properties, so Vide updates them for you. Both are
+the same transition underneath, with the same tween, the same options, and the same behavior for
+non-animatable fields. They differ only in how you receive the value.
+
+```luau
+const animated = handler.animate({ duration = 0.2, easing = "quadOut" })
+
+create "Frame" {
+    BackgroundTransparency = animated.transparency,
+}
+```
+
+The sources start at the values of the current state. They are separate from [`sources`](#sources), which
+switch to the next state at once and are not animated, and writing to them does nothing to the handler. Every
+call opens its own connection with its own tween, so call it once for each animation you need, not once for each
+property. Pause, [`scaleSpeed`](#scalespeed), and [`finish`](#finish) act on it like on any other connection. After
+[`destroy`](#destroy) the sources keep their last value.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The easing, duration, speed, and delay of this connection. Each field left out is inherited from the handler. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Sources`](#sources)`<T>` | One animated source for each field, with the same keys as the handler's `sources`. |
+| [`Disconnect`](#disconnect) | Call it to stop the sources from following. They keep their last value. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition), such as `onTransition easing must be a known easing name` |
+
 ### pause <Badge type="tip" text="Added in 0.2.0" />
 
 ```luau
@@ -440,6 +487,7 @@ type Handler<T> = {
     onEnter: (stateName: string, callback: OnEnterCallback) -> Disconnect,
     onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
+    animate: (options: TransitionOptions?) -> (Sources<T>, Disconnect),
     pause: () -> (),
     resume: () -> (),
     onPause: (callback: OnPauseCallback) -> Disconnect,

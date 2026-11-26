@@ -8,6 +8,7 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | `Change.luau` | `onChange` |
 | `StateEvents.luau` | `onEnter`, `onExit` |
 | `Transition/` | `onTransition`, and the `emit` that `setState` calls |
+| `Animate.luau` | `animate`, built on `onTransition` |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` |
 | `ScaleSpeed.luau` | `scaleSpeed` |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` |

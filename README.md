@@ -18,7 +18,7 @@ VideState change their properties whenever the state changes.
 - **Handlers** hold one component's state, with `sources` that follow the active state and bind to Vide properties.
 - **Events** for state changes: `onChange`, `onEnter`, `onExit`.
 - **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`.
-  An interrupted transition continues from its current value.
+  An interrupted transition continues from its current value. `animate` gives the same transition as Vide sources.
 - **Transition controls**: `pause`, `resume`, `scaleSpeed`, `finish`, `onFinish`, `waitForFinish`, and
   `setState(name, { instant = true })`.
 - **Every handler at once**: `VideState.everyHandler` has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`,

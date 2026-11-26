@@ -21,8 +21,7 @@ user settles a new one.
 - **`finish` is the instant jump.** It sends the last frame before it returns, and works while paused.
 - **`onFinish` fires once per transition,** when the last connection ends and at least one reached its end. A
   transition that a newer `setState` replaces never finishes.
-- **No `animated` sources.** Derived sources that follow the tween were proposed and dropped, because `onTransition`
-  already covers it.
+- **`handler.animate` returns the animatable sources of a transition.** An earlier decision dropped derived sources because `onTransition` already covers it. The user reopened it: `animate` is `onTransition` in the form Vide expects, a source for every field instead of a callback, so a property binds to it directly. It is a thin layer over one `onTransition` connection, so it takes the same options and has no tween code of its own. It returns `(sources, disconnect)`, and the sources are independent of `handler.sources`.
 - **`setState` takes `{ instant = true }`,** which runs the transition with a duration of 0: one frame with the next
   values and an alpha of 1, and `onFinish` still runs.
 - **`onExit` runs first, then `onEnter`, `onChange`, and the transition.** The callbacks receive the other state's name.

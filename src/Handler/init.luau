@@ -8,6 +8,7 @@ const EveryRegistry = require("./Every/Registry")
 const EveryScale = require("./Every/Scale")
 const Change = require("@self/Change")
 const StateEvents = require("@self/StateEvents")
+const Animate = require("@self/Animate")
 const Transition = require("@self/Transition")
 const TransitionState = require("@self/Transition/State")
 const Pause = require("@self/Pause")
@@ -22,6 +23,7 @@ type Handler<T> = Types.Handler<T>
 --   Change      onChange
 --   StateEvents onEnter, onExit
 --   Transition  onTransition
+--   Animate     animate
 --   Pause       pause, resume, onPause, onResume
 --   ScaleSpeed scaleSpeed
 --   Finish      finish, onFinish, waitForFinish
@@ -80,6 +82,7 @@ return function <S>(
     end
 
     local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
+    local animate = Animate<<Values>>(transition.onTransition, sources)
     local destroyed = false
     local registered: EveryRegistry.Controls? = nil
 
@@ -148,6 +151,7 @@ return function <S>(
         onEnter = stateEvents.onEnter,
         onExit = stateEvents.onExit,
         onTransition = transition.onTransition,
+        animate = animate,
         pause = pause.pause,
         resume = pause.resume,
         onPause = pause.onPause,

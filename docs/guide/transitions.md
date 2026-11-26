@@ -20,6 +20,10 @@ handler.onTransition(fade, { duration = 0.2, easing = "quadOut" })
 handler.onTransition(slide, { duration = 0.5, easing = "backOut" })
 ```
 
+[`animate`](/guide/handlers#animate) is the same transition with Vide sources instead of a callback. It takes
+the same options, so everything on this page applies to it too. Use `onTransition` when you want to run your
+own code on each frame, and `animate` when you only need to bind the values to properties.
+
 Connections with the same settings still start together and stay in step. Each connection costs its own
 set of tweens, so connect only the listeners that need to animate.
 

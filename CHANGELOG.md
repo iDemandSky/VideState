@@ -9,6 +9,7 @@ version can contain breaking changes.
 
 ### Added
 
+- `handler.animate`, which returns a Vide source for every field that follows a transition, so a property can be bound to the animated value directly. It is `onTransition` in the form Vide expects, with the same options, and returns the sources and a disconnect function.
 - `rule.hasTag`, `rule.addTags`, and `rule.removeTags`, which check a tag on a rule and add or remove tags after it was created. `addTags` and `removeTags` take any number of tags and return whether the rule's tags changed. `info` and the `everyHandler` filters see the change at once.
 
 ## [0.3.0] - 2026-11-25
