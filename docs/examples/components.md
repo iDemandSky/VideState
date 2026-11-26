@@ -22,7 +22,7 @@ A **Play button** for a game's main menu. It reacts to the mouse, and every reac
 | `Disabled` | The player cannot use it yet | A greyed-out button that ignores the mouse |
 
 Every state sets the same three properties: `backgroundColor`, `textColor`, and `textSize`. The colors
-fade over 0.15 seconds when the state changes, instead of jumping.
+and the text size fade over 0.15 seconds when the state changes, instead of jumping.
 
 The steps below continue one script. Put them together in order, in a LocalScript.
 
@@ -123,21 +123,17 @@ const function createButton(label: string, design: Design, enabled: boolean)
         },
     })
 
-    -- The state sources change instantly, so the fade comes from onTransition.
-    local displayColor = Vide.source(handler.sources.backgroundColor())
-
-    handler.onTransition(function(_, _, current)
-        displayColor(current.backgroundColor)
-    end)
+    -- The state sources change instantly. `animate` returns sources that fade between the states instead.
+    local animated = handler.animate()
 
     local button = Vide.create "TextButton" {
         Name = label,
         Text = label,
         Size = UDim2.fromOffset(200, 50),
         AutoButtonColor = false,
-        BackgroundColor3 = displayColor,
-        TextColor3 = handler.sources.textColor,
-        TextSize = handler.sources.textSize,
+        BackgroundColor3 = animated.backgroundColor,
+        TextColor3 = animated.textColor,
+        TextSize = animated.textSize,
     }
 
     -- The mouse events only change the state. The handler decides what each state looks like.
@@ -196,5 +192,6 @@ as the last argument to `createButton` and it starts greyed out and ignores the 
 
 - The rule is written once. Every button is a new handler made with `ButtonRule.new`, and each handler keeps its own state.
 - The component's states and properties live in the rule, so a state name outside `allowedStateNames` is rejected.
-- `createButton` only reads from `handler.sources`. It never decides colors itself, so changing a design needs no change to the component.
+- `createButton` only reads from the handler. It never decides colors itself, so changing a design needs no change to the component.
+- `handler.animate()` gives the properties as sources that fade between the states, so they bind straight to the Instance. [`onTransition`](/guide/handlers#ontransition) is the same transition with a callback, for when you need to run your own code on each frame.
 - To make another button, call `createButton` again. To make a different looking button, pass another design. See [Inheritance](/examples/inheritance).
