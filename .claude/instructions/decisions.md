@@ -10,7 +10,7 @@ user settles a new one.
   per animated component, and found defaults on the handler confusing and extra lines to write.
 - **An interrupted transition continues from its current value.** When `setState` runs before a transition ends, the new
   tween starts from the last value that connection sent, not from the previous state's values. It builds a new tween
-  from that value instead of retargeting the old Ripple tweens, because the animatable fields can differ between
+  from that value instead of retargeting the old tweens, because the animatable fields can differ between
   transitions. The callback's `from` is still the previous state's values.
 - **`pause` acts on the whole handler.** `setState` while paused sends the first frame and holds it until `resume`. A
   connection's own `speed` source of `0` pauses only that connection and does not fire `onPause`.
@@ -41,6 +41,13 @@ user settles a new one.
   going until the newer one ends.
 - **`destroy` stops transitions silently** (no last frame, no `onFinish`), removes every listener, releases waiting
   threads, and makes `setState` raise an error. The other functions do nothing afterwards.
+- **VideState tweens values itself, and Ripple is no longer a dependency.** The user asked for it after a measurement
+  showed that Ripple's tween was about 45% of the time of one connection's step. The shared frame step blends every
+  field and the alpha with one eased progress, picks each field's blend once when the tween is made, and has no
+  signals. It is 20 to 30% faster per connection, with the same values: parity tests against Ripple passed for all
+  19 easings and the value types before Ripple was removed. The easing curves and the Oklab conversion in
+  `Transition/Tween/` carry the notices of Ripple (MIT) and Oklab (MIT). The user dropped the spring option, which
+  would have used Ripple's springs.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
 
@@ -87,7 +94,7 @@ user settles a new one.
 - **Sequences are tweened only when their keypoint counts match.** The user accepted this: with different counts there
   is no pairing, so the value switches at the start like a string. A `NumberRange` tweens its minimum and maximum and is
   clamped so the minimum never passes the maximum, because an overshooting easing could break it. A sequence keeps its
-  first time at 0 and its last at 1 and keeps the others in order. Each is a composite of Ripple tweens in
+  first time at 0 and its last at 1 and keeps the others in order. Each is blended in
   `Transition/Tween/Composite.luau`.
 
 ## Code and tooling

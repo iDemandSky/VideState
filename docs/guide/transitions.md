@@ -86,7 +86,7 @@ A few things to know:
 
 `alpha` is the progress of the transition, from `0` at the start to `1` at the end. It follows the
 same easing and duration as the tweened fields, so it matches how far the transition has moved. Use
-it to drive values that Ripple cannot tween.
+it to drive values that cannot be tweened.
 
 `back` and `elastic` easings overshoot. With them, `alpha` goes below `0` or above `1` during the
 transition and settles at exactly `1` when it ends. This is expected, because the same curve moves
@@ -244,7 +244,7 @@ Measure your own use. The numbers depend on the device, the number of fields, an
 ## Changing settings during a transition
 
 When a setting is a Vide source, it is read every frame. Changing it affects the running transition,
-and Ripple restarts each tween from its current position. The remaining distance is covered with the new
+and each tween restarts from its current position. The remaining distance is covered with the new
 settings, so values do not jump, but the easing curve starts again from that point. Plain values are
 read once and never change.
 
@@ -284,7 +284,7 @@ type TweenSettings = {
 }
 ```
 
-The tween settings of a connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
+The tween settings of a connection. The easing curves are the standard equations that [easings.net](https://easings.net) lists.
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |

@@ -42,7 +42,7 @@ export type TweenName =
     | "elasticIn" | "elasticOut" | "elasticInOut"
 --- The tween settings of one connection. A setting left out takes the built-in default. Each setting accepts a plain value or a Vide source, except `speed`, which is a source. A source is read every frame, so changing it affects the running transition and later ones.
 export type TweenSettings = {
-    --- The Ripple easing applied to animatable fields and to `alpha`. Defaults to linear.
+    --- The easing curve applied to animatable fields and to `alpha`. Defaults to linear.
     easing: (TweenName | Source<TweenName>)?,
     --- The duration in seconds. Must be finite and non-negative. Defaults to 0.25.
     duration: (number | Source<number>)?,

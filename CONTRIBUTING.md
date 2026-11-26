@@ -47,7 +47,7 @@ argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
 lest schemas
 ```
 
-The suite needs Roblox Studio, because Vide and Ripple only load inside Roblox. It covers the schema
+The suite needs Roblox Studio, because Vide only loads inside Roblox. It covers the schema
 builders, rules, handlers, `onTransition`, and `info`.
 
 Lest stops a spec file once its tests have run for 15 seconds in total, and reports it as a timeout. Keep
@@ -107,7 +107,7 @@ Each feature of a handler has its own module under `src/Handler/`, with the func
 | --- | --- | --- |
 | `Change.luau` | `onChange` | Runs once when the state changes. |
 | `StateEvents.luau` | `onEnter`, `onExit` | Runs when the handler enters or leaves one state. |
-| `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` wraps Ripple. |
+| `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` has the easing curves and the blending of each value type. |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` | Pause state for every transition of the handler. |
 | `ScaleSpeed.luau` | `scaleSpeed` | Speed scale for the running transition. |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` | How a transition ends. |

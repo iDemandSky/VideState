@@ -34,7 +34,7 @@ const SETTING_KEYS: { [string]: boolean } = {
     delay = true,
 }
 
--- Value types that Ripple can interpolate directly.
+-- Value types that a tween can blend directly.
 const ANIMATABLE_TYPES: { [string]: boolean } = {
     number = true,
     vector = true,

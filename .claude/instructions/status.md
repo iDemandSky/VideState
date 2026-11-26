@@ -30,6 +30,5 @@ has pushed it there.
 
 ## Ideas not started
 
-- A spring option, using Ripple's springs.
 - More 2D schemas, such as a `union`. Not `Vector3`; see
   [decisions.md](decisions.md).

@@ -13,7 +13,6 @@ Rojo is no longer used. Argon builds the test place and the sourcemap.
 ## Dependencies
 
 - `centau/vide` 0.4.1 (Wally)
-- `littensy/ripple` 0.10.2 (Wally)
 - `typed/core` ^0.9.2, locked 0.9.2
 - `typed/engine` ^0.1.0, locked 0.1.0
 

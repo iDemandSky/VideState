@@ -198,8 +198,7 @@ Changed in 0.2.0: takes an optional `options` argument, and every connection twe
 Changed in 0.4.0: the settings go inside `tweenDefault`, and a handler has no tween options of its own.
 
 Runs `callback` with a `current` value that moves from the previous state to the next one, and the
-`alpha` that shows how far along it is. Each animatable field is tweened with
-[Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as strings,
+`alpha` that shows how far along it is. Each animatable field is tweened. Fields that cannot be tweened, such as strings,
 booleans, and enums, are not transitioned: they switch to their next value at the start of the transition. Each connection has its own tween. Its
 settings come from the `tweenDefault` of `options`, and any setting it leaves out takes the built-in default. See
 [Transitions](/guide/transitions) for the full behavior.

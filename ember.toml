@@ -17,7 +17,6 @@ Wally = "https://github.com/UpliftGames/wally-index"
 
 [dependencies]
 Vide = { name = "centau/vide", version = "0.4.1", index = "Wally" }
-Ripple = { name = "littensy/ripple", version = "0.10.2", index = "Wally" }
 Typed = { name = "typed/core", version = "^0.9.2" }
 TypedCore = { name = "typed/engine", version = "^0.1.0" }
 
