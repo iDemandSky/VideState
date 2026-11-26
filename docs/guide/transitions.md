@@ -232,6 +232,13 @@ run, so only a frame time well above 33 ms shows real cost.
 | 5,000 | about 150 ms | about 27 ms | about 32 ms |
 | 10,000 | about 300 ms | about 55 ms | about 64 ms |
 
+`animate` and `onTransition` cost about the same. In one Studio run of 10,000 handlers, with one connection each:
+
+- Creating the handlers and connecting took about 450 ms for both, which is about 45 microseconds for each handler.
+- `setState` on all of them took about 270 ms for both.
+- `tweenOverrides` with six entries, where the matching entry was the last one, added about 20 microseconds to
+  connecting each handler and about 5 microseconds to its `setState`. A connection with no overrides pays nothing.
+
 Measure your own use. The numbers depend on the device, the number of fields, and the work your callbacks do.
 
 ## Changing settings during a transition

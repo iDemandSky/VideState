@@ -57,7 +57,13 @@ each spec file well under that, and split a file by topic when it grows, as `Rul
 ## Benchmark
 
 `tests/bench/` measures many handlers transitioning at once. It is a separate suite that never runs by
-default:
+default. `Bench.luau` holds the shared rounds, and there is one spec for each way of connecting:
+
+- `OnTransition.spec.luau` connects a callback with `onTransition`.
+- `Animate.spec.luau` connects `animate`, which writes a Vide source for every field.
+- `Overrides.spec.luau` connects `animate` with six `tweenOverrides` entries, and the matching entry is the last one,
+  so the lookup is as slow as it can be.
+
 
 ```sh
 larvae process
@@ -65,8 +71,10 @@ argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
 lest bench
 ```
 
-It prints one `[bench]` line per round, with the time `setState` took on every handler and the average and
-worst frame time while they animate. Studio caps the frame rate, so compare runs on the same machine.
+It prints one `[bench]` line per round, with the time it took to create and connect the handlers, the time `setState`
+took on every handler, and the average and worst frame time while they animate. Studio caps the frame rate and changes
+it between runs, so the frame times are only a rough guide. The connect and `setState` times are the ones to compare,
+and a single run varies by about a quarter, so run it a few times and compare runs on the same machine.
 
 ## Type checks
 
