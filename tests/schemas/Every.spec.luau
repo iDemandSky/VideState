@@ -15,7 +15,8 @@ const function createHandler(name: string, tags: { string }?)
         Active = { opacity = Vide.source(1) },
     }, "Idle", {
         onTransition = {
-            duration = 1,
+            -- Long, because Studio's first frame can take over a second and would end a short transition early.
+            duration = 5,
         },
     })
 end
