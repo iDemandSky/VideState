@@ -45,6 +45,17 @@ local disconnectTransition: () -> () = panel.onTransition(function(from, to, cur
     local _alpha: number = alpha
 end)
 
+local animated, disconnectAnimated = panel.animate({ duration = 0.1, easing = "quadOut" })
+local animatedVisible: Vide.Source<boolean> = animated.visible
+local animatedCount: Vide.Source<number> = animated.count
+local animatedSources: Sources = animated
+local defaultAnimated, disconnectDefaultAnimated = panel.animate()
+local ruleTags: { string } = rule.getTags()
+local ruleHasTag: boolean = rule.hasTag("ui")
+local tagsAdded: boolean = rule.addTags("ui", "menu")
+local tagsRemoved: boolean = rule.removeTags("ui")
+local disconnectAnimatedFunction: () -> () = disconnectAnimated
+
 disconnectChange()
 disconnectTransition()
 
@@ -57,4 +68,14 @@ return {
     typedHandler,
     disconnectChange,
     disconnectTransition,
+    animatedVisible,
+    animatedCount,
+    animatedSources,
+    defaultAnimated,
+    disconnectDefaultAnimated,
+    disconnectAnimatedFunction,
+    ruleTags,
+    ruleHasTag,
+    tagsAdded,
+    tagsRemoved,
 }
