@@ -16,6 +16,16 @@ user settles a new one.
 - **`resume` and `onResume` exist** because a `pause` with no way back would leave transitions stuck.
 - **The events pass `startedAt`,** the `os.clock()` time the most recent transition started. Before any transition, it
   is the time of the call.
+- **Tween settings are chosen per state pair, and a handler takes no options (agreed, not built).** `rule.new(states,
+  initialState)` has no third argument. The tween options go to `onTransition` and `animate`: `tweenDefault = {
+  duration, easing, speed, delay }`, and `tweenOverrides`, an array of entries `{ from = { names }, to = { names },
+  tween = { ... } }`. A side that is left out means every state. Any overlap between entries raises one batched error
+  when the call is made, so the array order never matters. The order for a setting is the matching entry, then
+  `tweenDefault`, then the built-in default (0.25 s, linear). The speed is `(duration / localSpeed) / globalSpeed`, as
+  now. A third argument to `new` raises an error that says where the settings moved. The user chose it over handler
+  defaults because it is simpler to read and cheaper. A sketch is in the artifact the user was shown.
+- **No per-field tween settings.** A source cannot be tweened on its own, and one `alpha` would have no meaning with
+  several durations. A different tween for one field is another `animate` call.
 - **`scaleSpeed` keeps its scale for every following transition by default.** `once = true` limits it to the running transition, and the next `setState` resets it. The kept scale is a separate base scale that multiplies with the once scale. The user chose `once` as the option name and `false` as its default. It multiplies each
   connection's own speed. It was called `fastForward` in 0.2.0 and renamed because a scale below 1 slows it down. It is not called `snapTransition`, because "snap" suggests an instant jump.
 - **`finish` is the instant jump.** It sends the last frame before it returns, and works while paused.

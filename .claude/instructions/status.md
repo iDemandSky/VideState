@@ -30,7 +30,8 @@ has pushed it there.
 
 ## Ideas not started
 
-- Tween settings per state pair (such as `Idle -> Active`) and per field.
+- Tween settings per state pair: the design is settled (see [decisions.md](decisions.md)) and not built. It removes the
+  handler options, a breaking change for 0.4.0. Per field is dropped.
 - A spring option, using Ripple's springs.
 - More 2D schemas, such as a `union`. Not `Vector3`; see
   [decisions.md](decisions.md).
