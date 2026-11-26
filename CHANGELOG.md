@@ -5,7 +5,7 @@ All notable changes to VideState are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the version is below 1.0.0, a minor
 version can contain breaking changes.
 
-## [Unreleased]
+## [0.4.0] - Unreleased
 
 ### Added
 

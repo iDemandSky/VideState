@@ -12,7 +12,7 @@ The latest release is 0.3.0 (2026-11-25). It renamed `fastForward` to `scaleSpee
 the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its UI Labs story in `stories/`. See
 `CHANGELOG.md`.
 
-## Unreleased on `dev`
+## Unreleased on `dev` (0.4.0)
 
 `rule.hasTag`, `rule.addTags`, `rule.removeTags`, and `handler.animate` (Vide sources for a transition). The tooling moved from Rojo to Argon, and `serve.cmd` and `docs.cmd` replaced the old launchers.
 
