@@ -4,7 +4,12 @@ Update this file when a release ships, a limit is found or fixed, or an idea is 
 
 ## Released
 
-The latest release is 0.3.0 (2026-11-25). It renamed `fastForward` to `scaleSpeed` (breaking), added the `once` option
+The latest release is 0.4.0 (2026-11-26). It removed the handler options (breaking): `rule.new(states, initialState)`
+takes no third argument, and the tween settings go in `tweenDefault` in the options of `onTransition` and `animate`. It
+added `tweenOverrides` (tween settings per state change), `handler.animate` (Vide sources for a transition), the schemas
+`numberRange`, `numberSequence`, and `colorSequence`, and `rule.getTags`, `hasTag`, `addTags`, and `removeTags`. It
+replaced Ripple with a built-in tween, which is 20 to 30% faster per connection, and the tooling moved from Rojo to
+Argon. 0.3.0 (2026-11-25) renamed `fastForward` to `scaleSpeed` (breaking), added the `once` option
 (default `false`, so the scale stays), and added `VideState.everyHandler` with its filters, exclusions, conflict checks,
 `setState`, `destroy`, and the `count`, `isAnyRunning`, and `isAnyPaused` reads. 0.2.1 only changed the README. Versions
 0.1.0 to 0.1.2 are deprecated on Ember. 0.2.0 added per-connection `onTransition` options, pause and resume, `finish`,
@@ -12,11 +17,11 @@ The latest release is 0.3.0 (2026-11-25). It renamed `fastForward` to `scaleSpee
 the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its UI Labs story in `stories/`. See
 `CHANGELOG.md`.
 
-## Unreleased on `dev` (0.4.0)
+## Unreleased on `dev`
 
-`rule.hasTag`, `rule.addTags`, `rule.removeTags`, and `handler.animate` (Vide sources for a transition), and the schemas `numberRange`, `numberSequence`, and `colorSequence`. `tweenDefault` and `tweenOverrides` (tween settings per state change), with the handler options removed, a breaking change. The tooling moved from Rojo to Argon, and `serve.cmd` and `docs.cmd` replaced the old launchers.
+Nothing yet.
 
-`main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.3.0 only once the user
+`main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.4.0 only once the user
 has pushed it there.
 
 ## Known limits
