@@ -100,6 +100,36 @@ two states.
 | <Badge type="danger" text="Error" /> | `onTransition.speed` is not finite | `onTransition speed must be a finite non-negative number` |
 | <Badge type="danger" text="Error" /> | `onTransition.delay` is not a finite, non-negative number | `onTransition delay must be a finite non-negative number` |
 
+## Changing tags <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+rule.addTags(...: string) -> boolean
+rule.removeTags(...: string) -> boolean
+```
+
+Adds tags to a rule, or removes them, after it was created. Tags are compared exactly as written. The
+change reaches [`info`](/guide/info) and the [`everyHandler`](/guide/every-handler) filters at once,
+because they read the tags each time they run.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `...` | `string` | The tags to add or remove. At least one is required. A tag that is repeated in one call counts once. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `boolean` | `true` when the rule's tags changed. `false` when every added tag was already there, or when no removed tag was. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No tags are given | `addTags requires at least one tag` or `removeTags requires at least one tag` |
+| <Badge type="danger" text="Error" /> | A tag is not a string | `Tag <index> must be a string, got <type>` |
+
 ## Types
 
 ### RuleMetadata <Badge type="tip" text="Added in 0.1.0" />
@@ -139,6 +169,8 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 type Rule<Fields> = {
     _schema: Schema<Fields>, -- The schema built from the fields
     new: (states: { [string]: Sources<T> }, initialState: string, options: HandlerOptions?) -> Handler<T>,
+    addTags: (...string) -> boolean,
+    removeTags: (...string) -> boolean,
 }
 ```
 
@@ -148,3 +180,5 @@ A rule returned by [`rule`](#creating-a-rule). It is frozen, so it cannot be cha
 | --- | --- | --- |
 | `_schema` | [`Schema`](/guide/schemas#schema)`<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
 | `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#creating-handlers-from-a-rule). |
+| `addTags` | `function` | Adds tags to the rule. See [`addTags`](#changing-tags). |
+| `removeTags` | `function` | Removes tags from the rule. See [`removeTags`](#changing-tags). |

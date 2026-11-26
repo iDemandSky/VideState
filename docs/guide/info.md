@@ -123,5 +123,6 @@ Checks whether a rule has a tag. The tag is matched exactly as written.
 ## Registration
 
 [`VideState.rule`](/guide/rules#creating-a-rule) registers each rule for you. Do not call `info.register`
-yourself. It raises `Duplicate rule name: <name>` when a name is already registered, which is the
+or `info.setTags` yourself. Use [`addTags` and `removeTags`](/guide/rules#changing-tags) to change a rule's tags.
+`info.register` raises `Duplicate rule name: <name>` when a name is already registered, which is the
 same error that `rule` raises for a duplicate name.
