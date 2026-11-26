@@ -270,6 +270,9 @@ describe("rule handlers", function()
             Active = { visible = Vide.source(true) },
         }, "Idle")
 
+        expect(table.concat(rule.getTags(), ",")).toBe("mutableOne")
+        expect(table.isfrozen(rule.getTags())).toBe(true)
+
         expect(rule.hasTag("mutableOne")).toBe(true)
         expect(rule.hasTag("mutableTwo")).toBe(false)
         expect(rule.hasTag("mutableone")).toBe(false)
@@ -278,6 +281,7 @@ describe("rule handlers", function()
         expect(rule.addTags("mutableOne", "mutableTwo", "mutableTwo")).toBe(true)
         expect(Info.ruleHasTag("MutableTagPanel", "mutableTwo")).toBe(true)
         expect(rule.hasTag("mutableTwo")).toBe(true)
+        expect(table.concat(rule.getTags(), ",")).toBe("mutableOne,mutableTwo")
         expect(#(Info.get("MutableTagPanel") :: any).tags).toBe(2)
 
         expect(VideState.everyHandler.withTags("mutableTwo").count()).toBe(1)
@@ -293,7 +297,9 @@ describe("rule handlers", function()
     it("adds tags to a rule that was created without any", function()
         local rule = VideState.rule({ visible = VideState.boolean() }, { name = "UntaggedPanel" })
 
+        expect(#rule.getTags()).toBe(0)
         expect(rule.addTags("lateTag")).toBe(true)
+        expect(rule.getTags()[1]).toBe("lateTag")
         expect(Info.ruleHasTag("UntaggedPanel", "lateTag")).toBe(true)
     end)
 

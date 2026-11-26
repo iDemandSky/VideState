@@ -107,6 +107,20 @@ read and change a rule's tags after it was created. Tags are compared exactly as
 never trimmed or lowercased. [`info`](/guide/info) and the [`everyHandler`](/guide/every-handler)
 filters read the tags each time they run, so a change reaches them at once.
 
+### getTags <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+rule.getTags() -> { string }
+```
+
+Returns the rule's tags.
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `{ string }` | A frozen copy of the tags in the order they were added. It is empty when the rule has none. Later changes do not affect it, so call `getTags` again to read them. |
+
 ### hasTag <Badge type="tip" text="Added in 0.4.0" />
 
 ```luau
@@ -226,6 +240,7 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 type Rule<Fields> = {
     _schema: Schema<Fields>, -- The schema built from the fields
     new: (states: { [string]: Sources<T> }, initialState: string, options: HandlerOptions?) -> Handler<T>,
+    getTags: () -> { string },
     hasTag: (tag: string) -> boolean,
     addTags: (...string) -> boolean,
     removeTags: (...string) -> boolean,
@@ -238,6 +253,7 @@ A rule returned by [`rule`](#creating-a-rule). It is frozen, so it cannot be cha
 | --- | --- | --- |
 | `_schema` | [`Schema`](/guide/schemas#schema)`<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
 | `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#creating-handlers-from-a-rule). |
+| `getTags` | `function` | Returns the rule's tags. See [`getTags`](#gettags). |
 | `hasTag` | `function` | Checks whether the rule has a tag. See [`hasTag`](#hastag). |
 | `addTags` | `function` | Adds tags to the rule. See [`addTags`](#addtags). |
 | `removeTags` | `function` | Removes tags from the rule. See [`removeTags`](#removetags). |

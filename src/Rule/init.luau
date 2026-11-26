@@ -43,6 +43,11 @@ return function <Fields>(fields: Fields, metadata: RuleMetadata)
     return table.freeze({
         _schema = schema,
 
+        -- Returns a frozen copy of the rule's tags, in the order they were added.
+        getTags = function(): { string }
+            return table.freeze(currentTags(ruleName))
+        end,
+
         -- Returns whether the rule has the exact tag.
         hasTag = function(tag: string): boolean
             return Info.ruleHasTag(ruleName, tag)
