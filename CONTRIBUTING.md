@@ -4,7 +4,7 @@ Notes for working on VideState itself. This file is not part of the published pa
 
 ## Setup
 
-Run `embr install` first if the pinned tools (Larvae, Rojo, and Lest) are not installed.
+Run `embr install` first if the pinned tools (Larvae, Rojo, Lest, and Argon) are not installed.
 
 Build the Larvae output and serve it with Rojo from the repository root:
 
@@ -15,6 +15,12 @@ serve.bat    # Windows
 
 If either process exits, the launcher refreshes the output and retries after five seconds. Press Ctrl+C to
 stop serving. Every command in this file uses forward slashes, which work on all platforms.
+
+To sync with [Argon](https://argon.wiki/) instead, run `serve.cmd` on Windows. It rebuilds `dist/`, starts
+`larvae process --watch` in the same window, waits for `.larvae/build.project.json`, and then runs
+`argon serve .larvae/build.project.json`. Connect from the Argon plugin in Studio. If the plugin shows
+"Failed to connect" while the console prints `invalid Header provided`, turn on **Allow HTTP Requests** for the
+place (Game Settings, Security). Close the window to stop the watcher. Argon is pinned in `ember.toml`.
 
 ## Stories
 

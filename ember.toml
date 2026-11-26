@@ -10,12 +10,7 @@ license = "MIT"
 [target]
 environment = "roblox"
 main = "src/init.luau"
-includes = [
-    "src",
-    "LICENSE",
-    "README.md",
-    "CHANGELOG.md",
-]
+includes = ["src", "LICENSE", "README.md", "CHANGELOG.md"]
 
 [indices]
 Wally = "https://github.com/UpliftGames/wally-index"
@@ -28,8 +23,8 @@ TypedCore = { name = "typed/engine", version = "^0.1.0" }
 
 [tools]
 larvae = "larvae-luau/larvae@0.11.0"
-rojo = "rojo-rbx/rojo@7.7.0"
 lest = "lest-luau/lest@0.6.0"
+argon = "argon-rbx/argon@2.0.29"
 
 [dev-dependencies]
 ui-labs = { name = "pepeeltoro41/ui-labs", version = "2.4.2", index = "Wally" }
