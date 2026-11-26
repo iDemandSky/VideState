@@ -4,13 +4,16 @@ Notes for working on VideState itself. This file is not part of the published pa
 
 ## Setup
 
-Run `embr install` first if the pinned tools (Larvae, Rojo, Lest, and Argon) are not installed.
+Run `embr install` first if the pinned tools (Larvae, Lest, and Argon) are not installed.
 
 Sync to Studio with [Argon](https://argon.wiki/) by running `serve.cmd` from the repository root (Windows only). It rebuilds `dist/`, starts
 `larvae process --watch` in the same window, waits for `.larvae/build.project.json`, and then runs
 `argon serve .larvae/build.project.json`. Connect from the Argon plugin in Studio. If the plugin shows
 "Failed to connect" while the console prints `invalid Header provided`, turn on **Allow HTTP Requests** for the
 place (Game Settings, Security). Close the window to stop the watcher. Every command in this file uses forward slashes. Argon is pinned in `ember.toml`.
+
+Preview the docs site with `docs.cmd` from the repository root (Windows only). It runs `npm install` when `node_modules/`
+is missing, then starts the VitePress dev server with `npm run docs:dev` and opens the browser. Close the window to stop it.
 
 ## Stories
 
