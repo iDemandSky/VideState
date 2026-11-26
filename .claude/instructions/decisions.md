@@ -72,8 +72,12 @@ user settles a new one.
 
 ## Schemas
 
-- **No 3D schemas,** such as `Vector3`. VideState is for 2D UI. 2D types such as `NumberSequence` or `ColorSequence`
-  are still open.
+- **No 3D schemas,** such as `Vector3`. VideState is for 2D UI. The 2D types `NumberRange`, `NumberSequence`, and `ColorSequence` were added.
+- **Sequences are tweened only when their keypoint counts match.** The user accepted this: with different counts there
+  is no pairing, so the value switches at the start like a string. A `NumberRange` tweens its minimum and maximum and is
+  clamped so the minimum never passes the maximum, because an overshooting easing could break it. A sequence keeps its
+  first time at 0 and its last at 1 and keeps the others in order. Each is a composite of Ripple tweens in
+  `Transition/Tween/Composite.luau`.
 
 ## Code and tooling
 

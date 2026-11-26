@@ -1,8 +1,10 @@
 const Ripple = require("../../../../packages/roblox/Ripple")
 const Types = require("../../../Types")
 const CanTween = require("./CanTween")
+const Composite = require("./Composite")
 
-export type FieldTweens = { [string]: Ripple.Tween<any> }
+-- A Ripple tween, or a composite for values built from several numbers. Both have `step` and `configure`.
+export type FieldTweens = { [string]: any }
 
 const function create<T>(from: T, to: T, easing: Types.TweenName?, duration: number): FieldTweens
     local tweens: FieldTweens = {}
@@ -19,6 +21,8 @@ const function create<T>(from: T, to: T, easing: Types.TweenName?, duration: num
             })
             tween:setGoal(toValue)
             tweens[key] = tween
+        elseif Composite.canTween(fromValue, toValue) then
+            tweens[key] = Composite.create(fromValue, toValue, easing, duration)
         end
     end
 

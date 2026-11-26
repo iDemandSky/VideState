@@ -9,6 +9,7 @@ version can contain breaking changes.
 
 ### Added
 
+- The schemas `numberRange`, `numberSequence`, and `colorSequence`. A transition tweens a `NumberRange` by its minimum and maximum, and keeps the minimum at or below the maximum. It tweens a `NumberSequence` or a `ColorSequence` keypoint by keypoint when both values have the same number of keypoints, and switches at the start when they differ.
 - `handler.animate`, which returns a Vide source for every field that follows a transition, so a property can be bound to the animated value directly. It is `onTransition` in the form Vide expects, with the same options, and returns the sources and a disconnect function.
 - `rule.getTags`, `rule.hasTag`, `rule.addTags`, and `rule.removeTags`, which read a rule's tags, check one, and add or remove tags after it was created. `addTags` and `removeTags` take any number of tags and return whether the rule's tags changed. `info` and the `everyHandler` filters see the change at once.
 

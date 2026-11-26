@@ -50,9 +50,14 @@ If you need a gradual effect on text, such as a typewriter reveal, build it your
 ### Animatable fields
 
 Animatable fields are numbers, vectors, `Vector2`, `Vector3`, `CFrame`, `Color3`, `UDim`, `UDim2`,
-`Rect`, and tables whose values are numbers, vectors, or `Vector3`s with the same keys. Everything else
-is not tweened and switches at the start of the transition. That includes `string`, `boolean`, `enum`,
-and `optional` fields.
+`Rect`, `NumberRange`, and tables whose values are numbers, vectors, or `Vector3`s with the same keys.
+`NumberSequence` and `ColorSequence` are tweened keypoint by keypoint, so both values need the same number of
+keypoints. Everything else is not tweened and switches at the start of the transition. That includes `string`,
+`boolean`, `enum`, and `optional` fields, and a sequence whose keypoint count changes.
+
+A `NumberRange` tweens its minimum and its maximum separately. An easing that overshoots, such as `back`, can push
+the minimum above the maximum, so the range is clamped to keep the minimum at or below the maximum. A sequence keeps
+its first keypoint at time `0` and its last at `1`, and its other times stay in order.
 
 `current` is not validated against the schema again. A tweened `integer` field can hold a fractional
 value in the middle of a transition, so round it in your callback if you need a whole number.
