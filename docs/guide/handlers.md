@@ -332,6 +332,71 @@ value.
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition) |
 
+### playSequence <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+Handler.playSequence(
+    steps: { SequenceStep }, -- The states to play, in order
+    options: SequenceOptions? -- Options for this sequence
+) -> Disconnect
+```
+
+Changes the state step by step. Each step calls [`setState`](#setstate), waits until its transition has finished, then
+waits for the step's `hold` before the next one. Use it for a notification that slides in, stays, and slides out, or a
+button that flashes and settles.
+
+```luau
+handler.playSequence({
+    { state = "Shown", hold = 3 }, -- slides in, then stays for 3 seconds
+    { state = "Hidden" },
+})
+```
+
+The first step starts before `playSequence` returns. The sequence ends after the last step's transition, or goes on
+from the first step again with `loop = true`.
+
+- **Anything else that changes the state stops it.** A `setState` from your code, or a sequence started later, ends the
+  running one, so a sequence never fights your own state changes. A newer `playSequence` replaces the running one.
+- **A hold is scaled time.** [`pause`](#pause) holds it, and [`scaleSpeed`](#scalespeed) shortens it. The hold after the
+  last step only counts when `loop` is `true`.
+- **A step that is already the current state** has no transition, so it goes straight to its hold.
+- **Reduced motion** makes each step instant, but the holds still apply.
+- **The states are checked first.** Every state must exist, and the rule's
+  [`allowedTransitions`](/guide/rules#allowed-state-changes) must allow each change from one step to the next. With
+  `loop`, they must also allow the change from the last step back to the first. If not, `playSequence` raises an error
+  before anything changes.
+- [`finish`](#finish) ends the step's transition at once, and the sequence moves on to the hold.
+- [`destroy`](#destroy) stops the sequence. A step that raises an error ends it, and the error is reported in the output.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `steps` | `{ `[`SequenceStep`](#sequencestep)` }` | The states to play, in order. Must have at least one step. |
+| `options` | [`SequenceOptions`](#sequenceoptions)`?` | Optional. Options for this sequence. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Disconnect`](#disconnect) | Call it to stop the sequence. The handler keeps the state it is in. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | The handler was destroyed | `playSequence cannot be called after destroy` |
+| <Badge type="danger" text="Error" /> | `steps` is not a list, or is empty | `playSequence steps must be a non-empty list of steps` |
+| <Badge type="danger" text="Error" /> | A step is not a table | `playSequence step <n> must be a table` |
+| <Badge type="danger" text="Error" /> | A step has an unknown key | `playSequence step <n> has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | A step has no state name | `playSequence step <n> needs a state name` |
+| <Badge type="danger" text="Error" /> | A step's state is not a state of the handler | `playSequence step <n> has an unknown state "<state>"` |
+| <Badge type="danger" text="Error" /> | A step's `hold` or `delay` is not a finite non-negative number | `playSequence step <n> hold must be a finite non-negative number`, and the same for `delay` |
+| <Badge type="danger" text="Error" /> | A step's `instant` is not a boolean | `playSequence step <n> instant must be a boolean` |
+| <Badge type="danger" text="Error" /> | The rule does not allow a change between two steps | `playSequence step <n> cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
+| <Badge type="danger" text="Error" /> | With `loop`, the rule does not allow the change from the last step to the first | `playSequence cannot loop: cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
+| <Badge type="danger" text="Error" /> | `options` is not a table, has an unknown key, or `loop` is not a boolean | `playSequence options must be a table`, `playSequence options has an unknown key <key>`, `playSequence loop must be a boolean` |
+
 ### pause <Badge type="tip" text="Added in 0.2.0" />
 
 ```luau
@@ -547,6 +612,7 @@ type Handler<T> = {
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
     animate: (options: TransitionOptions?) -> (Sources<T>, Disconnect),
     progress: (options: TransitionOptions?) -> (Source<number>, Disconnect),
+    playSequence: (steps: { SequenceStep }, options: SequenceOptions?) -> Disconnect,
     pause: () -> (),
     resume: () -> (),
     onPause: (callback: OnPauseCallback) -> Disconnect,
@@ -559,7 +625,7 @@ type Handler<T> = {
 }
 ```
 
-Changed in 0.5.0: added [`progress`](#progress).
+Changed in 0.5.0: added [`progress`](#progress) and [`playSequence`](#playsequence).
 
 The type of a handler. Pass it the value type from [`InferRule`](/guide/rules#inferrule) so the
 handler matches its rule.
@@ -662,6 +728,40 @@ Changed in 0.5.0: added `delay`.
 | --- | --- | --- | --- | --- |
 | `instant` | `boolean` | No | `false` | When `true`, every `onTransition` connection receives the next state's values at once, with an `alpha` of `1`. |
 | `delay` | `number` | No | `0` | Seconds every connection of this change waits before its first frame, added to the connection's own `delay`. It is scaled time, so `pause` holds it. An instant change ignores it. Must be finite and non-negative. |
+
+### SequenceStep <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type SequenceStep = {
+    state: string, -- The state to change to
+    hold: number?, -- Seconds to wait after the transition has finished
+    instant: boolean?, -- Skips the animation of this step
+    delay: number?, -- Seconds every connection waits before this step starts
+}
+```
+
+One step of [`playSequence`](#playsequence).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `state` | `string` | Yes | | The state to change to. It must be a state of the handler. |
+| `hold` | `number` | No | `0` | Seconds to wait after the step's transition has finished, before the next step. It is scaled time, so `pause` holds it. Must be finite and non-negative. |
+| `instant` | `boolean` | No | `false` | The same as in [`SetStateOptions`](#setstateoptions). |
+| `delay` | `number` | No | `0` | The same as in [`SetStateOptions`](#setstateoptions). |
+
+### SequenceOptions <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type SequenceOptions = {
+    loop: boolean?, -- Starts over after the last step
+}
+```
+
+The options of [`playSequence`](#playsequence).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `loop` | `boolean` | No | `false` | When `true`, the sequence starts over after its last step, until it is stopped. |
 
 ### ScaleSpeedOptions <Badge type="warning" text="Changed in 0.3.0" />
 

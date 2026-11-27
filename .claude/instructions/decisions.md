@@ -81,6 +81,13 @@ user settles a new one.
   steps every job once with that delta, scaled like a real frame. The loop lives in `Transition/Loop.luau` so the clock
   can reach it. The clock is global, and turning it off hands running transitions back to real frames.
 
+- **`playSequence` is built on `setState` and `waitForFinish`, with its own timer on the shared loop.** A step waits until the
+  handler is idle, then holds in scaled time, so pause, `scaleSpeed`, and the manual clock apply to the hold. The sequence
+  ends when the handler's generation moves past the one it made, so any outside `setState`, `destroy`, or a newer
+  sequence stops it. The steps and the rule's `allowedTransitions` are checked before the first change. The option is
+  `loop`, because `repeat` is a Luau keyword. A looping sequence waits one frame between rounds, so instant steps
+  cannot hold up the game.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`

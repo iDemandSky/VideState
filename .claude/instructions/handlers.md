@@ -10,6 +10,7 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | `Transition/` | `onTransition`, and the `emit` that `setState` calls. `Config/Overrides.luau` checks `tweenOverrides` and finds the entry for a state change |
 | `Animate.luau` | `animate`, built on `onTransition` |
 | `Progress.luau` | `progress`, built on `onTransition` |
+| `Sequence.luau` | `playSequence`, built on `setState` and `waitForFinish` |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` |
 | `ScaleSpeed.luau` | `scaleSpeed` |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` |

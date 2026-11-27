@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `handler.playSequence(steps, options)` changes the state step by step, waiting for each transition and an optional
+  `hold`, with `loop` to repeat. Anything else that changes the state stops it, and it returns a function to stop it.
 - `VideState.setManualClock(enabled)`, `VideState.isManualClock()`, and `VideState.advanceClock(seconds)` step every
   transition by hand, so a test checks the values at exact times.
 - `VideState.extend(base, extraFields, metadata)` makes a new rule from a base rule, with its fields, state names,

@@ -11,6 +11,7 @@ const Change = require("@self/Change")
 const StateEvents = require("@self/StateEvents")
 const Animate = require("@self/Animate")
 const Progress = require("@self/Progress")
+const Sequence = require("@self/Sequence")
 const Transition = require("@self/Transition")
 const TransitionState = require("@self/Transition/State")
 const Pause = require("@self/Pause")
@@ -27,6 +28,7 @@ type Handler<T> = Types.Handler<T>
 --   Transition  onTransition
 --   Animate     animate
 --   Progress    progress
+--   Sequence    playSequence
 --   Pause       pause, resume, onPause, onResume
 --   ScaleSpeed scaleSpeed
 --   Finish      finish, onFinish, waitForFinish
@@ -98,6 +100,8 @@ return function <S>(
     local destroyed = false
     local registered: EveryRegistry.Controls? = nil
 
+    local sequence: Sequence.Sequence
+
     -- Stops every transition and removes every listener. `setState` raises an error afterwards.
     const function destroy()
         if destroyed then
@@ -111,6 +115,7 @@ return function <S>(
         end
 
         transition.stop()
+        sequence.clear()
         change.clear()
         stateEvents.clear()
         pause.clear()
@@ -131,6 +136,33 @@ return function <S>(
         change.emit,
         transition.emit
     )
+
+    sequence = Sequence({
+        getState = function(): string
+            return currentState()
+        end,
+        hasState = function(stateName: string): boolean
+            return validatedStates[stateName] ~= nil
+        end,
+        checkChange = function(from: string, to: string): string?
+            local isFree = from == to or Transitions.canChange(transitionRules, from, to)
+
+            if isFree then
+                return nil
+            end
+
+            return `cannot change state from "{from}" to "{to}". Allowed: {Transitions.describeAllowed(transitionRules :: Transitions.Rules, from)}`
+        end,
+        isDestroyed = function(): boolean
+            return destroyed
+        end,
+        setState = setState,
+        waitForFinish = finish.waitForFinish,
+        getGeneration = function(): number
+            return state.generation
+        end,
+        getRate = getRate,
+    })
 
     -- What the debug tools show about this handler. The label is filled in by `debug.track`.
     const function inspect(): Types.DebugSnapshot
@@ -166,6 +198,7 @@ return function <S>(
         onTransition = transition.onTransition,
         animate = animate,
         progress = progress,
+        playSequence = sequence.playSequence,
         pause = pause.pause,
         resume = pause.resume,
         onPause = pause.onPause,

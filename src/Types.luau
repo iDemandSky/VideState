@@ -82,6 +82,24 @@ export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: 
 export type Animate<T> = (options: TransitionOptions?) -> (Sources<T>, Disconnect)
 --- Creates a Vide source for the alpha of one `onTransition` connection. It starts at 1 and goes from 0 to 1 during each transition. A connection can pass options to override the tween settings of its handler. Returns the source and a function that removes the connection.
 export type Progress<T> = (options: TransitionOptions?) -> (Source<number>, Disconnect)
+--- One step of `playSequence`.
+export type SequenceStep = {
+    --- The state to change to. It must be a state of the handler.
+    state: string,
+    --- Seconds to wait after the step's transition has finished, before the next step. Scaled time, so a pause holds it. Defaults to 0.
+    hold: number?,
+    --- Skips the animation of this step. Defaults to false.
+    instant: boolean?,
+    --- Seconds every connection waits before this step starts, as in `SetStateOptions`. Defaults to 0.
+    delay: number?,
+}
+--- Options for `playSequence`.
+export type SequenceOptions = {
+    --- Starts over after the last step, until the sequence is stopped. Defaults to false.
+    loop: boolean?,
+}
+--- Changes the state step by step, waiting for each transition to finish. Returns a function that stops the sequence.
+export type PlaySequence = (steps: { SequenceStep }, options: SequenceOptions?) -> Disconnect
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
 --- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
@@ -200,6 +218,7 @@ export type Handler<T> = {
     read onTransition: ConnectTransition<T>,
     read animate: Animate<T>,
     read progress: Progress<T>,
+    read playSequence: PlaySequence,
     read pause: () -> (),
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,

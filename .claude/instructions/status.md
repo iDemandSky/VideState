@@ -21,7 +21,7 @@ the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` w
 
 0.5.0 adds the `union` schema, `setReducedMotion`, custom easing (`bezier`, `easing`), `handler.progress`,
 `allowedTransitions` in the rule metadata, a `delay` option on `setState` with `stagger` on `everyHandler.setState`,
-`VideState.extend` for rule inheritance, and the manual clock for tests (`setManualClock`, `advanceClock`). See
+`VideState.extend` for rule inheritance, `handler.playSequence` for state sequences, and the manual clock for tests (`setManualClock`, `advanceClock`). See
 `CHANGELOG.md`.
 
 `main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.4.0 only once the user
