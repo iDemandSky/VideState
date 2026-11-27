@@ -231,7 +231,6 @@ To accept more than two schemas, nest the union: `VideState.union(a, VideState.u
 | | When | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | An argument is not a schema | `expected the first union schema to be a schema`, and the same for the second |
-| <Badge type="warning" text="Issue" /> | Neither schema accepts the value | The issues of both schemas, one after the other |
 
 A field of a union type tweens only when the old and new values have the same animatable type, such as two numbers. When
 the types differ, such as a number and a string, the value switches at the start of the transition.
@@ -364,28 +363,9 @@ Accepts a `Vector2`.
 
 ## Schema
 
-### parse <Badge type="tip" text="Added in 0.1.0" />
-
-```luau
-Schema.parse(
-    value: unknown -- The value to check
-) -> ParseResult<T>
-```
-
-Checks a value against the schema without raising an error.
-
-**Parameters**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `value` | `unknown` | The value to validate. |
-
-**Returns**
-
-| Type | Description |
-| --- | --- |
-| [`ParseResult`](#parseresult)`<T>` when valid: `{ ok: true, value: T }` | The value is valid. `value` is the accepted value, which can differ from the input, for example when a string is truncated. |
-| [`ParseResult`](#parseresult)`<T>` when invalid: `{ ok: false, issues: { ParseIssue } }` | The value is invalid. `issues` lists what was wrong. |
+Every builder above returns a `Schema<T>` for the Luau type `T`. You do not call a schema yourself. Pass it as a field
+of a [rule](/guide/rules), and the rule checks the values of every state against it when a handler is created and
+whenever the state changes. A value that does not match raises an error that names the field and what was wrong.
 
 ## Types
 
@@ -450,19 +430,3 @@ Options for [`string`](#string).
 | --- | --- | --- | --- | --- |
 | `maxLength` | `number` | No | No limit | The maximum length, counted in Unicode code points rather than bytes. When set, strings with invalid UTF-8 are rejected. |
 | `truncate` | `boolean` | No | `false` | When `true`, longer strings are cut down to `maxLength` instead of rejected. |
-
-### ParseResult <Badge type="tip" text="Added in 0.1.0" />
-
-```luau
-type ParseResult<T> =
-    { ok: true, value: T }
-    | { ok: false, issues: { ParseIssue } }
-```
-
-The result of [`parse`](#parse). Check `ok` to tell the two cases apart.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `ok` | `boolean` | `true` when the value is valid. |
-| `value` | `T` | Only when `ok` is `true`. The accepted value, which can differ from the input, for example when a string is truncated. |
-| `issues` | `{ ParseIssue }` | Only when `ok` is `false`. What was wrong with the value. |
