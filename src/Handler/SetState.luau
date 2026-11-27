@@ -2,6 +2,7 @@ const Vide = require("../../packages/roblox/Vide")
 
 const Types = require("../Types")
 const Validation = require("../Validation")
+const ReducedMotion = require("../ReducedMotion")
 
 -- Keys allowed in the options of `setState`.
 const OPTION_KEYS: { [string]: boolean } = {
@@ -57,7 +58,8 @@ return function <T>(
 
         Validation.stateName(stateName, "state name")
 
-        local instant = parseOptions(options)
+        -- With reduced motion on, every state change is instant, whatever the options say.
+        local instant = parseOptions(options) or ReducedMotion.get()
         local nextValues = readState(stateName)
         local currentStateName = currentState()
 

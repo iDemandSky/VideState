@@ -214,6 +214,28 @@ handler.finish()
 - Connections with different durations finish at different times, so the event waits for the slowest one.
 - [`waitForFinish`](/guide/handlers#waitforfinish) yields until the handler has no running transition, for code that runs in sequence.
 
+## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
+
+Some players turn animations off. `VideState.setReducedMotion(true)` makes every following `setState` instant, so
+each [`onTransition`](/guide/handlers#ontransition) connection receives one frame with the next values and an alpha of
+`1`, and [`onFinish`](/guide/handlers#onfinish) still runs. Call it from your game's settings, and set it back to
+`false` to animate again.
+
+```luau
+VideState.setReducedMotion(true)
+
+handler.setState("Open") -- plays as one frame, whatever the duration is
+```
+
+It affects every handler, including ones created later, and only the state changes that start after it is called. A
+transition that is already running keeps playing, and `finish` ends it at once. A connection cannot opt out, so it also
+applies to a spinner or a progress bar that you animate with `onTransition`.
+
+| Function | Description |
+| --- | --- |
+| `VideState.setReducedMotion(enabled: boolean)` | Turns reduced motion on or off. Raises an error when `enabled` is not a boolean. |
+| `VideState.isReducedMotion() -> boolean` | Returns whether reduced motion is on. Defaults to `false`. |
+
 ## Performance
 
 Every running transition of every handler is stepped by one shared loop, which runs only while a transition

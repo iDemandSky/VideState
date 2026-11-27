@@ -1,4 +1,5 @@
 const Types = require("@self/Types")
+const ReducedMotion = require("@self/ReducedMotion")
 
 export type Infer<S> = Types.Infer<S>
 export type InferRule<R> = Types.InferRule<R>
@@ -43,6 +44,10 @@ return table.freeze({
 
     -- METHODS --
     rule = require("@self/Rule"),
+
+    -- REDUCED MOTION --
+    setReducedMotion = ReducedMotion.set,
+    isReducedMotion = ReducedMotion.get,
 
     -- EVERY HANDLER --
     everyHandler = require("@self/Every"),

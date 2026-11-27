@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `VideState.setReducedMotion(enabled)` and `VideState.isReducedMotion()`. While it is on, every `setState` is instant,
+  for players who turn animations off.
 - `VideState.union(first, second)` accepts a value that either schema accepts, such as a number or the string `"Auto"`.
   More than two schemas are written by nesting. A union field tweens only between two values of the same type, and
   otherwise switches at the start like a string.
