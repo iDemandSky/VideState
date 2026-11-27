@@ -345,8 +345,7 @@ VideState.everyHandler.setState("Closed")
 | Name | Type | Description |
 | --- | --- | --- |
 | `stateName` | `string` | Required. The name of the state. |
-| `options` | `EverySetStateOptions?` | Optional. The options of the handler's [`setState`](/guide/handlers#setstateoptions), `instant` and `delay`, and `stagger`. |
-| `options.stagger` | `number?` | Optional. Seconds between the handlers, in the order they were created. The first waits `0`, the second `stagger`, the third twice that, and so on, added to `delay`. Must be finite and non-negative. Defaults to `0`. See [Staggering handlers](/guide/transitions#staggering-handlers). |
+| `options` | [`EverySetStateOptions`](#everysetstateoptions)`?` | Optional. The options of the handler's `setState`, `instant` and `delay`, and `stagger`. |
 
 **Errors**
 
@@ -412,7 +411,7 @@ Group.isAnyPaused() -> boolean
 
 ## Types
 
-### EveryHandlerGroup <Badge type="tip" text="Added in 0.3.0" />
+### EveryHandlerGroup <Badge type="tip" text="Added in 0.3.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type EveryHandlerGroup = {
@@ -426,7 +425,7 @@ type EveryHandlerGroup = {
     pause: () -> (), -- Pauses the handlers in scope
     resume: () -> (), -- Resumes the handlers in scope
     finish: () -> (), -- Finishes the transitions of the handlers in scope
-    setState: (stateName: string, options: SetStateOptions?) -> (), -- Changes the state of the handlers in scope
+    setState: (stateName: string, options: EverySetStateOptions?) -> (), -- Changes the state of the handlers in scope
     destroy: () -> (), -- Destroys the handlers in scope
     count: () -> number, -- How many handlers are in scope
     isAnyRunning: () -> boolean, -- Whether any handler in scope has a running transition
@@ -434,4 +433,24 @@ type EveryHandlerGroup = {
 }
 ```
 
+Changed in 0.5.0: `setState` takes [`EverySetStateOptions`](#everysetstateoptions).
+
 The functions of `everyHandler`, and of every group that a filter returns. Each one is described above.
+
+### EverySetStateOptions <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type EverySetStateOptions = {
+    instant: boolean?, -- Skips the animation of this change
+    delay: number?, -- Seconds every connection waits before it starts
+    stagger: number?, -- Seconds between the handlers, in the order they were created
+}
+```
+
+The options of [`setState`](#setstate).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `instant` | `boolean` | No | `false` | The same as in the handler's [`SetStateOptions`](/guide/handlers#setstateoptions). |
+| `delay` | `number` | No | `0` | The same as in the handler's [`SetStateOptions`](/guide/handlers#setstateoptions), for every handler. |
+| `stagger` | `number` | No | `0` | Seconds between the handlers, in the order they were created. The first waits `0`, the second `stagger`, the third twice that, and so on, added to `delay`. Must be finite and non-negative. See [Staggering handlers](/guide/transitions#staggering-handlers). |

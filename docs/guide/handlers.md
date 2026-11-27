@@ -41,7 +41,7 @@ Returns the name of the active state. It is a function, so call it to read the n
 | --- | --- |
 | `string` | The name of the active state. |
 
-### setState <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
+### setState <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 Handler.setState(
@@ -51,6 +51,9 @@ Handler.setState(
 ```
 
 Changed in 0.2.0: takes an optional `options` argument, so one change can skip its animation.
+
+Changed in 0.5.0: the options take `delay`, and a change that the rule's
+[`allowedTransitions`](/guide/rules#allowed-state-changes) do not list raises an error.
 
 Switches to a state. Later reads and writes of [`sources`](#sources) use that state's sources, and
 [`onChange`](#onchange) and [`onTransition`](#ontransition) listeners are called.
@@ -531,7 +534,7 @@ tween settings are passed to [`onTransition`](#ontransition) and [`animate`](#an
 Move `onTransition = { duration = 0.2 }` from the handler options to
 `handler.onTransition(callback, { tweenDefault = { duration = 0.2 } })`.
 
-### Handler <Badge type="tip" text="Added in 0.1.0" />
+### Handler <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type Handler<T> = {
@@ -555,6 +558,8 @@ type Handler<T> = {
     destroy: () -> (),
 }
 ```
+
+Changed in 0.5.0: added [`progress`](#progress).
 
 The type of a handler. Pass it the value type from [`InferRule`](/guide/rules#inferrule) so the
 handler matches its rule.
@@ -642,7 +647,7 @@ type OnFinishCallback = (startedAt: number) -> ()
 | --- | --- | --- |
 | `startedAt` | `number` | The `os.clock()` time at which the transition that finished started. |
 
-### SetStateOptions <Badge type="tip" text="Added in 0.2.0" />
+### SetStateOptions <Badge type="tip" text="Added in 0.2.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type SetStateOptions = {
@@ -651,10 +656,12 @@ type SetStateOptions = {
 }
 ```
 
+Changed in 0.5.0: added `delay`.
+
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `instant` | `boolean` | No | `false` | When `true`, every `onTransition` connection receives the next state's values at once, with an `alpha` of `1`. |
-| `delay` | `number` | No | `0` | <Badge type="tip" text="Added in 0.5.0" /> Seconds every connection of this change waits before its first frame, added to the connection's own `delay`. It is scaled time, so `pause` holds it. An instant change ignores it. Must be finite and non-negative. |
+| `delay` | `number` | No | `0` | Seconds every connection of this change waits before its first frame, added to the connection's own `delay`. It is scaled time, so `pause` holds it. An instant change ignores it. Must be finite and non-negative. |
 
 ### ScaleSpeedOptions <Badge type="warning" text="Changed in 0.3.0" />
 

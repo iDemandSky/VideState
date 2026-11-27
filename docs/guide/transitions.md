@@ -247,11 +247,55 @@ handler.animate({
 })
 ```
 
-`VideState.bezier(x1, y1, x2, y2)` is a cubic bezier like CSS `cubic-bezier`, so a curve from a design tool works as it
-is. The curve starts at 0 and ends at 1. `x1` and `x2` must be between 0 and 1. `y1` and `y2` can be any finite number,
-and a value outside 0 to 1 overshoots like the `back` easings.
+Both functions below return a value that `easing` accepts in place of a name, including from a Vide source. A plain
+function does not work in `easing`, because a function there is read as a source. A table that was not made by these
+two is rejected.
 
-`VideState.easing(fn)` wraps your own function. It takes the progress from 0 to 1 and returns the eased progress:
+### bezier <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.bezier(
+    x1: number, -- The horizontal position of the first control point
+    y1: number, -- The vertical position of the first control point
+    x2: number, -- The horizontal position of the second control point
+    y2: number -- The vertical position of the second control point
+) -> CustomEasing
+```
+
+Makes a cubic bezier easing, like CSS `cubic-bezier`, so a curve from a design tool works as it is. The curve starts at
+0 and ends at 1.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `x1` | `number` | Must be between `0` and `1`. |
+| `y1` | `number` | Any finite number. A value outside 0 to 1 overshoots like the `back` easings. |
+| `x2` | `number` | Must be between `0` and `1`. |
+| `y2` | `number` | Any finite number. A value outside 0 to 1 overshoots like the `back` easings. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`CustomEasing`](#customeasing) | An easing for the `easing` setting. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | A number is not finite | `bezier expects four finite numbers` |
+| <Badge type="danger" text="Error" /> | `x1` or `x2` is outside 0 to 1 | `bezier x1 and x2 must be between 0 and 1` |
+
+### easing <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.easing(
+    fn: (number) -> number -- Takes the progress from 0 to 1 and returns the eased progress
+) -> CustomEasing
+```
+
+Wraps your own easing function:
 
 ```luau
 easing = VideState.easing(function(progress)
@@ -259,21 +303,33 @@ easing = VideState.easing(function(progress)
 end)
 ```
 
-The function is called with `0` and `1` when it is made, and it must return finite numbers for both. It should return `0`
-at `0` and `1` at `1`, so a transition starts at the old value and ends at the new one. A later result that is not a
+The function is called with `0` and `1` when it is made, and it must return finite numbers for both. It should return
+`0` at `0` and `1` at `1`, so a transition starts at the old value and ends at the new one. A later result that is not a
 finite number ends the transition with an error.
 
-Both return a value that `easing` accepts in place of a name, including from a Vide source. A plain function does not
-work in `easing`, because a function there is read as a source. A table that was not made by these two is rejected.
+**Parameters**
 
-| Function | Description |
+| Name | Type | Description |
+| --- | --- | --- |
+| `fn` | `(number) -> number` | The easing curve. It may overshoot. |
+
+**Returns**
+
+| Type | Description |
 | --- | --- |
-| `VideState.bezier(x1, y1, x2, y2) -> `[`CustomEasing`](#customeasing) | Makes a cubic bezier easing. Raises an error when a number is not finite or `x1` or `x2` is outside 0 to 1. |
-| `VideState.easing(fn: (number) -> number) -> `[`CustomEasing`](#customeasing) | Wraps a function of the progress. Raises an error when it is not a function or does not return finite numbers for `0` and `1`. |
+| [`CustomEasing`](#customeasing) | An easing for the `easing` setting. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `fn` is not a function | `easing expects a function, got <type>` |
+| <Badge type="danger" text="Error" /> | `fn` does not return a finite number for `0` or `1` | `easing must return a finite number for a progress of 0 and 1` |
+| <Badge type="danger" text="Error" /> | During a transition, `fn` returns a value that is not a finite number | `a custom easing returned a value that is not a finite number` |
 
 ## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
 
-Some players turn animations off. `VideState.setReducedMotion(true)` makes every following `setState` instant, so
+Some players turn animations off. [`setReducedMotion`](#setreducedmotion) makes every following `setState` instant, so
 each [`onTransition`](/guide/handlers#ontransition) connection receives one frame with the next values and an alpha of
 `1`, and [`onFinish`](/guide/handlers#onfinish) still runs. Call it from your game's settings, and set it back to
 `false` to animate again.
@@ -288,10 +344,41 @@ It affects every handler, including ones created later, and only the state chang
 transition that is already running keeps playing, and `finish` ends it at once. A connection cannot opt out, so it also
 applies to a spinner or a progress bar that you animate with `onTransition`.
 
-| Function | Description |
+### setReducedMotion <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.setReducedMotion(
+    enabled: boolean -- Whether every state change is instant
+) -> ()
+```
+
+Turns reduced motion on or off. It is off by default.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `enabled` | `boolean` | `true` makes every following `setState` instant. `false` animates again. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `enabled` is not a boolean | `setReducedMotion expects a boolean, got <type>` |
+
+### isReducedMotion <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.isReducedMotion() -> boolean
+```
+
+Returns whether reduced motion is on.
+
+**Returns**
+
+| Type | Description |
 | --- | --- |
-| `VideState.setReducedMotion(enabled: boolean)` | Turns reduced motion on or off. Raises an error when `enabled` is not a boolean. |
-| `VideState.isReducedMotion() -> boolean` | Returns whether reduced motion is on. Defaults to `false`. |
+| `boolean` | `true` while every state change is instant. Defaults to `false`. |
 
 ## Performance
 
@@ -353,7 +440,7 @@ The options of one [`onTransition`](/guide/handlers#ontransition) or [`animate`]
 An unknown key, a non-table value, or a setting at the top level raises an error when the connection is made. A top-level
 setting such as `duration` gets the message `onTransition options has an unknown key duration. Put duration inside tweenDefault`.
 
-### TweenSettings <Badge type="tip" text="Added in 0.4.0" />
+### TweenSettings <Badge type="tip" text="Added in 0.4.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type TweenSettings = {
@@ -364,11 +451,13 @@ type TweenSettings = {
 }
 ```
 
+Changed in 0.5.0: `easing` also takes a [`CustomEasing`](#customeasing) made with [`bezier`](#bezier) or [`easing`](#easing).
+
 The tween settings of a connection. The easing curves are the standard equations that [easings.net](https://easings.net) lists.
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `easing` | [`Easing`](#easing) or `Source<Easing>` | No | `"linear"` | The easing curve: a name, or one made with [`bezier`](#custom-easing) or [`easing`](#custom-easing). An unknown name raises an error. |
+| `easing` | [`Easing`](#easing) or `Source<Easing>` | No | `"linear"` | The easing curve: a name, or one made with [`bezier`](#bezier) or [`easing`](#easing). An unknown name raises an error. |
 | `duration` | `number` or `Source<number>` | No | `0.25` | The duration in seconds. Must be finite and non-negative. |
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
 | `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
@@ -429,7 +518,7 @@ type CustomEasing = {
 }
 ```
 
-A curve made with [`VideState.bezier`](#custom-easing) or [`VideState.easing`](#custom-easing). `fn` takes the progress
+A curve made with [`VideState.bezier`](#bezier) or [`VideState.easing`](#easing). `fn` takes the progress
 and returns the eased progress. Only these two functions make one.
 
 ### TweenName <Badge type="tip" text="Added in 0.1.0" />

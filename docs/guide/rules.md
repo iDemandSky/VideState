@@ -95,6 +95,40 @@ two states.
 | <Badge type="danger" text="Error" /> | `initialState` is not one of the states | `unknown initial state "<state>"` |
 | <Badge type="danger" text="Error" /> | A third argument is given | `new takes only the states and the initial state. Pass tweenDefault to onTransition or animate instead` |
 
+## Allowed state changes <Badge type="tip" text="Added in 0.5.0" />
+
+By default a handler can change from any state to any state. `allowedTransitions` limits that. Each key is a state, and its
+list holds the only states it can change to:
+
+```luau
+const ButtonRule = VideState.rule({
+    backgroundColor = VideState.color3(),
+}, {
+    name = "Button",
+    allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
+    allowedTransitions = {
+        -- A disabled button can only become idle again.
+        Disabled = { "Idle" },
+    },
+})
+```
+
+A [`setState`](/guide/handlers#setstate) to a state that the current state does not list raises an error, and the handler
+stays where it was. No event runs and no transition starts.
+
+```luau
+handler.setState("Disabled")
+handler.setState("Pressed")
+-- Raises: cannot change state from "Disabled" to "Pressed". Allowed: "Idle"
+```
+
+- A state that is not a key can change to any state.
+- Changing to the state the handler is already in does nothing, as before.
+- The initial state is not checked, and the rule applies to every following change.
+- The names must be states. With `allowedStateNames`, the rule checks them when it is made. Without it, each handler
+  checks them against its own states when it is created.
+- [`everyHandler.setState`](/guide/every-handler#setstate) checks every handler first, and none changes state if one is blocked.
+
 ## Extending a rule <Badge type="tip" text="Added in 0.5.0" />
 
 ```luau
@@ -142,6 +176,20 @@ How the new rule is put together:
 
 The base rule does not change, and handlers made from it are not affected. `extend` can be called on an extended rule
 again.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `base` | [`Rule`](#rule)`<Fields>` | A rule made with [`VideState.rule`](#creating-a-rule) or `extend`. |
+| `extraFields` | `Extra` | A record of schema builders, keyed by field name. Each name must be new to the base rule. |
+| `metadata` | [`RuleMetadata`](#rulemetadata) | The new rule's name and the details it adds. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Rule`](#rule)`<Fields & Extra>` | The new rule. |
 
 **Errors**
 
@@ -258,7 +306,7 @@ Removes tags from the rule.
 
 ## Types
 
-### RuleMetadata <Badge type="tip" text="Added in 0.1.0" />
+### RuleMetadata <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type RuleMetadata = {
@@ -270,47 +318,15 @@ type RuleMetadata = {
 }
 ```
 
+Changed in 0.5.0: added `allowedTransitions`.
+
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `name` | `string` | Yes | Must be unique across all rules. A duplicate raises an error. |
 | `description` | `string` | No | Text describing the rule. |
 | `tags` | `{ string }` | No | Strings for grouping rules. Tags are never formatted, so keep them consistent. Look them up with [`info`](/guide/info). |
 | `allowedStateNames` | `{ string }` | No | When set, [handlers](/guide/handlers) reject any other state name. When omitted, every state name is allowed. |
-| `allowedTransitions` | `{ [string]: { string } }` | No | <Badge type="tip" text="Added in 0.5.0" /> For a state, the only states it can change to. A state that is not listed can change to any state. See [Allowed state changes](#allowed-state-changes). |
-
-#### Allowed state changes <Badge type="tip" text="Added in 0.5.0" />
-
-By default a handler can change from any state to any state. `allowedTransitions` limits that. Each key is a state, and its
-list holds the only states it can change to:
-
-```luau
-const ButtonRule = VideState.rule({
-    backgroundColor = VideState.color3(),
-}, {
-    name = "Button",
-    allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
-    allowedTransitions = {
-        -- A disabled button can only become idle again.
-        Disabled = { "Idle" },
-    },
-})
-```
-
-A [`setState`](/guide/handlers#setstate) to a state that the current state does not list raises an error, and the handler
-stays where it was. No event runs and no transition starts.
-
-```luau
-handler.setState("Disabled")
-handler.setState("Pressed")
--- Raises: cannot change state from "Disabled" to "Pressed". Allowed: "Idle"
-```
-
-- A state that is not a key can change to any state.
-- Changing to the state the handler is already in does nothing, as before.
-- The initial state is not checked, and the rule applies to every following change.
-- The names must be states. With `allowedStateNames`, the rule checks them when it is made. Without it, each handler
-  checks them against its own states when it is created.
-- [`everyHandler.setState`](/guide/every-handler#setstate) checks every handler first, and none changes state if one is blocked.
+| `allowedTransitions` | `{ [string]: { string } }` | No | For a state, the only states it can change to. A state that is not listed can change to any state. See [Allowed state changes](#allowed-state-changes). |
 
 ### InferRule <Badge type="tip" text="Added in 0.1.0" />
 
