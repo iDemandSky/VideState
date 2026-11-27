@@ -97,6 +97,11 @@ user settles a new one.
   first time at 0 and its last at 1 and keeps the others in order. Each is blended in
   `Transition/Tween/Composite.luau`.
 
+- **`union` takes two schemas, and more are nested.** `VideState.union(first, second)` wraps Typed's binary union, so the
+  inferred type stays exact (`A | B`). A variadic version could not be typed by the analyzer. The first schema is tried
+  first. A union field tweens only between two values of the same animatable type, and otherwise switches at the start,
+  like a string.
+
 ## Code and tooling
 
 - **Dependencies are required with relative paths in `src/`,** such as `../packages/roblox/Vide`. The `@packages` aliases

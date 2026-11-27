@@ -7,6 +7,14 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.5.0] - Unreleased
+
+### Added
+
+- `VideState.union(first, second)` accepts a value that either schema accepts, such as a number or the string `"Auto"`.
+  More than two schemas are written by nesting. A union field tweens only between two values of the same type, and
+  otherwise switches at the start like a string.
+
 ## [0.4.0] - 2026-11-26
 
 ### Changed

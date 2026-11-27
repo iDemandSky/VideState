@@ -19,7 +19,7 @@ the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` w
 
 ## Unreleased on `dev`
 
-Nothing yet.
+0.5.0 adds the `union` schema (`VideState.union(first, second)`, nested for more than two schemas).
 
 `main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.4.0 only once the user
 has pushed it there.
@@ -35,5 +35,4 @@ has pushed it there.
 
 ## Ideas not started
 
-- More 2D schemas, such as a `union`. Not `Vector3`; see
-  [decisions.md](decisions.md).
+- More 2D schemas. Not `Vector3`; see [decisions.md](decisions.md).

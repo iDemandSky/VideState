@@ -194,6 +194,48 @@ Accepts `nil` and any value the inner schema accepts. A Vide source that holds `
 | --- | --- |
 | [`Schema`](#schema)`<T?>` | A schema that accepts `nil` or a value accepted by `schema`. |
 
+### union <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.union(
+    first: Schema<A>, -- The schema that is tried first
+    second: Schema<B> -- The schema that is tried when the first one rejects the value
+) -> Schema<A | B>
+```
+
+Accepts any value that `first` or `second` accepts. The first schema is tried first, and its result is used when it
+accepts the value. A Vide source that holds a value of either schema is also accepted.
+
+```luau
+-- A width that is a number of pixels or the string "Auto".
+const width = VideState.union(VideState.float({ min = 0 }), VideState.enum("Auto"))
+```
+
+To accept more than two schemas, nest the union: `VideState.union(a, VideState.union(b, c))`.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `first` | [`Schema`](#schema)`<A>` | The schema to try first. |
+| `second` | [`Schema`](#schema)`<B>` | The schema to try when `first` rejects the value. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Schema`](#schema)`<A | B>` | A schema that accepts a value accepted by either schema. |
+
+**Errors**
+
+| | When | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | An argument is not a schema | `expected the first union schema to be a schema`, and the same for the second |
+| <Badge type="warning" text="Issue" /> | Neither schema accepts the value | The issues of both schemas, one after the other |
+
+A field of a union type tweens only when the old and new values have the same animatable type, such as two numbers. When
+the types differ, such as a number and a string, the value switches at the start of the transition.
+
 ### table <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau

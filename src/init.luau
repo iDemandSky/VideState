@@ -29,6 +29,7 @@ return table.freeze({
     float = require("@self/Schemas/Primitives/Float"),
     integer = require("@self/Schemas/Primitives/Integer"),
     optional = require("@self/Schemas/Primitives/Optional"),
+    union = require("@self/Schemas/Primitives/Union"),
     string = require("@self/Schemas/Primitives/String"),
     table = require("@self/Schemas/Primitives/Table"),
     record = require("@self/Schemas/Record"),
