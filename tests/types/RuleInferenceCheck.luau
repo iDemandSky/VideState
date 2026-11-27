@@ -74,6 +74,22 @@ local disconnectAnimatedFunction: () -> () = disconnectAnimated
 disconnectChange()
 disconnectTransition()
 
+
+-- An extended rule has the fields of its base and its own.
+local extendedRule = VideState.extend(rule, {
+    label = VideState.string(),
+}, { name = "InferenceCheckExtendedPanel" })
+
+local extendedPanel = extendedRule.new(
+    {
+        Idle = { visible = Vide.source(true), count = Vide.source(2), label = Vide.source("Idle") },
+        Active = { visible = Vide.source(false), count = Vide.source(0), label = Vide.source("Active") },
+    },
+    "Idle"
+)
+local extendedVisible: Vide.Source<boolean> = extendedPanel.sources.visible
+local extendedLabel: Vide.Source<string> = extendedPanel.sources.label
+
 return {
     sources,
     visibleSource,
@@ -93,4 +109,6 @@ return {
     ruleHasTag,
     tagsAdded,
     tagsRemoved,
+    extendedVisible,
+    extendedLabel,
 }

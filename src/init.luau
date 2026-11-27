@@ -49,6 +49,7 @@ return table.freeze({
 
     -- METHODS --
     rule = require("@self/Rule"),
+    extend = require("@self/Rule/Extend"),
 
     -- EASING --
     bezier = Custom.bezier,

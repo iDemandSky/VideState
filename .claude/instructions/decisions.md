@@ -71,6 +71,12 @@ user settles a new one.
   `stagger × its position` in the order the handlers were created, which the registry now keeps. A handler's own
   `setState` rejects `stagger`.
 
+- **Rule inheritance is `VideState.extend(base, extraFields, metadata)`, not a method on the rule.** A method would make
+  the rule module call itself, and the analyzer then loses the type of every rule. The fields are merged with a type
+  function, because Typed's inference does not accept an intersection. A field the base already has raises an error.
+  State names and tags are joined, and the extension's transitions replace the base list for the same state. A rule
+  keeps `_fields` and `_metadata` for it.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`

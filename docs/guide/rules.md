@@ -95,6 +95,66 @@ two states.
 | <Badge type="danger" text="Error" /> | `initialState` is not one of the states | `unknown initial state "<state>"` |
 | <Badge type="danger" text="Error" /> | A third argument is given | `new takes only the states and the initial state. Pass tweenDefault to onTransition or animate instead` |
 
+## Extending a rule <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.extend<Fields, Extra>(
+    base: Rule<Fields>, -- The rule to build on
+    extraFields: Extra, -- The fields the new rule adds
+    metadata: RuleMetadata -- The new rule's name and what it adds
+) -> Rule<Fields & Extra>
+```
+
+Makes a new rule from a base rule. The new rule has every field of the base and the ones in `extraFields`, so a
+component that needs one more property does not repeat the base rule's fields.
+
+```luau
+const ButtonRule = VideState.rule({
+    backgroundColor = VideState.color3(),
+    textColor = VideState.color3(),
+}, {
+    name = "Button",
+    tags = { "Button" },
+    allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
+})
+
+-- A button that can also show a loading state, with an icon on top.
+const LoadingButtonRule = VideState.extend(ButtonRule, {
+    iconTransparency = VideState.float({ min = 0, max = 1 }),
+}, {
+    name = "LoadingButton",
+    allowedStateNames = { "Loading" },
+})
+```
+
+A handler of `LoadingButtonRule` needs `backgroundColor`, `textColor`, and `iconTransparency` in every state, and can use
+the states `Idle`, `Hovered`, `Pressed`, `Disabled`, and `Loading`.
+
+How the new rule is put together:
+
+| Part | Result |
+| --- | --- |
+| Fields | The base fields and `extraFields`. A field the base already has raises an error. |
+| `name`, `description` | From `metadata`. The name must be unique, like any rule's. |
+| `tags` | The base rule's current tags, then the new ones, without repeats. |
+| `allowedStateNames` | The base names and the new ones. If neither has a list, every name is allowed. |
+| `allowedTransitions` | The base transitions and the new ones. A state the new rule lists replaces the base list for that state. |
+
+The base rule does not change, and handlers made from it are not affected. `extend` can be called on an extended rule
+again.
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `base` is not a rule | `extend expects a rule made with VideState.rule as its first argument` |
+| <Badge type="danger" text="Error" /> | `extraFields` is not a table | `extend expects a table of named field schemas, got <type>` |
+| <Badge type="danger" text="Error" /> | A field is already in the base rule | `extend cannot redefine field "<field>" of rule <rule>` |
+| <Badge type="danger" text="Error" /> | `metadata` is missing | `extend expects metadata with a name` |
+| <Badge type="danger" text="Error" /> | The name is already used | `Duplicate rule name: <name>` |
+
+The new rule's metadata is checked like the metadata of [`VideState.rule`](#creating-a-rule).
+
 ## Tags
 
 Tags group rules, and are set in the [`tags`](#rulemetadata) field of the metadata. These methods

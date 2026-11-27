@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `VideState.extend(base, extraFields, metadata)` makes a new rule from a base rule, with its fields, state names,
+  transitions, and tags, and the ones you add. The base rule does not change.
 - `setState(name, { delay = seconds })` delays the first frame of one state change, and `everyHandler.setState(name,
   { stagger = seconds })` starts the handlers one after another, in the order they were created, for list items that
   appear in turn.

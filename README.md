@@ -15,6 +15,8 @@ VideState change their properties whenever the state changes.
 
 - **Rules** describe a component's properties with schemas (`boolean`, `integer`, `float`, `string`, `enum`,
   `optional`, `union`, `table`, `record`, `color3`, `numberRange`, `numberSequence`, `colorSequence`, `udim`, `udim2`, `vector2`), and validate every state.
+- **Rule inheritance** with `VideState.extend`: a new rule keeps every field, state name, and tag of its base and adds
+  its own.
 - **Handlers** hold one component's state, with `sources` that follow the active state and bind to Vide properties.
 - **Events** for state changes: `onChange`, `onEnter`, `onExit`.
 - **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`, and can use other

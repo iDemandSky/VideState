@@ -45,6 +45,9 @@ return function <Fields>(fields: Fields, metadata: RuleMetadata)
 
     return table.freeze({
         _schema = schema,
+        -- The fields and metadata the rule was made with. `VideState.extend` reads them.
+        _fields = fields,
+        _metadata = metadata,
 
         -- Returns a frozen copy of the rule's tags, in the order they were added.
         getTags = function(): { string }
