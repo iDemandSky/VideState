@@ -41,7 +41,9 @@ above its `return`.
 
 The primary design is blue. Its text grows by two points when hovered, like the default design:
 
-```luau
+::: code-group
+
+```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
 local Primary: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(60, 120, 230),
@@ -66,10 +68,14 @@ local Primary: Design = {
 }
 ```
 
+:::
+
 The danger design is red. Its text does not grow on hover, which shows that designs can differ in any
 property and not only in colors:
 
-```luau
+::: code-group
+
+```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
 local Danger: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(200, 60, 60),
@@ -94,9 +100,13 @@ local Danger: Design = {
 }
 ```
 
+:::
+
 Then list them in its `return`, so a component picks a design by name:
 
-```luau
+::: code-group
+
+```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
 return {
     Default = Default,
     Primary = Primary,
@@ -104,12 +114,16 @@ return {
 }
 ```
 
+:::
+
 ## 3. Build the menu
 
 In the LocalScript, create one button per design and place them in a list. Each button is its own handler, so changing one
 never affects another.
 
-```luau
+::: code-group
+
+```luau [StarterPlayerScripts/MainMenu (LocalScript)]
 Vide.mount(function()
     return Vide.create "ScreenGui" {
         Name = "MainMenu",
@@ -129,6 +143,8 @@ Vide.mount(function()
     }
 end, player:WaitForChild("PlayerGui"))
 ```
+
+:::
 
 You get a blue Play button, a red Delete button, and a greyed-out Shop button. They share the same hover and
 press behavior, and each reacts on its own.

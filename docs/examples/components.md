@@ -35,8 +35,9 @@ The rule lists the properties a button has and the states it can be in. `allowed
 VideState reject any state that is not one of the four. Create a ModuleScript named **`ButtonRule`** in
 `ReplicatedStorage` that returns it:
 
-```luau
--- ReplicatedStorage.ButtonRule
+::: code-group
+
+```luau [ReplicatedStorage/ButtonRule (ModuleScript)]
 const VideState = require("@VideState")
 
 return VideState.rule({
@@ -49,6 +50,8 @@ return VideState.rule({
 })
 ```
 
+:::
+
 ## 2. Design how each state looks
 
 A design says what every state looks like. It is plain data, so it is easy to change or replace. The
@@ -56,8 +59,9 @@ A design says what every state looks like. It is plain data, so it is easy to ch
 named **`ButtonDesigns`** in `ReplicatedStorage`. It holds the types and every design, so a look is changed in one
 place:
 
-```luau
--- ReplicatedStorage.ButtonDesigns
+::: code-group
+
+```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
 export type Look = {
     backgroundColor: Color3,
     textColor: Color3,
@@ -99,12 +103,16 @@ return {
 }
 ```
 
+:::
+
 ## 3. Turn the design into sources
 
 The rest is one LocalScript. It requires the two modules. A handler needs a Vide source for each property in each state,
 and this helper builds them from a design.
 
-```luau
+::: code-group
+
+```luau [StarterPlayerScripts/PlayButton (LocalScript)]
 const Players = game:GetService("Players")
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Point @Vide at the Vide package in your project.
@@ -129,12 +137,16 @@ const function createStates(design: Design)
 end
 ```
 
+:::
+
 ## 4. Build the button
 
 `createButton` makes one button. Calling `ButtonRule.new` creates the handler, which is this
 button's component instance. The button starts in `Idle`, or in `Disabled` when it is not enabled.
 
-```luau
+::: code-group
+
+```luau [StarterPlayerScripts/PlayButton (LocalScript)]
 const function createButton(label: string, design: Design, enabled: boolean)
     local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled")
 
@@ -188,11 +200,15 @@ const function createButton(label: string, design: Design, enabled: boolean)
 end
 ```
 
+:::
+
 ## 5. Show it
 
 Create the Play button and mount it in the player's screen.
 
-```luau
+::: code-group
+
+```luau [StarterPlayerScripts/PlayButton (LocalScript)]
 const player = Players.LocalPlayer
 
 Vide.mount(function()
@@ -203,6 +219,8 @@ Vide.mount(function()
     }
 end, player:WaitForChild("PlayerGui"))
 ```
+
+:::
 
 Hover over the button and it lightens and grows. Hold the mouse down and it darkens. Pass `false`
 as the last argument to `createButton` and it starts greyed out and ignores the mouse.

@@ -15,8 +15,9 @@ that file.
 Create a ModuleScript named **`TweenConfig`** in `ReplicatedStorage`, so components load it with
 `require(ReplicatedStorage.TweenConfig)`. It returns the options that `animate` and `onTransition` take.
 
-```luau
--- ReplicatedStorage.TweenConfig
+::: code-group
+
+```luau [ReplicatedStorage/TweenConfig (ModuleScript)]
 const VideState = require("@VideState")
 
 const config: VideState.TransitionOptions = {
@@ -46,6 +47,8 @@ const config: VideState.TransitionOptions = {
 return config
 ```
 
+:::
+
 The state names in `from` and `to` must be states of the handler that uses the config. Use it with the handlers of rules
 that have them, such as the rule below.
 
@@ -54,7 +57,9 @@ that have them, such as the rule below.
 A component requires the module and passes it to `animate`. It has no tween numbers of its own. This rule has the
 four states the config names, and each state holds a Vide source for each property:
 
-```luau
+::: code-group
+
+```luau [StarterPlayerScripts/Button (LocalScript)]
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Vide = require("@Vide")
 const VideState = require("@VideState")
@@ -80,6 +85,8 @@ const button = Vide.create "TextButton" {
     BackgroundColor3 = animated.backgroundColor,
 }
 ```
+
+:::
 
 `handler.setState("Pressed")` now fades over 0.05 seconds and `handler.setState("Disabled")` over 0.5 seconds. Every
 other handler of `ButtonRule` makes the same `animate(TweenConfig)` call and fades the same way. See
