@@ -25,20 +25,21 @@ A **Play button** for a game's main menu. It reacts to the mouse, and every reac
 Every state sets the same three properties: `backgroundColor`, `textColor`, and `textSize`. The colors
 and the text size fade over 0.15 seconds when the state changes, instead of jumping.
 
-The steps below continue one script. Put them together in order, in a LocalScript.
+The rule and the designs are definitions that many buttons share, so they live in two ModuleScripts in
+`ReplicatedStorage`: **`ButtonRule`** and **`ButtonDesigns`**. The rest is one LocalScript that requires them. Create
+them in the order below.
 
 ## 1. Describe the component
 
 The rule lists the properties a button has and the states it can be in. `allowedStateNames` makes
-VideState reject any state that is not one of the four.
+VideState reject any state that is not one of the four. Create a ModuleScript named **`ButtonRule`** in
+`ReplicatedStorage` that returns it:
 
 ```luau
-const Players = game:GetService("Players")
--- Point @Vide at the Vide package in your project.
-const Vide = require("@Vide")
+-- ReplicatedStorage.ButtonRule
 const VideState = require("@VideState")
 
-const ButtonRule = VideState.rule({
+return VideState.rule({
     backgroundColor = VideState.color3(),
     textColor = VideState.color3(),
     textSize = VideState.integer({ min = 1 }),
@@ -51,9 +52,12 @@ const ButtonRule = VideState.rule({
 ## 2. Design how each state looks
 
 A design says what every state looks like. It is plain data, so it is easy to change or replace. The
-`Look` and `Design` types match the rule, and your editor flags a missing state or property.
+`Look` and `Design` types match the rule, and your editor flags a missing state or property. Create a ModuleScript
+named **`ButtonDesigns`** in `ReplicatedStorage`. It holds the types and every design, so a look is changed in one
+place:
 
 ```luau
+-- ReplicatedStorage.ButtonDesigns
 export type Look = {
     backgroundColor: Color3,
     textColor: Color3,
@@ -67,7 +71,7 @@ export type Design = {
     Disabled: Look,
 }
 
-const DefaultDesign: Design = {
+local Default: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(60, 60, 70),
         textColor = Color3.fromRGB(255, 255, 255),
@@ -89,13 +93,27 @@ const DefaultDesign: Design = {
         textSize = 18,
     },
 }
+
+return {
+    Default = Default,
+}
 ```
 
 ## 3. Turn the design into sources
 
-A handler needs a Vide source for each property in each state. This helper builds them from a design.
+The rest is one LocalScript. It requires the two modules. A handler needs a Vide source for each property in each state,
+and this helper builds them from a design.
 
 ```luau
+const Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Point @Vide at the Vide package in your project.
+const Vide = require("@Vide")
+const ButtonRule = require(ReplicatedStorage.ButtonRule)
+const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
+
+type Design = ButtonDesigns.Design
+
 const function createStates(design: Design)
     local states = {}
 
@@ -181,7 +199,7 @@ Vide.mount(function()
     return Vide.create "ScreenGui" {
         Name = "Components",
         ResetOnSpawn = false,
-        [1] = createButton("Play", DefaultDesign, true),
+        [1] = createButton("Play", ButtonDesigns.Default, true),
     }
 end, player:WaitForChild("PlayerGui"))
 ```

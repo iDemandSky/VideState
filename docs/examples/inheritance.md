@@ -15,43 +15,34 @@ A **main menu with three buttons**, all made from the button component in [Compo
 
 | Button | Design | Purpose | Enabled |
 | --- | --- | --- | --- |
-| Play | `PrimaryDesign` (blue) | The main action | Yes |
-| Delete | `DangerDesign` (red) | A destructive action | Yes |
-| Shop | `DefaultDesign` (grey) | Not available yet | No |
+| Play | `ButtonDesigns.Primary` (blue) | The main action | Yes |
+| Delete | `ButtonDesigns.Danger` (red) | A destructive action | Yes |
+| Shop | `ButtonDesigns.Default` (grey) | Not available yet | No |
 
 All three buttons have the same four states (`Idle`, `Hovered`, `Pressed`, `Disabled`) and the same three
 properties (`backgroundColor`, `textColor`, `textSize`). Only the values differ. For example, `Idle` is blue
 for Play, red for Delete, and dark grey for Shop.
 
-This page continues the script from Components. The rule, the `Look` and `Design` types, `createStates`,
-`createButton`, and `DefaultDesign` are exactly the same, so they are not repeated here.
+This page continues from Components. The **`ButtonRule`** and **`ButtonDesigns`** ModuleScripts in `ReplicatedStorage`,
+`createStates`, and `createButton` are exactly the same, so they are not repeated here. The new designs are added to
+`ButtonDesigns`.
 
 ## 1. The base component
 
-The base is the `ButtonRule` you already wrote. It is the contract that every design has to follow: each
-design provides `Idle`, `Hovered`, `Pressed`, and `Disabled`, with the same three properties.
-It is shown again only as a reminder, so do not define it a second time.
-
-```luau
-const ButtonRule = VideState.rule({
-    backgroundColor = VideState.color3(),
-    textColor = VideState.color3(),
-    textSize = VideState.integer({ min = 1 }),
-}, {
-    name = "Button",
-    allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
-})
-```
+The base is the **`ButtonRule`** ModuleScript you already wrote. It is the contract that every design has to follow:
+each design provides `Idle`, `Hovered`, `Pressed`, and `Disabled`, with the same three properties. Do not change it.
+Every button requires it by that name, so there is still one definition.
 
 ## 2. Add the designs
 
-Each design is a table of type `Design`. It has the same states as `DefaultDesign`, with different values,
-so every design works with the same `createButton`.
+Each design is a table of type `Design`. It has the same states as the default design, with different values,
+so every design works with the same `createButton`. Add the two designs below to the **`ButtonDesigns`** ModuleScript,
+above its `return`.
 
 The primary design is blue. Its text grows by two points when hovered, like the default design:
 
 ```luau
-const PrimaryDesign: Design = {
+local Primary: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(60, 120, 230),
         textColor = Color3.fromRGB(255, 255, 255),
@@ -79,7 +70,7 @@ The danger design is red. Its text does not grow on hover, which shows that desi
 property and not only in colors:
 
 ```luau
-const DangerDesign: Design = {
+local Danger: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(200, 60, 60),
         textColor = Color3.fromRGB(255, 255, 255),
@@ -103,9 +94,19 @@ const DangerDesign: Design = {
 }
 ```
 
+Then list them in its `return`, so a component picks a design by name:
+
+```luau
+return {
+    Default = Default,
+    Primary = Primary,
+    Danger = Danger,
+}
+```
+
 ## 3. Build the menu
 
-Create one button per design and place them in a list. Each button is its own handler, so changing one
+In the LocalScript, create one button per design and place them in a list. Each button is its own handler, so changing one
 never affects another.
 
 ```luau
@@ -121,9 +122,9 @@ Vide.mount(function()
                 VerticalAlignment = Enum.VerticalAlignment.Center,
                 Padding = UDim.new(0, 12),
             },
-            [2] = createButton("Play", PrimaryDesign, true),
-            [3] = createButton("Delete", DangerDesign, true),
-            [4] = createButton("Shop", DefaultDesign, false),
+            [2] = createButton("Play", ButtonDesigns.Primary, true),
+            [3] = createButton("Delete", ButtonDesigns.Danger, true),
+            [4] = createButton("Shop", ButtonDesigns.Default, false),
         },
     }
 end, player:WaitForChild("PlayerGui"))
