@@ -358,7 +358,7 @@ A rule returned by [`rule`](#creating-a-rule). It is frozen, so it cannot be cha
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `_schema` | [`Schema`](/guide/schemas#schema)`<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
+| `_schema` | `Schema<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
 | `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#creating-handlers-from-a-rule). |
 | `getTags` | `function` | Returns the rule's tags. See [`getTags`](#gettags). |
 | `hasTag` | `function` | Checks whether the rule has a tag. See [`hasTag`](#hastag). |
