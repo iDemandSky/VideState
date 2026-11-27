@@ -1,14 +1,17 @@
 ---
-title: Who is this for?
-description: For those wanting to find the purpose of VideState.
+title: Why VideState
+description: The reasons VideState was built.
 ---
 
-# Why?
+# Why VideState
 
-As a Roblox developer who wants my UI to feel consistent everywhere, I wanted to be able to build different styles of UI without rewriting the transition logic for each one.
+As a Roblox developer who wants my UI to feel consistent everywhere, I wanted to build different styles of UI without
+rewriting the transition logic for each one.
 
-VideState keeps transitions consistent. Every handler tweens each field between states with the same timing, with a default duration of 0.25 seconds, so the motion looks the same across your interface. You can still set a different duration for a connection when it needs one.
-
-It also lets you set a state on the UI seamlessly. Calling `setState` swaps the active state, updates the derived sources, and fires your change and transition listeners, so Vide reacts to the new values without extra wiring.
-
-VideState is also compatible with inheritance-based programming, so you can use it in class-style code as well as in plain functional code.
+- **Consistent motion.** Every handler tweens each field between states the same way, with a default duration of 0.25
+  seconds, so the motion looks the same across your interface. A connection can still set its own settings when it
+  needs them.
+- **Seamless state changes.** Calling `setState` swaps the active state, updates the sources, and fires your change and
+  transition listeners, so Vide reacts to the new values without extra wiring.
+- **Inheritance-friendly.** One rule can serve many looks, so you can use VideState in class-style code as well as in
+  plain functional code. See [Inheritance](/examples/inheritance).

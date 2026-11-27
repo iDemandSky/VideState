@@ -5,10 +5,11 @@ description: Build a menu button that reacts to the mouse, with a rule as its bl
 
 # Components
 
-VideState lets you build UI components the way you would in Vue.js. A [rule](/guide/rules) is the
-component's blueprint: the properties it has and the states it can be in. A
-[handler](/guide/handlers) is one instance of that component, with its own state and values. Vide
-creates the Instances, and the handler decides what their properties are.
+VideState lets you build UI components the way you would in [Vue.js](https://vuejs.org/) (at least from what I currently use for other projects).
+
+A [rule](/guide/rules) is the component's blueprint: the properties it has and the states it can be in.
+
+A [handler](/guide/handlers) is one instance of that component, with its own state and values. Vide creates the Instances, and the handler decides what their properties are.
 
 ## What we're building
 
