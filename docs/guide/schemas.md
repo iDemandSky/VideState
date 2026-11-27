@@ -6,9 +6,13 @@ outline: [2, 3]
 
 # Schemas
 
-Schema builders describe the shape of a value. Every builder returns a [`Schema<T>`](#schema) for a
+Schema builders describe the shape of a value. Every builder returns a `Schema<T>` for a
 Luau type `T`. Schemas are the field definitions that a [rule](/guide/rules) combines. Builders
 validate their options when they are called, and an invalid option raises an error.
+
+You do not call a schema yourself. Pass it as a field of a rule, and the rule checks the values of every state against
+it when a handler is created and whenever the state changes. A value that does not match raises an error that names the
+field and what was wrong.
 
 ## Primitives
 
@@ -24,7 +28,7 @@ Accepts `true` or `false`, and rejects every other type.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<boolean>` | A schema for booleans. |
+| `Schema``<boolean>` | A schema for booleans. |
 
 ### integer <Badge type="tip" text="Added in 0.1.0" />
 
@@ -51,7 +55,7 @@ Accepts finite whole numbers.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<number>` | A schema for whole numbers within the bounds. |
+| `Schema``<number>` | A schema for whole numbers within the bounds. |
 
 **Errors**
 
@@ -89,7 +93,7 @@ Accepts finite numbers, including whole numbers.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<number>` | A schema for finite numbers within the bounds and precision. |
+| `Schema``<number>` | A schema for finite numbers within the bounds and precision. |
 
 **Errors**
 
@@ -133,7 +137,7 @@ Accepts strings.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<string>` | A schema for strings. |
+| `Schema``<string>` | A schema for strings. |
 
 **Errors**
 
@@ -163,7 +167,7 @@ Accepts only the strings passed as arguments. Matching is case-sensitive.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<string>` | A schema that accepts one of the given strings. |
+| `Schema``<string>` | A schema that accepts one of the given strings. |
 
 **Errors**
 
@@ -186,13 +190,13 @@ Accepts `nil` and any value the inner schema accepts. A Vide source that holds `
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `schema` | [`Schema`](#schema)`<T>` | The schema to apply when the value is not `nil`. |
+| `schema` | `Schema``<T>` | The schema to apply when the value is not `nil`. |
 
 **Returns**
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<T?>` | A schema that accepts `nil` or a value accepted by `schema`. |
+| `Schema``<T?>` | A schema that accepts `nil` or a value accepted by `schema`. |
 
 ### union <Badge type="tip" text="Added in 0.5.0" />
 
@@ -217,14 +221,14 @@ To accept more than two schemas, nest the union: `VideState.union(a, VideState.u
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `first` | [`Schema`](#schema)`<A>` | The schema to try first. |
-| `second` | [`Schema`](#schema)`<B>` | The schema to try when `first` rejects the value. |
+| `first` | `Schema``<A>` | The schema to try first. |
+| `second` | `Schema``<B>` | The schema to try when `first` rejects the value. |
 
 **Returns**
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<A | B>` | A schema that accepts a value accepted by either schema. |
+| `Schema``<A | B>` | A schema that accepts a value accepted by either schema. |
 
 **Errors**
 
@@ -257,7 +261,7 @@ inferred from the field schemas, so [`Infer`](#infer) returns a table with the s
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<{ [string]: any }>` | A schema for tables with exactly these fields. |
+| `Schema``<{ [string]: any }>` | A schema for tables with exactly these fields. |
 
 **Errors**
 
@@ -287,7 +291,7 @@ can be any schema, including another record.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<{ [string]: any }>` | A schema for records with exactly these fields. |
+| `Schema``<{ [string]: any }>` | A schema for records with exactly these fields. |
 
 **Errors**
 
@@ -360,12 +364,6 @@ VideState.vector2() -> Schema<Vector2>
 ```
 
 Accepts a `Vector2`.
-
-## Schema
-
-Every builder above returns a `Schema<T>` for the Luau type `T`. You do not call a schema yourself. Pass it as a field
-of a [rule](/guide/rules), and the rule checks the values of every state against it when a handler is created and
-whenever the state changes. A value that does not match raises an error that names the field and what was wrong.
 
 ## Types
 
