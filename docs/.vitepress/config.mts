@@ -40,7 +40,8 @@ export default defineConfig({
         text: 'Examples',
         items: [
           { text: 'Components', link: '/examples/components' },
-          { text: 'Inheritance', link: '/examples/inheritance' }
+          { text: 'Inheritance', link: '/examples/inheritance' },
+          { text: 'Tween config', link: '/examples/tween-config' }
         ]
       },
     ],

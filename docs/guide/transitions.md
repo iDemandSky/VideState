@@ -136,6 +136,7 @@ handler.animate({
 - `from` and `to` are arrays of state names. A side that is left out means every state.
 - `tween` takes the same settings as `tweenDefault`. A setting it leaves out keeps the one of `tweenDefault`.
 - A state change that no entry matches uses `tweenDefault`.
+- To keep `tweenDefault` and `tweenOverrides` in one module that many components share, see [Tween config](/examples/tween-config).
 - At most one entry may match a state change, so the order of the array does not matter. An overlap raises an error
   when `onTransition` or `animate` is called. The error lists every problem together: overlaps, a state the handler does
   not have, an empty array, an entry that leaves out both sides, an entry that only matches a state to itself, and an
