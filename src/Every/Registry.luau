@@ -26,23 +26,30 @@ export type Entry = {
 export type Member = {
     handler: Controls,
     entry: Entry,
+    -- When the handler was created, compared to the others. The list is sorted by it.
+    order: number,
 }
 
 -- Every live handler. The keys are weak, so a handler that nothing else holds is collected. An entry must not
 -- hold its handler, or the key would stay alive.
 const entries: { [Controls]: Entry } = setmetatable({}, { __mode = "k" }) :: any
+const orders: { [Controls]: number } = setmetatable({}, { __mode = "k" }) :: any
+local nextOrder = 0
 
 const function add(handler: Controls, entry: Entry)
+    nextOrder += 1
     entries[handler] = entry
+    orders[handler] = nextOrder
 end
 
 -- A destroyed handler leaves the list.
 const function remove(handler: Controls)
     entries[handler] = nil
+    orders[handler] = nil
 end
 
 -- A snapshot, so a callback that creates a handler cannot change the list while it is walked. With `matches`,
--- only the handlers it accepts are listed.
+-- only the handlers it accepts are listed. The list is in the order the handlers were created.
 const function list(matches: ((entry: Entry) -> boolean)?): { Member }
     local members: { Member } = {}
 
@@ -53,9 +60,14 @@ const function list(matches: ((entry: Entry) -> boolean)?): { Member }
             table.insert(members, {
                 handler = handler,
                 entry = entry,
+                order = orders[handler] or 0,
             })
         end
     end
+
+    table.sort(members, function(a: Member, b: Member): boolean
+        return a.order < b.order
+    end)
 
     return members
 end

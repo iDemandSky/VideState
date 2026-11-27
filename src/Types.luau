@@ -85,11 +85,29 @@ export type Progress<T> = (options: TransitionOptions?) -> (Source<number>, Disc
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
 --- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
-export type StartTransition<T> = (from: T, to: T, instant: boolean, fromState: string, toState: string) -> ()
+export type StartTransition<T> = (
+    from: T,
+    to: T,
+    instant: boolean,
+    fromState: string,
+    toState: string,
+    delay: number
+) -> ()
 --- Options for one `setState` call.
 export type SetStateOptions = {
     --- Skips the animation. Every `onTransition` connection receives the next state's values at once, with an alpha of 1. Defaults to false.
     instant: boolean?,
+    --- Seconds every connection waits before it starts, added to its own `delay`. Scaled like that delay, so a pause holds it. An instant change ignores it. Defaults to 0.
+    delay: number?,
+}
+--- Options for `everyHandler.setState`.
+export type EverySetStateOptions = {
+    --- The same as in `SetStateOptions`.
+    instant: boolean?,
+    --- The same as in `SetStateOptions`, for every handler.
+    delay: number?,
+    --- Seconds between the handlers, in the order they were created: the first waits 0, the second this much, and so on. Added to `delay`. Defaults to 0.
+    stagger: number?,
 }
 --- One `setState` that has listeners. It is finished when every connection that was playing it has ended.
 export type Transition = {
@@ -130,7 +148,7 @@ export type EveryHandlerGroup = {
     --- Calls `destroy` on every handler in scope.
     read destroy: () -> (),
     --- Changes the state of every handler in scope. If any lacks the state, or its rule does not let it change to the state, one error lists them and none changes.
-    read setState: (stateName: string, options: SetStateOptions?) -> (),
+    read setState: (stateName: string, options: EverySetStateOptions?) -> (),
     --- How many handlers are in scope.
     read count: () -> number,
     --- Whether any handler in scope has a running transition.

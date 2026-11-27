@@ -124,6 +124,61 @@ const function failOnConflicts(filterName: string, conflicts: { string })
     )
 end
 
+-- Reads `stagger` from the options of `everyHandler.setState`. The other keys are checked by each handler.
+const function readStagger(options: unknown): number
+    if type(options) ~= "table" then
+        return 0
+    end
+
+    const stagger = (options :: { stagger: unknown }).stagger
+
+    if stagger == nil then
+        return 0
+    end
+
+    if type(stagger) ~= "number" then
+        error("everyHandler.setState stagger must be a finite non-negative number", 0)
+    end
+
+    local isNotNaN = stagger == stagger
+    local isNotNegative = stagger >= 0
+    local isNotInfinite = stagger ~= math.huge
+    local isValid = isNotNaN and isNotNegative and isNotInfinite
+
+    if not isValid then
+        error("everyHandler.setState stagger must be a finite non-negative number", 0)
+    end
+
+    return stagger
+end
+
+-- The options one handler receives: the given ones without `stagger`, with its share of the stagger added to `delay`.
+const function optionsFor(options: Types.EverySetStateOptions?, stagger: number, index: number): Types.SetStateOptions?
+    if type(options) ~= "table" then
+        -- The handler raises the error for options that are not a table.
+        return options :: any
+    end
+
+    const handlerOptions: { [any]: unknown } = table.clone(options :: any)
+
+    handlerOptions.stagger = nil
+
+    if stagger == 0 then
+        return handlerOptions :: any
+    end
+
+    const baseDelay = handlerOptions.delay
+
+    -- An invalid delay is passed on as it is, so the handler raises its own error for it.
+    if baseDelay == nil then
+        handlerOptions.delay = stagger * index
+    elseif type(baseDelay) == "number" then
+        handlerOptions.delay = baseDelay + stagger * index
+    end
+
+    return handlerOptions :: any
+end
+
 -- Calls `action` on each member. A handler that raises does not stop the others, and the first error is raised
 -- once every handler has run.
 const function forEachMember(members: { Registry.Member }, action: (handler: Registry.Controls) -> ())
@@ -304,8 +359,10 @@ const function createGroup(scope: Scope): Types.EveryHandlerGroup
 
     -- Checks every handler in scope first. If any lacks the state, one error lists all of them and no handler
     -- changes state.
-    const function setState(stateName: string, options: Types.SetStateOptions?)
+    const function setState(stateName: string, options: Types.EverySetStateOptions?)
         Validation.stateName(stateName, "everyHandler.setState state name")
+
+        const stagger = readStagger(options)
 
         const found = members()
         const missing, description = describeMissing(found, stateName)
@@ -326,8 +383,14 @@ const function createGroup(scope: Scope): Types.EveryHandlerGroup
             )
         end
 
+        local index = 0
+
+        -- The handlers are listed in the order they were created, so the stagger follows that order.
         forEachMember(found, function(handler)
-            handler.setState(stateName, options)
+            const handlerOptions = optionsFor(options, stagger, index)
+
+            index += 1
+            handler.setState(stateName, handlerOptions)
         end)
     end
 

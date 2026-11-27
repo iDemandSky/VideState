@@ -11,6 +11,9 @@ version can contain breaking changes.
 
 ### Added
 
+- `setState(name, { delay = seconds })` delays the first frame of one state change, and `everyHandler.setState(name,
+  { stagger = seconds })` starts the handlers one after another, in the order they were created, for list items that
+  appear in turn.
 - `allowedTransitions` in the rule metadata limits which states a state can change to, so `setState` raises one clear
   error for a change that is not allowed. `everyHandler.setState` checks it for every handler first.
 - `handler.progress(options)` returns a Vide source for the alpha of a transition, so a progress bar or a ring can bind

@@ -32,6 +32,7 @@ const function play<T>(
     instant: boolean,
     fromState: string,
     toState: string,
+    extraDelay: number,
     getRate: () -> number,
     settle: Types.SettleTransition
 )
@@ -60,8 +61,8 @@ const function play<T>(
 
     connection.run = run
 
-    -- An instant transition ignores the delay as well.
-    local delay = if instant then 0 else settings.getDelay()
+    -- An instant transition ignores the delay as well. The delay of `setState` adds to the connection's own.
+    local delay = if instant then 0 else settings.getDelay() + extraDelay
 
     Scheduler(group, settings, delay, getRate, function(current: T, alpha: number): number
         -- A connection that was disconnected is no longer in the table, so its loop stops.
@@ -90,7 +91,7 @@ return function<T>(
     getRate: () -> number,
     settle: Types.SettleTransition
 ): Types.StartTransition<T>
-    return function(from: T, to: T, instant: boolean, fromState: string, toState: string)
+    return function(from: T, to: T, instant: boolean, fromState: string, toState: string, extraDelay: number)
         state.generation += 1
         state.startedAt = os.clock()
         state.scale = 1
@@ -122,7 +123,7 @@ return function<T>(
                 continue
             end
 
-            play(state, transition, id, connection, from, to, instant, fromState, toState, getRate, settle)
+            play(state, transition, id, connection, from, to, instant, fromState, toState, extraDelay, getRate, settle)
         end
 
         settle(transition, false)

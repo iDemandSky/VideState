@@ -66,6 +66,11 @@ user settles a new one.
   `allowedStateNames` when it is made, and each handler checks them against its own states. `everyHandler.setState`
   checks every handler first, like a missing state.
 
+- **Stagger is an option of `everyHandler.setState`, built on a `delay` option of `setState`.** `setState(name, { delay })`
+  adds to each connection's own delay, is scaled time, and an instant change ignores it. `stagger` gives each handler
+  `stagger × its position` in the order the handlers were created, which the registry now keeps. A handler's own
+  `setState` rejects `stagger`.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`

@@ -317,14 +317,16 @@ Group.finish() -> ()
 Calls [`finish`](/guide/handlers#finish) on every handler in scope: each one sends its last frame before
 `finish` returns, and then fires its own `onFinish`.
 
-### setState <Badge type="tip" text="Added in 0.3.0" />
+### setState <Badge type="tip" text="Added in 0.3.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 Group.setState(
     stateName: string, -- The state to change to
-    options: SetStateOptions? -- The same options as the handler's setState
+    options: EverySetStateOptions? -- The options of the handler's setState, and stagger
 ) -> ()
 ```
+
+Changed in 0.5.0: the options take `stagger`, which starts the handlers one after another.
 
 Calls [`setState`](/guide/handlers#setstate) on every handler in scope.
 
@@ -343,13 +345,15 @@ VideState.everyHandler.setState("Closed")
 | Name | Type | Description |
 | --- | --- | --- |
 | `stateName` | `string` | Required. The name of the state. |
-| `options` | [`SetStateOptions`](/guide/handlers#setstateoptions)`?` | Optional. The same options as the handler's `setState`, such as `instant`. |
+| `options` | `EverySetStateOptions?` | Optional. The options of the handler's [`setState`](/guide/handlers#setstateoptions), `instant` and `delay`, and `stagger`. |
+| `options.stagger` | `number?` | Optional. Seconds between the handlers, in the order they were created. The first waits `0`, the second `stagger`, the third twice that, and so on, added to `delay`. Must be finite and non-negative. Defaults to `0`. See [Staggering handlers](/guide/transitions#staggering-handlers). |
 
 **Errors**
 
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `everyHandler.setState state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `options.stagger` is not a finite non-negative number | `everyHandler.setState stagger must be a finite non-negative number` |
 | <Badge type="danger" text="Error" /> | The rule of one or more handlers does not let them change to the state | `everyHandler.setState cannot change to state "<stateName>" in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 | <Badge type="danger" text="Error" /> | One or more handlers in scope lack the state | `everyHandler.setState state "<stateName>" is missing in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 

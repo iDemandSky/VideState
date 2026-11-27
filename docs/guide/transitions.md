@@ -173,6 +173,25 @@ end
   is still waiting.
 - The transition finishes, and [`onFinish`](/guide/handlers#onfinish) runs, only after the most delayed connection ends.
 
+### Delaying a state change <Badge type="tip" text="Added in 0.5.0" />
+
+`setState(name, { delay = seconds })` delays one state change. The state changes at once, so `currentState` and the
+events update, but every connection waits that long before its first frame, on top of its own `delay`.
+
+### Staggering handlers <Badge type="tip" text="Added in 0.5.0" />
+
+To stagger separate handlers, such as one handler per list item, pass `stagger` to
+[`everyHandler.setState`](/guide/every-handler#setstate). The handlers start one after another, in the order they were
+created:
+
+```luau
+-- The first item starts at once, the second after 0.05 seconds, the third after 0.1 seconds, and so on.
+VideState.everyHandler.withRule("ListItem").setState("Shown", { stagger = 0.05 })
+```
+
+Each handler receives a `delay` of `stagger × its position`, added to any `delay` you pass. Create the handlers in the
+order they should appear.
+
 ## Pausing
 
 [`pause`](/guide/handlers#pause) freezes every transition of a handler, and [`resume`](/guide/handlers#resume)

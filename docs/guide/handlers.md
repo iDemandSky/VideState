@@ -74,6 +74,7 @@ it to set the first layout of a component, or to snap it back without an animati
 | <Badge type="danger" text="Error" /> | `options` is not a table | `setState options must be a table` |
 | <Badge type="danger" text="Error" /> | `options` has an unknown key | `setState options has an unknown key <key>` |
 | <Badge type="danger" text="Error" /> | `options.instant` is not a boolean | `setState instant must be a boolean` |
+| <Badge type="danger" text="Error" /> | `options.delay` is not a finite non-negative number | `setState delay must be a finite non-negative number` |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `state name must be a string, got <type>` |
 | <Badge type="danger" text="Error" /> | The state name is unknown | `unknown state "<state>"` |
 | <Badge type="danger" text="Error" /> | The rule's [`allowedTransitions`](/guide/rules#allowed-state-changes) do not let the active state change to it | `cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
@@ -646,12 +647,14 @@ type OnFinishCallback = (startedAt: number) -> ()
 ```luau
 type SetStateOptions = {
     instant: boolean?, -- Skips the animation of this change
+    delay: number?, -- Seconds every connection waits before it starts
 }
 ```
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `instant` | `boolean` | No | `false` | When `true`, every `onTransition` connection receives the next state's values at once, with an `alpha` of `1`. |
+| `delay` | `number` | No | `0` | <Badge type="tip" text="Added in 0.5.0" /> Seconds every connection of this change waits before its first frame, added to the connection's own `delay`. It is scaled time, so `pause` holds it. An instant change ignores it. Must be finite and non-negative. |
 
 ### ScaleSpeedOptions <Badge type="warning" text="Changed in 0.3.0" />
 

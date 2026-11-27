@@ -8,13 +8,14 @@ const Transitions = require("../Transitions")
 -- Keys allowed in the options of `setState`.
 const OPTION_KEYS: { [string]: boolean } = {
     instant = true,
+    delay = true,
 }
 
--- Validates the options of one `setState` call and returns whether it is instant. The error level of 3 points at
--- the user's call to `setState`.
-const function parseOptions(options: unknown): boolean
+-- Validates the options of one `setState` call and returns whether it is instant and how long it waits. The error
+-- level of 3 points at the user's call to `setState`.
+const function parseOptions(options: unknown): (boolean, number)
     if options == nil then
-        return false
+        return false, 0
     end
 
     if typeof(options) ~= "table" then
@@ -32,16 +33,30 @@ const function parseOptions(options: unknown): boolean
     end
 
     local instant = fields.instant
+    local delay = fields.delay
 
-    if instant == nil then
-        return false
-    end
-
-    if type(instant) ~= "boolean" then
+    if instant ~= nil and type(instant) ~= "boolean" then
         error("setState instant must be a boolean", 3)
     end
 
-    return instant
+    if delay == nil then
+        return instant == true, 0
+    end
+
+    if type(delay) ~= "number" then
+        error("setState delay must be a finite non-negative number", 3)
+    end
+
+    local isNotNaN = delay == delay
+    local isNotNegative = delay >= 0
+    local isNotInfinite = delay ~= math.huge
+    local isValid = isNotNaN and isNotNegative and isNotInfinite
+
+    if not isValid then
+        error("setState delay must be a finite non-negative number", 3)
+    end
+
+    return instant == true, delay
 end
 
 return function <T>(
@@ -61,7 +76,8 @@ return function <T>(
         Validation.stateName(stateName, "state name")
 
         -- With reduced motion on, every state change is instant, whatever the options say.
-        local instant = parseOptions(options) or ReducedMotion.get()
+        local requestedInstant, delay = parseOptions(options)
+        local instant = requestedInstant or ReducedMotion.get()
         local nextValues = readState(stateName)
         local currentStateName = currentState()
 
@@ -88,6 +104,6 @@ return function <T>(
         -- The order is exit, enter, change, then the transition.
         emitStateEvents(currentStateName, stateName)
         emitChange(from, to)
-        emitTransition(from, to, instant, currentStateName, stateName)
+        emitTransition(from, to, instant, currentStateName, stateName, delay)
     end
 end
