@@ -17,7 +17,7 @@ Create a ModuleScript named **`TweenConfig`** in `ReplicatedStorage`, so compone
 
 ::: code-group
 
-```luau [ReplicatedStorage/TweenConfig (ModuleScript)]
+```luau [ReplicatedStorage/TweenConfig.luau]
 const VideState = require("@VideState")
 
 const config: VideState.TransitionOptions = {
@@ -59,7 +59,7 @@ four states the config names, and each state holds a Vide source for each proper
 
 ::: code-group
 
-```luau [StarterPlayerScripts/Button (LocalScript)]
+```luau [StarterPlayerScripts/Button.client.luau]
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 const Vide = require("@Vide")
 const VideState = require("@VideState")

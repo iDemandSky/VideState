@@ -43,7 +43,7 @@ The primary design is blue. Its text grows by two points when hovered, like the 
 
 ::: code-group
 
-```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
+```luau [ReplicatedStorage/ButtonDesigns.luau]
 local Primary: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(60, 120, 230),
@@ -75,7 +75,7 @@ property and not only in colors:
 
 ::: code-group
 
-```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
+```luau [ReplicatedStorage/ButtonDesigns.luau]
 local Danger: Design = {
     Idle = {
         backgroundColor = Color3.fromRGB(200, 60, 60),
@@ -106,7 +106,7 @@ Then list them in its `return`, so a component picks a design by name:
 
 ::: code-group
 
-```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
+```luau [ReplicatedStorage/ButtonDesigns.luau]
 return {
     Default = Default,
     Primary = Primary,
@@ -123,7 +123,7 @@ never affects another.
 
 ::: code-group
 
-```luau [StarterPlayerScripts/MainMenu (LocalScript)]
+```luau [StarterPlayerScripts/MainMenu.client.luau]
 Vide.mount(function()
     return Vide.create "ScreenGui" {
         Name = "MainMenu",

@@ -37,7 +37,7 @@ VideState reject any state that is not one of the four. Create a ModuleScript na
 
 ::: code-group
 
-```luau [ReplicatedStorage/ButtonRule (ModuleScript)]
+```luau [ReplicatedStorage/ButtonRule.luau]
 const VideState = require("@VideState")
 
 return VideState.rule({
@@ -61,7 +61,7 @@ place:
 
 ::: code-group
 
-```luau [ReplicatedStorage/ButtonDesigns (ModuleScript)]
+```luau [ReplicatedStorage/ButtonDesigns.luau]
 export type Look = {
     backgroundColor: Color3,
     textColor: Color3,
@@ -112,7 +112,7 @@ and this helper builds them from a design.
 
 ::: code-group
 
-```luau [StarterPlayerScripts/PlayButton (LocalScript)]
+```luau [StarterPlayerScripts/PlayButton.client.luau]
 const Players = game:GetService("Players")
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Point @Vide at the Vide package in your project.
@@ -146,7 +146,7 @@ button's component instance. The button starts in `Idle`, or in `Disabled` when 
 
 ::: code-group
 
-```luau [StarterPlayerScripts/PlayButton (LocalScript)]
+```luau [StarterPlayerScripts/PlayButton.client.luau]
 const function createButton(label: string, design: Design, enabled: boolean)
     local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled")
 
@@ -208,7 +208,7 @@ Create the Play button and mount it in the player's screen.
 
 ::: code-group
 
-```luau [StarterPlayerScripts/PlayButton (LocalScript)]
+```luau [StarterPlayerScripts/PlayButton.client.luau]
 const player = Players.LocalPlayer
 
 Vide.mount(function()
