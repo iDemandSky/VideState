@@ -1,5 +1,5 @@
 ---
-title: Tween config
+title: Tween Config
 description: Keep every tween setting in one ModuleScript named TweenConfig, so the handlers of your rules share it and you only edit one file.
 ---
 
@@ -46,30 +46,41 @@ const config: VideState.TransitionOptions = {
 return config
 ```
 
-The state names in `from` and `to` must be states of the handler that uses the config. Use this one with the handlers of
-rules that have them, such as the `Button` rule in [Components](/examples/components), which has `Idle`, `Hovered`,
-`Pressed`, and `Disabled`.
+The state names in `from` and `to` must be states of the handler that uses the config. Use it with the handlers of rules
+that have them, such as the rule below.
 
 ## Use it in a component
 
-A component requires the module and passes it to `animate`. It has no tween numbers of its own.
+A component requires the module and passes it to `animate`. It has no tween numbers of its own. This rule has the
+four states the config names, and each state holds a Vide source for each property:
 
 ```luau
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Vide = require("@Vide")
+const VideState = require("@VideState")
 const TweenConfig = require(ReplicatedStorage.TweenConfig)
 
-const handler = ButtonRule.new(createStates(design), "Idle")
+const ButtonRule = VideState.rule({
+    backgroundColor = VideState.color3(),
+}, {
+    name = "Button",
+    allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
+})
 
-local animated = handler.animate(TweenConfig)
+const handler = ButtonRule.new({
+    Idle = { backgroundColor = Vide.source(Color3.fromRGB(60, 60, 70)) },
+    Hovered = { backgroundColor = Vide.source(Color3.fromRGB(80, 80, 95)) },
+    Pressed = { backgroundColor = Vide.source(Color3.fromRGB(40, 40, 50)) },
+    Disabled = { backgroundColor = Vide.source(Color3.fromRGB(35, 35, 35)) },
+}, "Idle")
+
+const animated = handler.animate(TweenConfig)
+
+const button = Vide.create "TextButton" {
+    BackgroundColor3 = animated.backgroundColor,
+}
 ```
 
-This is the button from [Components](/examples/components). Only the `handler.animate` line changes: the options come from
-`TweenConfig` instead of an inline `tweenDefault`. Every other button made from `ButtonRule` makes the same call, so
-`handler.setState("Pressed")` fades over 0.05 seconds and `handler.setState("Disabled")` over 0.5 seconds, for all of them.
-
-## What to notice
-
-- **The module is named `TweenConfig`.** Every component requires it by that name, so renaming it means updating every `require`.
-- **You edit one file.** Change `tweenDefault` or an entry of `tweenOverrides` and every handler that uses it follows.
-- **Overrides cannot overlap.** Two entries that match the same state change raise one batched error when the connection is made, whatever their order.
-- **Each connection builds its own tween** from the shared settings, so sharing the module does not link the handlers.
+`handler.setState("Pressed")` now fades over 0.05 seconds and `handler.setState("Disabled")` over 0.5 seconds. Every
+other handler of `ButtonRule` makes the same `animate(TweenConfig)` call and fades the same way. See
+[Components](/examples/components) for a complete button.
