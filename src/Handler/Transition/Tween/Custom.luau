@@ -122,6 +122,70 @@ const function bezier(x1: number, y1: number, x2: number, y2: number): Types.Cus
     end)
 end
 
+-- How fast the wobble of a spring dies out, so it has faded to about a third of a percent when the transition ends.
+const SPRING_DECAY = 8
+
+-- The default bounce of `VideState.spring`.
+const DEFAULT_BOUNCE = 0.3
+
+-- The least damping ratio a spring gets. A bounce of 1 is this, so the curve still settles inside its duration.
+const LEAST_DAMPING = 0.2
+
+-- A curve that looks like a damped spring: it starts at 0, passes 1, wobbles around it, and has settled at 1 by the
+-- end. It is a curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier
+-- transition, and it always ends when the duration does. `bounce` goes from 0, which settles smoothly without passing
+-- 1, to 1, which wobbles the most.
+const function spring(bounce: number?): Types.CustomEasing
+    local amount = DEFAULT_BOUNCE
+
+    if bounce ~= nil then
+        local isNumber = type(bounce) == "number"
+        local isInRange = isNumber and bounce >= 0 and bounce <= 1
+
+        if not isInRange then
+            error("spring bounce must be a number from 0 to 1", 2)
+        end
+
+        amount = bounce :: number
+    end
+
+    const decay = SPRING_DECAY
+
+    -- A bounce of 0 is critically damped, which has no wobble.
+    if amount == 0 then
+        return make(function(progress: number): number
+            if progress <= 0 then
+                return 0
+            end
+
+            if progress >= 1 then
+                return 1
+            end
+
+            return 1 - (1 + decay * progress) * math.exp(-decay * progress)
+        end)
+    end
+
+    -- The damping ratio goes down as the bounce goes up. The decay is fixed, so the frequency follows from the ratio.
+    const damping = 1 - (1 - LEAST_DAMPING) * amount
+    const frequency = decay * math.sqrt(1 - damping * damping) / damping
+    const ratio = decay / frequency
+
+    return make(function(progress: number): number
+        if progress <= 0 then
+            return 0
+        end
+
+        if progress >= 1 then
+            return 1
+        end
+
+        const angle = frequency * progress
+
+        return 1 - math.exp(-decay * progress) * (math.cos(angle) + ratio * math.sin(angle))
+    end)
+end
+
 -- Wraps a function of the progress from 0 to 1 that returns the eased progress. It is called with 0 and 1 once, to
 -- check that it returns finite numbers. It can overshoot, and it should return 0 at 0 and 1 at 1.
 const function fromFunction(fn: (number) -> number): Types.CustomEasing
@@ -151,6 +215,7 @@ end
 
 return table.freeze({
     bezier = bezier,
+    spring = spring,
     fromFunction = fromFunction,
     isCustom = isCustom,
 })

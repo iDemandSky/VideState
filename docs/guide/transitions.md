@@ -247,7 +247,7 @@ handler.animate({
 })
 ```
 
-Both functions below return a value that `easing` accepts in place of a name, including from a Vide source. A plain
+The functions below return a value that `easing` accepts in place of a name, including from a Vide source. A plain
 function does not work in `easing`, because a function there is read as a source. A table that was not made by these
 two is rejected.
 
@@ -326,6 +326,60 @@ finite number ends the transition with an error.
 | <Badge type="danger" text="Error" /> | `fn` is not a function | `easing expects a function, got <type>` |
 | <Badge type="danger" text="Error" /> | `fn` does not return a finite number for `0` or `1` | `easing must return a finite number for a progress of 0 and 1` |
 | <Badge type="danger" text="Error" /> | During a transition, `fn` returns a value that is not a finite number | `a custom easing returned a value that is not a finite number` |
+
+### spring <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.spring(
+    bounce: number? -- How much it wobbles, from 0 to 1
+) -> CustomEasing
+```
+
+Makes an easing in the shape of a damped spring: it starts at 0, passes 1, wobbles around it, and has settled at 1 when the
+duration ends.
+
+```luau
+handler.animate({
+    tweenDefault = {
+        duration = 0.4,
+        easing = VideState.spring(0.4),
+    },
+})
+```
+
+::: warning This is not a real spring
+`spring` is a curve, like `backOut` or `elasticOut`, with a bounce you can adjust. It is not a physics simulation.
+
+- **It always takes the whole `duration`.** A real spring settles when its energy runs out. This curve is fitted to the
+  duration you give, so the duration is also the time it takes to settle.
+- **It does not keep the speed of an earlier transition.** If `setState` interrupts a transition, the new one starts
+  from the current value with no speed, so a quick change of mind shows a small kink where a real spring would curve
+  smoothly.
+- **It does not react to how far the value travels.** A short move and a long move wobble for the same time.
+
+Use it for the look of a spring. If you need the behavior of one, VideState does not have it.
+:::
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `bounce` | `number?` | Optional. From `0` to `1`. `0` settles smoothly and never passes `1`. A higher value overshoots further and wobbles more, and `1` is the most. Defaults to `0.3`. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`CustomEasing`](#customeasing) | An easing for the `easing` setting. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `bounce` is not a number from 0 to 1 | `spring bounce must be a number from 0 to 1` |
+
+The wobble has faded to about a third of a percent when the transition ends, so the last frame does not jump. A value of
+`bounce` above `0.7` wobbles a lot, and a short `duration` makes it look frantic.
 
 ## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
 
@@ -451,7 +505,7 @@ type TweenSettings = {
 }
 ```
 
-Changed in 0.5.0: `easing` also takes a [`CustomEasing`](#customeasing) made with [`bezier`](#bezier) or [`easing`](#easing).
+Changed in 0.5.0: `easing` also takes a [`CustomEasing`](#customeasing) made with [`bezier`](#bezier), [`easing`](#easing), or [`spring`](#spring).
 
 The tween settings of a connection. The easing curves are the standard equations that [easings.net](https://easings.net) lists.
 
@@ -518,7 +572,7 @@ type CustomEasing = {
 }
 ```
 
-A curve made with [`VideState.bezier`](#bezier) or [`VideState.easing`](#easing). `fn` takes the progress
+A curve made with [`VideState.bezier`](#bezier), [`VideState.easing`](#easing), or [`VideState.spring`](#spring). `fn` takes the progress
 and returns the eased progress. Only these two functions make one.
 
 ### TweenName <Badge type="tip" text="Added in 0.1.0" />

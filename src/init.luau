@@ -57,6 +57,7 @@ return table.freeze({
 
     -- EASING --
     bezier = Custom.bezier,
+    spring = Custom.spring,
     easing = Custom.fromFunction,
 
     -- REDUCED MOTION --

@@ -66,6 +66,103 @@ describe("custom easing", function()
         end).toThrow("finite")
     end)
 
+    it("makes a spring curve that starts at 0 and has settled at 1 by the end", function()
+        for _, bounce in { 0, 0.1, 0.3, 0.6, 1 } do
+            local spring = VideState.spring(bounce)
+
+            expect(spring.fn(0)).toBe(0)
+            expect(spring.fn(1)).toBe(1)
+            expect(math.abs(spring.fn(0.99) - 1) < 0.02).toBe(true)
+        end
+    end)
+
+    it("makes a spring with no bounce that never passes 1 and never goes back", function()
+        local spring = VideState.spring(0)
+        local previous = 0
+
+        -- cubic-style check against the closed form: 1 - (1 + 8t) * e^(-8t).
+        expect(math.abs(spring.fn(0.5) - (1 - 5 * math.exp(-4))) < 0.0001).toBe(true)
+
+        for step = 1, 100 do
+            local value = spring.fn(step / 100)
+
+            expect(value <= 1).toBe(true)
+            expect(value >= previous).toBe(true)
+
+            previous = value
+        end
+    end)
+
+    it("overshoots more as the bounce goes up", function()
+        local function highest(bounce: number?): number
+            local spring = VideState.spring(bounce)
+            local top = 0
+
+            for step = 1, 199 do
+                top = math.max(top, spring.fn(step / 200))
+            end
+
+            return top
+        end
+
+        local low = highest(0.2)
+        local middle = highest(0.5)
+        local high = highest(0.9)
+
+        expect(low > 1).toBe(true)
+        expect(middle > low).toBe(true)
+        expect(high > middle).toBe(true)
+
+        -- The default bounce is 0.3.
+        expect(highest(nil)).toBe(highest(0.3))
+    end)
+
+    it("rejects a spring bounce outside 0 to 1", function()
+        expect(function()
+            VideState.spring(-0.1)
+        end).toThrow("spring bounce must be a number from 0 to 1")
+        expect(function()
+            VideState.spring(1.1)
+        end).toThrow("spring bounce must be a number from 0 to 1")
+        expect(function()
+            VideState.spring("soft" :: any)
+        end).toThrow("spring bounce must be a number from 0 to 1")
+        expect(function()
+            VideState.spring(0 / 0)
+        end).toThrow("spring bounce must be a number from 0 to 1")
+    end)
+
+    it("plays a transition with a spring, and ends exactly on the next value", function()
+        VideState.setManualClock(true)
+
+        local handler = createHandler("SpringPanel")
+        local values: { number } = {}
+
+        handler.onTransition(function(_, _, current)
+            table.insert(values, current.opacity)
+        end, {
+            tweenDefault = {
+                duration = 1,
+                easing = VideState.spring(0.5),
+            },
+        })
+
+        handler.setState("Active")
+
+        local top = 0
+
+        for _ = 1, 20 do
+            VideState.advanceClock(0.05)
+            top = math.max(top, values[#values])
+        end
+
+        -- The spring passed 1 on its way, and the transition ended on 1.
+        expect(top > 1).toBe(true)
+        expect(values[#values]).toBe(1)
+
+        VideState.setManualClock(false)
+    end)
+
     it("plays a transition with a custom easing", function()
         local handler = createHandler("CustomEasingPanel")
         local alphas: { number } = {}
