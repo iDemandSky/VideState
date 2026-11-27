@@ -188,11 +188,6 @@ end, player:WaitForChild("PlayerGui"))
 Hover over the button and it lightens and grows. Hold the mouse down and it darkens. Pass `false`
 as the last argument to `createButton` and it starts greyed out and ignores the mouse.
 
-## What to notice
-
-- The rule is written once. Every button is a new handler made with `ButtonRule.new`, and each handler keeps its own state.
-- The component's states and properties live in the rule, so a state name outside `allowedStateNames` is rejected.
-- `createButton` only reads from the handler. It never decides colors itself, so changing a design needs no change to the component.
-- `handler.animate()` gives the properties as sources that fade between the states, so they bind straight to the Instance. [`onTransition`](/guide/handlers#ontransition) is the same transition with a callback, for when you need to run your own code on each frame.
-- To make another button, call `createButton` again. To make a different looking button, pass another design. See [Inheritance](/examples/inheritance).
-- To keep the tween settings in one shared module instead of in each component, see [Tween config](/examples/tween-config).
+To make another button, call `createButton` again. To make a different looking button, pass another design. See
+[Inheritance](/examples/inheritance). To keep the tween settings in one shared module instead of in each button, see
+[Tween config](/examples/tween-config).

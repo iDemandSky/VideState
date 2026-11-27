@@ -131,10 +131,3 @@ end, player:WaitForChild("PlayerGui"))
 
 You get a blue Play button, a red Delete button, and a greyed-out Shop button. They share the same hover and
 press behavior, and each reacts on its own.
-
-## What to notice
-
-- The state structure is defined once, in the rule. A design that leaves out a property is rejected when its handler is created, and the `Design` type flags a missing state while you write it.
-- A new design is only data. The component's logic, such as the hover and press handling, is never copied.
-- Designs can differ in any property, not only colors. A design could use a bigger `textSize` in every state.
-- Each button owns its handler, so one button can be `Disabled` while another is `Hovered`.
