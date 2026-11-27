@@ -14,16 +14,18 @@ VideState change their properties whenever the state changes.
 ## Features
 
 - **Rules** describe a component's properties with schemas (`boolean`, `integer`, `float`, `string`, `enum`,
-  `optional`, `union`, `table`, `record`, `color3`, `numberRange`, `numberSequence`, `colorSequence`, `udim`, `udim2`, `vector2`), and validate every state.
+  `optional`, `union`, `table`, `record`, `color3`, `numberRange`, `numberSequence`, `colorSequence`, `udim`, `udim2`, `vector2`), and validate every state. `allowedTransitions` limits which state can follow which.
 - **Rule inheritance** with `VideState.extend`: a new rule keeps every field, state name, and tag of its base and adds
   its own.
 - **Handlers** hold one component's state, with `sources` that follow the active state and bind to Vide properties.
 - **Events** for state changes: `onChange`, `onEnter`, `onExit`.
 - **Transitions** with `onTransition`: each connection has its own easing, duration, speed, and `delay`, and can use other
-  settings for particular state changes with `tweenOverrides`.
+  settings for particular state changes with `tweenOverrides`. Curves of your own come from `VideState.bezier` and
+  `VideState.easing`.
   An interrupted transition continues from its current value. `animate` gives the same transition as Vide sources, and `progress` gives its alpha as one source.
 - **Transition controls**: `pause`, `resume`, `scaleSpeed`, `finish`, `onFinish`, `waitForFinish`, and
-  `setState(name, { instant = true })`.
+  `setState(name, { instant = true, delay = 0.2 })`. `everyHandler.setState` takes a `stagger` to start handlers one
+  after another.
 - **Every handler at once**: `VideState.everyHandler` has `scaleSpeed`, `pause`, `resume`, `finish`, `setState`, and `destroy`,
   plus `count`, `isAnyRunning`, and `isAnyPaused`. Chain `withTags`, `withRule`, and `withStates`, or their `without` forms, to pick the handlers.
 - **Cleanup** with `destroy`.
