@@ -85,7 +85,9 @@ user settles a new one.
   handler is idle, then holds in scaled time, so pause, `scaleSpeed`, and the manual clock apply to the hold. The sequence
   ends when the handler's generation moves past the one it made, so any outside `setState`, `destroy`, or a newer
   sequence stops it. The steps and the rule's `allowedTransitions` are checked before the first change. The option is
-  `loop`, because `repeat` is a Luau keyword. A looping sequence waits one frame between rounds, so instant steps
+  `loop`, because `repeat` is a Luau keyword, and it is `true` or a number of rounds in total. `onLoop(round)` runs at
+  the end of every round, the call returns `(Source<number>, Disconnect)` like `animate` and `progress`, and
+  `onTransition` callbacks get the round as a fifth argument, read when the transition starts (0 outside a sequence). A looping sequence waits one frame between rounds, so instant steps
   cannot hold up the game.
 
 ## Every handler

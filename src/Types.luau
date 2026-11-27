@@ -74,8 +74,8 @@ export type TransitionOptions = {
     --- Tween settings for particular state changes. An override replaces the settings of `tweenDefault` for the state changes it matches.
     tweenOverrides: { TweenOverride }?,
 }
---- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
-export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
+--- Called during a transition with the previous value, the new value, the current value, the alpha, and the round. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1. The round is the round of the `playSequence` that started the transition, counted from 1, and 0 when no sequence started it.
+export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number, round: number) -> ()
 --- Starts listening for transitions. A connection can pass options to override the tween settings of its handler. Returns a function that removes the listener.
 export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect
 --- Creates a Vide source for every field that follows one `onTransition` connection. A connection can pass options to override the tween settings of its handler. Returns the sources and a function that removes the connection.
@@ -95,11 +95,13 @@ export type SequenceStep = {
 }
 --- Options for `playSequence`.
 export type SequenceOptions = {
-    --- Starts over after the last step, until the sequence is stopped. Defaults to false.
-    loop: boolean?,
+    --- How many times the steps play. `true` plays them until the sequence is stopped, and a whole number plays them that many times in total. Defaults to false, which plays them once.
+    loop: (boolean | number)?,
+    --- Called when a round ends, with how many rounds have been completed. It must not yield, because the sequence waits for it.
+    onLoop: ((round: number) -> ())?,
 }
---- Changes the state step by step, waiting for each transition to finish. Returns a function that stops the sequence.
-export type PlaySequence = (steps: { SequenceStep }, options: SequenceOptions?) -> Disconnect
+--- Changes the state step by step, waiting for each transition to finish. Returns a source that holds the round being played, counted from 1, and a function that stops the sequence.
+export type PlaySequence = (steps: { SequenceStep }, options: SequenceOptions?) -> (Source<number>, Disconnect)
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
 --- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
@@ -130,6 +132,8 @@ export type EverySetStateOptions = {
 --- One `setState` that has listeners. It is finished when every connection that was playing it has ended.
 export type Transition = {
     generation: number,
+    -- The round of the sequence that started it, or 0.
+    round: number,
     pending: number,
     completed: boolean,
     fired: boolean,

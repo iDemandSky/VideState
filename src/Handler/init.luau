@@ -162,6 +162,9 @@ return function <S>(
             return state.generation
         end,
         getRate = getRate,
+        setRound = function(round: number)
+            state.round = round
+        end,
     })
 
     -- What the debug tools show about this handler. The label is filled in by `debug.track`.

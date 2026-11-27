@@ -35,6 +35,8 @@ export type State<T> = {
     scale: number,
     -- The scale that `scaleSpeed` keeps for every transition when `once` is false.
     baseScale: number,
+    -- The round of the `playSequence` that is starting a transition. 0 when no sequence is.
+    round: number,
 }
 
 const function create<T>(): State<T>
@@ -46,6 +48,7 @@ const function create<T>(): State<T>
         currentTransition = nil,
         scale = 1,
         baseScale = 1,
+        round = 0,
     }
 end
 

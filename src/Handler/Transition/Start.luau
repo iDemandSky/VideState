@@ -71,7 +71,7 @@ const function play<T>(
         end
 
         connection.current = current
-        connection.callback(from, to, current, alpha)
+        connection.callback(from, to, current, alpha, transition.round)
 
         return 1
     end, function(): boolean
@@ -107,6 +107,7 @@ return function<T>(
         -- they are being started. A transition with no connections ends right away.
         local transition: Types.Transition = {
             generation = state.generation,
+            round = state.round,
             pending = #ids + 1,
             completed = false,
             fired = false,

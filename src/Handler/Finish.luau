@@ -134,7 +134,7 @@ return function <T>(state: State.State<T>): Finish
 
             run.ended = true
             connection.current = run.to
-            connection.callback(run.from, run.to, run.to, 1)
+            connection.callback(run.from, run.to, run.to, 1, transition.round)
             settle(transition, true)
         end
     end

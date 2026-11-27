@@ -98,7 +98,7 @@ describe("playSequence", function()
 
         local handler = createHandler("SequenceLoopPanel")
         local entered = trackStates(handler)
-        local stop = handler.playSequence({
+        local _, stop = handler.playSequence({
             { state = "Shown", hold = 1 },
             { state = "Hidden", hold = 1 },
         }, { loop = true })
@@ -118,6 +118,156 @@ describe("playSequence", function()
         end
 
         expect(#entered).toBe(count)
+
+        VideState.setManualClock(false)
+    end)
+
+    it("plays the steps a set number of times when loop is a number", function()
+        VideState.setManualClock(true)
+
+        local handler = createHandler("SequenceRoundsPanel")
+        local entered = trackStates(handler)
+
+        handler.playSequence({
+            { state = "Shown", hold = 1 },
+            { state = "Hidden", hold = 1 },
+        }, { loop = 3 })
+
+        for _ = 1, 20 do
+            VideState.advanceClock(1.1)
+        end
+
+        -- Three rounds of two steps, and then it stops.
+        expect(#entered).toBe(6)
+        expect(handler.currentState()).toBe("Hidden")
+
+        VideState.setManualClock(false)
+    end)
+
+    it("calls onLoop at the end of every round with the rounds completed", function()
+        VideState.setManualClock(true)
+
+        local handler = createHandler("SequenceOnLoopPanel")
+        local rounds: { number } = {}
+
+        handler.playSequence({
+            { state = "Shown", hold = 1 },
+            { state = "Hidden", hold = 1 },
+        }, {
+            loop = 3,
+            onLoop = function(round)
+                table.insert(rounds, round)
+            end,
+        })
+
+        for _ = 1, 20 do
+            VideState.advanceClock(1.1)
+        end
+
+        expect(#rounds).toBe(3)
+        expect(rounds[1]).toBe(1)
+        expect(rounds[2]).toBe(2)
+        expect(rounds[3]).toBe(3)
+
+        VideState.setManualClock(false)
+    end)
+
+    it("calls onLoop once for a sequence that is not looped", function()
+        local handler = createHandler("SequenceOnLoopOncePanel")
+        local rounds: { number } = {}
+
+        VideState.setManualClock(true)
+
+        handler.playSequence({
+            { state = "Shown", instant = true },
+        }, {
+            onLoop = function(round)
+                table.insert(rounds, round)
+            end,
+        })
+
+        VideState.advanceClock(0.1)
+
+        expect(#rounds).toBe(1)
+        expect(rounds[1]).toBe(1)
+
+        VideState.setManualClock(false)
+    end)
+
+    it("returns a source that holds the round being played", function()
+        VideState.setManualClock(true)
+
+        local handler = createHandler("SequenceSourcePanel")
+        local round, stop = handler.playSequence({
+            { state = "Shown", hold = 1 },
+            { state = "Hidden", hold = 1 },
+        }, { loop = true })
+
+        expect(round()).toBe(1)
+
+        for _ = 1, 3 do
+            VideState.advanceClock(1.1)
+        end
+
+        local afterOne = round()
+
+        expect(afterOne >= 2).toBe(true)
+
+        for _ = 1, 4 do
+            VideState.advanceClock(1.1)
+        end
+
+        expect(round() > afterOne).toBe(true)
+
+        stop()
+
+        local stopped = round()
+
+        for _ = 1, 4 do
+            VideState.advanceClock(1.1)
+        end
+
+        expect(round()).toBe(stopped)
+
+        VideState.setManualClock(false)
+    end)
+
+    it("tells onTransition connections which round they are playing", function()
+        VideState.setManualClock(true)
+
+        local handler = createHandler("SequenceConnectionPanel")
+        local roundsSeen: { number } = {}
+
+        handler.onTransition(function(_, _, _, alpha, round)
+            if alpha == 0 then
+                table.insert(roundsSeen, round)
+            end
+        end, {
+            tweenDefault = {
+                duration = 0.5,
+            },
+        })
+
+        handler.playSequence({
+            { state = "Shown", hold = 1 },
+            { state = "Hidden", hold = 1 },
+        }, { loop = 2 })
+
+        for _ = 1, 20 do
+            VideState.advanceClock(1.1)
+        end
+
+        -- Two steps in each of the two rounds.
+        expect(#roundsSeen).toBe(4)
+        expect(roundsSeen[1]).toBe(1)
+        expect(roundsSeen[2]).toBe(1)
+        expect(roundsSeen[3]).toBe(2)
+        expect(roundsSeen[4]).toBe(2)
+
+        -- A change from outside the sequence has no round.
+        handler.setState("Shown")
+
+        expect(roundsSeen[5]).toBe(0)
 
         VideState.setManualClock(false)
     end)
@@ -253,7 +403,7 @@ describe("playSequence", function()
         expect(handler.currentState()).toBe("Hidden")
 
         -- Flash can go back to Hidden, so a sequence that ends there can loop.
-        local ok, stop = pcall(handler.playSequence, {
+        local ok, _, stop = pcall(handler.playSequence, {
             { state = "Flash" },
             { state = "Hidden" },
         }, { loop = true })
@@ -297,7 +447,16 @@ describe("playSequence", function()
         end).toThrow("unknown key repeats")
         expect(function()
             handler.playSequence({ { state = "Shown" } }, { loop = "yes" :: any })
-        end).toThrow("loop must be a boolean")
+        end).toThrow("loop must be a boolean or a whole number of rounds")
+        expect(function()
+            handler.playSequence({ { state = "Shown" } }, { loop = 0 })
+        end).toThrow("whole number of rounds, at least 1")
+        expect(function()
+            handler.playSequence({ { state = "Shown" } }, { loop = 1.5 })
+        end).toThrow("whole number of rounds, at least 1")
+        expect(function()
+            handler.playSequence({ { state = "Shown" } }, { onLoop = "print" :: any })
+        end).toThrow("onLoop must be a function")
         expect(function()
             handler.playSequence({ { state = "Shown" } }, { times = 2 } :: any)
         end).toThrow("unknown key times")
