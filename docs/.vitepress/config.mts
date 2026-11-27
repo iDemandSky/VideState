@@ -32,9 +32,17 @@ export default defineConfig({
           { text: 'Handlers', link: '/guide/handlers' },
           { text: 'Transitions', link: '/guide/transitions' },
           { text: 'Every handler', link: '/guide/every-handler' },
-          { text: 'Info (debugging)', link: '/guide/info' },
+          { text: 'Info', link: '/guide/info' },
           { text: 'Debug view', link: '/guide/debug' },
           { text: 'Testing', link: '/guide/testing' }
+        ]
+      },
+      {
+        text: 'Migration',
+        items: [
+          { text: 'Migrating to 0.5.0', link: '/migration/to-0-5-0' },
+          { text: 'Migrating to 0.4.0', link: '/migration/to-0-4-0' },
+          { text: 'Migrating to 0.3.0', link: '/migration/to-0-3-0' }
         ]
       },
       {
