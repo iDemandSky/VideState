@@ -1,5 +1,6 @@
 const Types = require("@self/Types")
 const ReducedMotion = require("@self/ReducedMotion")
+const Custom = require("@self/Handler/Transition/Tween/Custom")
 
 export type Infer<S> = Types.Infer<S>
 export type InferRule<R> = Types.InferRule<R>
@@ -20,6 +21,8 @@ export type TweenSettings = Types.TweenSettings
 export type TweenOverride = Types.TweenOverride
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
+export type CustomEasing = Types.CustomEasing
+export type Easing = Types.Easing
 export type TransitionOptions = Types.TransitionOptions
 export type DebugSnapshot = Types.DebugSnapshot
 
@@ -44,6 +47,10 @@ return table.freeze({
 
     -- METHODS --
     rule = require("@self/Rule"),
+
+    -- EASING --
+    bezier = Custom.bezier,
+    easing = Custom.fromFunction,
 
     -- REDUCED MOTION --
     setReducedMotion = ReducedMotion.set,

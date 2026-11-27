@@ -214,6 +214,44 @@ handler.finish()
 - Connections with different durations finish at different times, so the event waits for the slowest one.
 - [`waitForFinish`](/guide/handlers#waitforfinish) yields until the handler has no running transition, for code that runs in sequence.
 
+## Custom easing <Badge type="tip" text="Added in 0.5.0" />
+
+The built-in easings are names. For a curve of your own, make one and pass it as `easing`:
+
+```luau
+handler.animate({
+    tweenDefault = {
+        duration = 0.3,
+        -- The same curve as CSS cubic-bezier(0.34, 1.56, 0.64, 1).
+        easing = VideState.bezier(0.34, 1.56, 0.64, 1),
+    },
+})
+```
+
+`VideState.bezier(x1, y1, x2, y2)` is a cubic bezier like CSS `cubic-bezier`, so a curve from a design tool works as it
+is. The curve starts at 0 and ends at 1. `x1` and `x2` must be between 0 and 1. `y1` and `y2` can be any finite number,
+and a value outside 0 to 1 overshoots like the `back` easings.
+
+`VideState.easing(fn)` wraps your own function. It takes the progress from 0 to 1 and returns the eased progress:
+
+```luau
+easing = VideState.easing(function(progress)
+    return progress * progress
+end)
+```
+
+The function is called with `0` and `1` when it is made, and it must return finite numbers for both. It should return `0`
+at `0` and `1` at `1`, so a transition starts at the old value and ends at the new one. A later result that is not a
+finite number ends the transition with an error.
+
+Both return a value that `easing` accepts in place of a name, including from a Vide source. A plain function does not
+work in `easing`, because a function there is read as a source. A table that was not made by these two is rejected.
+
+| Function | Description |
+| --- | --- |
+| `VideState.bezier(x1, y1, x2, y2) -> `[`CustomEasing`](#customeasing) | Makes a cubic bezier easing. Raises an error when a number is not finite or `x1` or `x2` is outside 0 to 1. |
+| `VideState.easing(fn: (number) -> number) -> `[`CustomEasing`](#customeasing) | Wraps a function of the progress. Raises an error when it is not a function or does not return finite numbers for `0` and `1`. |
+
 ## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
 
 Some players turn animations off. `VideState.setReducedMotion(true)` makes every following `setState` instant, so
@@ -300,7 +338,7 @@ setting such as `duration` gets the message `onTransition options has an unknown
 
 ```luau
 type TweenSettings = {
-    easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
+    easing: (Easing | Source<Easing>)?, -- The easing curve applied to animatable fields and alpha
     duration: (number | Source<number>)?, -- The duration in seconds
     speed: Source<number>?, -- How fast the transition advances
     delay: (number | Source<number>)?, -- How long a connection waits before its tween starts
@@ -311,7 +349,7 @@ The tween settings of a connection. The easing curves are the standard equations
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `easing` | [`TweenName`](#tweenname) or `Source<TweenName>` | No | `"linear"` | The easing curve. An unknown name raises an error. |
+| `easing` | [`Easing`](#easing) or `Source<Easing>` | No | `"linear"` | The easing curve: a name, or one made with [`bezier`](#custom-easing) or [`easing`](#custom-easing). An unknown name raises an error. |
 | `duration` | `number` or `Source<number>` | No | `0.25` | The duration in seconds. Must be finite and non-negative. |
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
 | `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
@@ -355,6 +393,25 @@ each problem on its own line:
 - `entry <n> needs a tween table`
 - `entry <n>: <message>` for an invalid setting, such as `onTransition duration must be a finite non-negative number`
 - `entries <a> and <b> both match <state> to <state>`
+
+### Easing <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type Easing = TweenName | CustomEasing
+```
+
+The easing of a connection: the name of a built-in curve, or a [`CustomEasing`](#customeasing).
+
+### CustomEasing <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type CustomEasing = {
+    read fn: (number) -> number,
+}
+```
+
+A curve made with [`VideState.bezier`](#custom-easing) or [`VideState.easing`](#custom-easing). `fn` takes the progress
+and returns the eased progress. Only these two functions make one.
 
 ### TweenName <Badge type="tip" text="Added in 0.1.0" />
 

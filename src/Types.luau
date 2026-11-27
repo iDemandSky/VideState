@@ -40,10 +40,17 @@ export type TweenName =
     | "expoIn" | "expoOut" | "expoInOut"
     | "backIn" | "backOut" | "backInOut"
     | "elasticIn" | "elasticOut" | "elasticInOut"
+--- An easing made with `VideState.bezier` or `VideState.easing`.
+export type CustomEasing = {
+    --- Takes the progress from 0 to 1 and returns the eased progress.
+    read fn: (number) -> number,
+}
+--- An easing: the name of a built-in one, or one the game made.
+export type Easing = TweenName | CustomEasing
 --- The tween settings of one connection. A setting left out takes the built-in default. Each setting accepts a plain value or a Vide source, except `speed`, which is a source. A source is read every frame, so changing it affects the running transition and later ones.
 export type TweenSettings = {
     --- The easing curve applied to animatable fields and to `alpha`. Defaults to linear.
-    easing: (TweenName | Source<TweenName>)?,
+    easing: (Easing | Source<Easing>)?,
     --- The duration in seconds. Must be finite and non-negative. Defaults to 0.25.
     duration: (number | Source<number>)?,
     --- How fast the transition advances. Must never be negative, so a transition never moves backwards. Defaults to 1, and 0 pauses.

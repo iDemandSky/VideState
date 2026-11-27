@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `VideState.bezier(x1, y1, x2, y2)` and `VideState.easing(fn)` make an easing of your own for `easing`, such as a curve
+  copied from a design tool. The `Easing` and `CustomEasing` types are exported.
 - `VideState.setReducedMotion(enabled)` and `VideState.isReducedMotion()`. While it is on, every `setState` is instant,
   for players who turn animations off.
 - `VideState.union(first, second)` accepts a value that either schema accepts, such as a number or the string `"Auto"`.

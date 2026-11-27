@@ -1,9 +1,10 @@
 const Types = require("../../../Types")
 const Constants = require("./Constants")
+const Custom = require("../Tween/Custom")
 
 -- The settings of one handler, read when a transition starts and again every frame.
 export type Settings = {
-    read getEasing: () -> Types.TweenName,
+    read getEasing: () -> Types.Easing,
     read getDuration: () -> number,
     read getSpeed: () -> number,
     -- Read once, when a transition starts.
@@ -11,6 +12,10 @@ export type Settings = {
 }
 
 const function isValidEasing(value: unknown): boolean
+    if Custom.isCustom(value) then
+        return true
+    end
+
     if type(value) ~= "string" then
         return false
     end
@@ -116,7 +121,7 @@ const function validateEasing(value: unknown)
     local current = if typeof(value) == "function" then (value :: () -> unknown)() else value
 
     if not isValidEasing(current) then
-        error("onTransition easing must be a known easing name", 0)
+        error("onTransition easing must be a known easing name, or a value made with bezier or easing", 0)
     end
 end
 
@@ -194,20 +199,20 @@ const function parseSettings(settings: Types.TweenSettings?, base: Settings?): S
         end
     end
 
-    local getEasing: () -> Types.TweenName
+    local getEasing: () -> Types.Easing
     local getDuration: () -> number
     local getSpeed: () -> number
     local getDelay: () -> number
 
     if easing ~= nil then
-        getEasing = createReader<<Types.TweenName>>(easing, isValidEasing, function(): Types.TweenName
-            return Constants.DEFAULT_EASING :: Types.TweenName
+        getEasing = createReader<<Types.Easing>>(easing, isValidEasing, function(): Types.Easing
+            return Constants.DEFAULT_EASING :: Types.Easing
         end)
     elseif base ~= nil then
         getEasing = base.getEasing
     else
-        getEasing = function(): Types.TweenName
-            return Constants.DEFAULT_EASING :: Types.TweenName
+        getEasing = function(): Types.Easing
+            return Constants.DEFAULT_EASING :: Types.Easing
         end
     end
 
