@@ -23,9 +23,8 @@ All three buttons have the same four states (`Idle`, `Hovered`, `Pressed`, `Disa
 properties (`backgroundColor`, `textColor`, `textSize`). Only the values differ. For example, `Idle` is blue
 for Play, red for Delete, and dark grey for Shop.
 
-This page continues from Components. The **`ButtonRule`** and **`ButtonDesigns`** ModuleScripts in `ReplicatedStorage`,
-`createStates`, and `createButton` are exactly the same, so they are not repeated here. The new designs are added to
-`ButtonDesigns`.
+This page continues from Components. The **`ButtonRule`** and **`Button`** ModuleScripts in `ReplicatedStorage` are exactly
+the same, so they are not repeated here. The new designs are added to **`ButtonDesigns`**.
 
 ## 1. The base component
 
@@ -136,12 +135,21 @@ A component picks a design by name, with `ButtonDesigns.Primary`, `ButtonDesigns
 
 ## 3. Build the menu
 
-In the LocalScript, create one button per design and place them in a list. Each button is its own handler, so changing one
+This LocalScript takes the place of `PlayButton`. It requires everything it uses, creates one button per design, and places them in a list. Each button is its own handler, so changing one
 never affects another.
 
 ::: code-group
 
 ```luau [StarterPlayerScripts/MainMenu.client.luau]
+const Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Point @Vide at the Vide package in your project.
+const Vide = require("@Vide")
+const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
+const createButton = require(ReplicatedStorage.Button)
+
+const player = Players.LocalPlayer
+
 Vide.mount(function()
     return Vide.create "ScreenGui" {
         Name = "MainMenu",

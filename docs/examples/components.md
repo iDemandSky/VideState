@@ -25,9 +25,9 @@ A **Play button** for a game's main menu. It reacts to the mouse, and every reac
 Every state sets the same three properties: `backgroundColor`, `textColor`, and `textSize`. The colors
 and the text size fade over 0.15 seconds when the state changes, instead of jumping.
 
-The rule and the designs are definitions that many buttons share, so they live in two ModuleScripts in
-`ReplicatedStorage`: **`ButtonRule`** and **`ButtonDesigns`**. The rest is one LocalScript that requires them. Create
-them in the order below.
+The rule, the designs, and the button are shared by every button, so they live in three ModuleScripts in
+`ReplicatedStorage`: **`ButtonRule`**, **`ButtonDesigns`**, and **`Button`**. One LocalScript requires them and shows
+the result. Create them in the order below.
 
 ## 1. Describe the component
 
@@ -105,15 +105,16 @@ return Designs
 
 :::
 
-## 3. Turn the design into sources
+## 3. Build the button
 
-The rest is one LocalScript. It requires the two modules. A handler needs a Vide source for each property in each state,
-and this helper builds them from a design.
+Create a third ModuleScript named **`Button`** in `ReplicatedStorage`. It returns `createButton`, which makes one button.
+A handler needs a Vide source for each property in each state, so `createStates` builds them from a design. Calling
+`ButtonRule.new` creates the handler, which is this button's component instance. The button starts in `Idle`, or in
+`Disabled` when it is not enabled.
 
 ::: code-group
 
-```luau [StarterPlayerScripts/PlayButton.client.luau]
-const Players = game:GetService("Players")
+```luau [ReplicatedStorage/Button.luau]
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- Point @Vide at the Vide package in your project.
 const Vide = require("@Vide")
@@ -122,7 +123,7 @@ const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
 
 type Design = ButtonDesigns.Design
 
-const function createStates(design: Design)
+local function createStates(design: Design)
     local states = {}
 
     for stateName, look in design do
@@ -135,19 +136,8 @@ const function createStates(design: Design)
 
     return states
 end
-```
 
-:::
-
-## 4. Build the button
-
-`createButton` makes one button. Calling `ButtonRule.new` creates the handler, which is this
-button's component instance. The button starts in `Idle`, or in `Disabled` when it is not enabled.
-
-::: code-group
-
-```luau [StarterPlayerScripts/PlayButton.client.luau]
-const function createButton(label: string, design: Design, enabled: boolean)
+local function createButton(label: string, design: Design, enabled: boolean)
     local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled")
 
     -- The state sources change instantly. `animate` returns sources that fade between the states instead.
@@ -198,17 +188,26 @@ const function createButton(label: string, design: Design, enabled: boolean)
 
     return button
 end
+
+return createButton
 ```
 
 :::
 
-## 5. Show it
+## 4. Show it
 
-Create the Play button and mount it in the player's screen.
+Create the Play button and mount it in the player's screen. This LocalScript requires everything it uses.
 
 ::: code-group
 
 ```luau [StarterPlayerScripts/PlayButton.client.luau]
+const Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Point @Vide at the Vide package in your project.
+const Vide = require("@Vide")
+const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
+const createButton = require(ReplicatedStorage.Button)
+
 const player = Players.LocalPlayer
 
 Vide.mount(function()
