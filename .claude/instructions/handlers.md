@@ -7,7 +7,8 @@ together. Each feature has its own module under `src/Handler/`, so look up a fun
 | --- | --- |
 | `Change.luau` | `onChange` |
 | `StateEvents.luau` | `onEnter`, `onExit` |
-| `Transition/` | `onTransition`, and the `emit` that `setState` calls |
+| `Transition/` | `onTransition`, and the `emit` that `setState` calls. `Config/Overrides.luau` checks `tweenOverrides` and finds the entry for a state change |
+| `Animate.luau` | `animate`, built on `onTransition` |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` |
 | `ScaleSpeed.luau` | `scaleSpeed` |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` |
@@ -27,7 +28,7 @@ The handler also has `sources` and `currentState`, which `init.luau` builds itse
   `Transition/State.luau`, because those modules require `Types` and moving it would create a require cycle.
 - The analyzer cannot infer a generic over `TypedCore.infer<S>`. Pass the type explicitly in `Handler/init.luau`, such as
   `ScaleSpeed<<Values>>(state)`.
-- `onTransition` takes optional per-connection options. Each connection has its own tween, and a setting it leaves out is
-  read from the handler options.
+- `onTransition` and `animate` take optional options with a `tweenDefault`. Each connection has its own tween, and a
+  setting it leaves out takes the built-in default. A handler takes no options.
 - A new transition that starts before the running one ends continues from the value the earlier one reached.
 - `pause`, `scaleSpeed` and `finish` act on the handler as a whole: every connection of the running transition.

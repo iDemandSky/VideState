@@ -4,17 +4,16 @@ Notes for working on VideState itself. This file is not part of the published pa
 
 ## Setup
 
-Run `embr install` first if the pinned tools (Larvae, Rojo, and Lest) are not installed.
+Run `embr install` first if the pinned tools (Larvae, Lest, and Argon) are not installed.
 
-Build the Larvae output and serve it with Rojo from the repository root:
+Sync to Studio with [Argon](https://argon.wiki/) by running `serve.cmd` from the repository root (Windows only). It rebuilds `dist/`, starts
+`larvae process --watch` in the same window, waits for `.larvae/build.project.json`, and then runs
+`argon serve .larvae/build.project.json`. Connect from the Argon plugin in Studio. If the plugin shows
+"Failed to connect" while the console prints `invalid Header provided`, turn on **Allow HTTP Requests** for the
+place (Game Settings, Security). Close the window to stop the watcher. Every command in this file uses forward slashes. Argon is pinned in `ember.toml`.
 
-```sh
-./serve.sh   # macOS, Linux, and Windows with Git Bash
-serve.bat    # Windows
-```
-
-If either process exits, the launcher refreshes the output and retries after five seconds. Press Ctrl+C to
-stop serving. Every command in this file uses forward slashes, which work on all platforms.
+Preview the docs site with `docs.cmd` from the repository root (Windows only). It runs `npm install` when `node_modules/`
+is missing, then starts the VitePress dev server with `npm run docs:dev` and opens the browser. Close the window to stop it.
 
 ## Stories
 
@@ -44,11 +43,11 @@ Warnings in `.lest/`, `dist/`, and `packages/` come from generated or vendored c
 
 ```sh
 larvae process
-rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
+argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
 lest schemas
 ```
 
-The suite needs Roblox Studio, because Vide and Ripple only load inside Roblox. It covers the schema
+The suite needs Roblox Studio, because Vide only loads inside Roblox. It covers the schema
 builders, rules, handlers, `onTransition`, and `info`.
 
 Lest stops a spec file once its tests have run for 15 seconds in total, and reports it as a timeout. Keep
@@ -58,16 +57,24 @@ each spec file well under that, and split a file by topic when it grows, as `Rul
 ## Benchmark
 
 `tests/bench/` measures many handlers transitioning at once. It is a separate suite that never runs by
-default:
+default. `Bench.luau` holds the shared rounds, and there is one spec for each way of connecting:
+
+- `OnTransition.spec.luau` connects a callback with `onTransition`.
+- `Animate.spec.luau` connects `animate`, which writes a Vide source for every field.
+- `Overrides.spec.luau` connects `animate` with six `tweenOverrides` entries, and the matching entry is the last one,
+  so the lookup is as slow as it can be.
+
 
 ```sh
 larvae process
-rojo build .larvae/build.project.json -o .lest/schema-tests.rbxlx
+argon build .larvae/build.project.json -o .lest/schema-tests.rbxlx
 lest bench
 ```
 
-It prints one `[bench]` line per round, with the time `setState` took on every handler and the average and
-worst frame time while they animate. Studio caps the frame rate, so compare runs on the same machine.
+It prints one `[bench]` line per round, with the time it took to create and connect the handlers, the time `setState`
+took on every handler, and the average and worst frame time while they animate. Studio caps the frame rate and changes
+it between runs, so the frame times are only a rough guide. The connect and `setState` times are the ones to compare,
+and a single run varies by about a quarter, so run it a few times and compare runs on the same machine.
 
 ## Type checks
 
@@ -78,7 +85,7 @@ intentionally invalid assignments and uses `--!nocheck` so they do not show up a
 The Luau LSP extension ships an analyzer that can run them:
 
 ```sh
-rojo sourcemap default.project.json -o <scratch>/sourcemap.json
+argon sourcemap default.project.json --output <scratch>/sourcemap.json
 <server> analyze --flag:LuauSolverV2=true \
     --definitions=@roblox=<globalStorage>/johnnymorganz.luau-lsp/globalTypes.PluginSecurity.d.luau \
     --sourcemap <scratch>/sourcemap.json --platform roblox \
@@ -100,7 +107,7 @@ Each feature of a handler has its own module under `src/Handler/`, with the func
 | --- | --- | --- |
 | `Change.luau` | `onChange` | Runs once when the state changes. |
 | `StateEvents.luau` | `onEnter`, `onExit` | Runs when the handler enters or leaves one state. |
-| `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` wraps Ripple. |
+| `Transition/` | `onTransition` | Tweens between states. `State` holds what the transition features share, `Connect` makes connections, `Start` starts a transition, `Scheduler` runs the frames, `Config/` validates options, and `Tween/` has the easing curves and the blending of each value type. |
 | `Pause.luau` | `pause`, `resume`, `onPause`, `onResume` | Pause state for every transition of the handler. |
 | `ScaleSpeed.luau` | `scaleSpeed` | Speed scale for the running transition. |
 | `Finish.luau` | `finish`, `onFinish`, `waitForFinish` | How a transition ends. |

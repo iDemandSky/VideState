@@ -30,17 +30,23 @@ const function play<T>(
     from: T,
     to: T,
     instant: boolean,
+    fromState: string,
+    toState: string,
     getRate: () -> number,
     settle: Types.SettleTransition
 )
+    -- The override for this state change replaces the settings of the connection. Settings are picked when the
+    -- transition starts, and a source inside them is still read every frame.
+    local override = if connection.overrides == nil then nil else connection.overrides(fromState, toState)
+    local settings = override or connection.settings
     local start = if isInterrupted(connection) then connection.current :: T else from
     -- A duration of 0 sends one frame with the next values and an alpha of 1, then ends.
-    local duration = if instant then 0 else connection.settings.getDuration()
+    local duration = if instant then 0 else settings.getDuration()
 
     local group = Group.create(
         start,
         to,
-        connection.settings.getEasing(),
+        settings.getEasing(),
         duration
     )
 
@@ -55,9 +61,9 @@ const function play<T>(
     connection.run = run
 
     -- An instant transition ignores the delay as well.
-    local delay = if instant then 0 else connection.settings.getDelay()
+    local delay = if instant then 0 else settings.getDelay()
 
-    Scheduler(group, connection.settings, delay, getRate, function(current: T, alpha: number): number
+    Scheduler(group, settings, delay, getRate, function(current: T, alpha: number): number
         -- A connection that was disconnected is no longer in the table, so its loop stops.
         if state.connections[id] ~= connection then
             return 0
@@ -84,7 +90,7 @@ return function<T>(
     getRate: () -> number,
     settle: Types.SettleTransition
 ): Types.StartTransition<T>
-    return function(from: T, to: T, instant: boolean)
+    return function(from: T, to: T, instant: boolean, fromState: string, toState: string)
         state.generation += 1
         state.startedAt = os.clock()
         state.scale = 1
@@ -116,7 +122,7 @@ return function<T>(
                 continue
             end
 
-            play(state, transition, id, connection, from, to, instant, getRate, settle)
+            play(state, transition, id, connection, from, to, instant, fromState, toState, getRate, settle)
         end
 
         settle(transition, false)

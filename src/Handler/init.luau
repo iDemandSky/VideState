@@ -8,6 +8,7 @@ const EveryRegistry = require("./Every/Registry")
 const EveryScale = require("./Every/Scale")
 const Change = require("@self/Change")
 const StateEvents = require("@self/StateEvents")
+const Animate = require("@self/Animate")
 const Transition = require("@self/Transition")
 const TransitionState = require("@self/Transition/State")
 const Pause = require("@self/Pause")
@@ -22,6 +23,7 @@ type Handler<T> = Types.Handler<T>
 --   Change      onChange
 --   StateEvents onEnter, onExit
 --   Transition  onTransition
+--   Animate     animate
 --   Pause       pause, resume, onPause, onResume
 --   ScaleSpeed scaleSpeed
 --   Finish      finish, onFinish, waitForFinish
@@ -31,7 +33,6 @@ return function <S>(
     schema: S,
     states: { [string]: Sources<TypedCore.infer<S>> },
     initialState: string,
-    options: Types.HandlerOptions?,
     allowedStateNames: { string }?,
     ruleName: string
 )
@@ -55,7 +56,13 @@ return function <S>(
     end
 
     local sources = table.freeze(derivedSources) :: Sources<Values>
-    local transitionOptions = if options == nil then nil else options.onTransition
+    local stateNames: { string } = {}
+
+    for stateName in validatedStates do
+        table.insert(stateNames, stateName)
+    end
+
+    table.sort(stateNames)
 
     -- The transitions of the handler share this state, and the features below act on it.
     local state = TransitionState.create<<Values>>()
@@ -79,7 +86,8 @@ return function <S>(
         return state.scale * state.baseScale * EveryScale.get()
     end
 
-    local transition = Transition<<Values>>(state, transitionOptions, getRate, finish.settle)
+    local transition = Transition<<Values>>(state, stateNames, getRate, finish.settle)
+    local animate = Animate<<Values>>(transition.onTransition, sources)
     local destroyed = false
     local registered: EveryRegistry.Controls? = nil
 
@@ -148,6 +156,7 @@ return function <S>(
         onEnter = stateEvents.onEnter,
         onExit = stateEvents.onExit,
         onTransition = transition.onTransition,
+        animate = animate,
         pause = pause.pause,
         resume = pause.resume,
         onPause = pause.onPause,

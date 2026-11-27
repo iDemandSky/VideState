@@ -1,6 +1,6 @@
 ---
 title: Transitions
-description: Animate between states with onTransition, shared tween settings, and alpha.
+description: Animate between states with onTransition and animate, tween settings for each connection, and alpha.
 outline: [2, 3]
 ---
 
@@ -11,14 +11,29 @@ runs repeatedly with a `current` value that moves from the previous state to the
 `alpha` that shows the progress. This page covers how transitions behave and the settings that control them.
 
 Every `onTransition` connection has its own tween, so each one can animate with its own settings.
-Pass them as the second argument of [`onTransition`](/guide/handlers#ontransition). A setting a connection
-leaves out is inherited from the `onTransition` key of the handler's
-[`HandlerOptions`](/guide/handlers#handleroptions), and then from the default.
+Pass them as the second argument of [`onTransition`](/guide/handlers#ontransition), inside `tweenDefault`. A setting a
+connection leaves out takes the built-in default. A handler has no tween options of its own, so the settings belong to
+the connection that uses them.
 
 ```luau
-handler.onTransition(fade, { duration = 0.2, easing = "quadOut" })
-handler.onTransition(slide, { duration = 0.5, easing = "backOut" })
+handler.onTransition(fade, {
+    tweenDefault = {
+        duration = 0.2,
+        easing = "quadOut",
+    },
+})
+
+handler.onTransition(slide, {
+    tweenDefault = {
+        duration = 0.5,
+        easing = "backOut",
+    },
+})
 ```
+
+[`animate`](/guide/handlers#animate) is the same transition with Vide sources instead of a callback. It takes
+the same options, so everything on this page applies to it too. Use `onTransition` when you want to run your
+own code on each frame, and `animate` when you only need to bind the values to properties.
 
 Connections with the same settings still start together and stay in step. Each connection costs its own
 set of tweens, so connect only the listeners that need to animate.
@@ -45,24 +60,94 @@ If you need a gradual effect on text, such as a typewriter reveal, build it your
 
 ### Animatable fields
 
-Animatable fields are numbers, vectors, `Vector2`, `Vector3`, `CFrame`, `Color3`, `UDim`, `UDim2`,
-`Rect`, and tables whose values are numbers, vectors, or `Vector3`s with the same keys. Everything else
-is not tweened and switches at the start of the transition. That includes `string`, `boolean`, `enum`,
-and `optional` fields.
+These types are tweened:
 
-`current` is not validated against the schema again. A tweened `integer` field can hold a fractional
-value in the middle of a transition, so round it in your callback if you need a whole number.
+- Numbers and vectors, including `Vector2` and `Vector3`.
+- `CFrame`, `Color3`, `UDim`, `UDim2`, and `Rect`.
+- `NumberRange`. Its minimum and its maximum are tweened separately.
+- `NumberSequence` and `ColorSequence`, keypoint by keypoint. Both values need the same number of keypoints.
+- Tables whose values are numbers, vectors, or `Vector3`s with the same keys.
+
+These are not tweened. They switch to their next value at the start of the transition:
+
+- `string`, `boolean`, `enum`, and `optional` fields.
+- A `NumberSequence` or `ColorSequence` whose keypoint count changes.
+- Every other type.
+
+A few things to know:
+
+- An easing that overshoots, such as `back`, can push the minimum of a `NumberRange` above its maximum. The range is
+  clamped to keep the minimum at or below the maximum.
+- A sequence keeps its first keypoint at time `0` and its last at `1`, and its other times stay in order.
+- `current` is not validated against the schema again. A tweened `integer` field can hold a fractional value in the
+  middle of a transition, so round it in your callback if you need a whole number.
 
 ## alpha
 
 `alpha` is the progress of the transition, from `0` at the start to `1` at the end. It follows the
 same easing and duration as the tweened fields, so it matches how far the transition has moved. Use
-it to drive values that Ripple cannot tween.
+it to drive values that cannot be tweened.
 
 `back` and `elastic` easings overshoot. With them, `alpha` goes below `0` or above `1` during the
 transition and settles at exactly `1` when it ends. This is expected, because the same curve moves
 the tweened fields past their start or end. Clamp it with `math.clamp(alpha, 0, 1)` if you need a
 fixed range.
+
+## Overrides for state changes <Badge type="tip" text="Added in 0.4.0" />
+
+A connection can use other tween settings for particular state changes. A state change is the state the handler
+leaves and the state it enters. `tweenOverrides` is an array of entries, and each entry names those states and the
+settings to use for them:
+
+```luau
+handler.animate({
+    tweenDefault = {
+        duration = 0.15,
+        easing = "quadOut",
+    },
+    tweenOverrides = {
+        {
+            from = {
+                "Idle",
+                "Hovered",
+            },
+            to = {
+                "Pressed",
+            },
+            tween = {
+                duration = 0.05,
+                easing = "linear",
+            },
+        },
+        {
+            -- from is left out, so it means every state
+            to = {
+                "Disabled",
+            },
+            tween = {
+                duration = 0.5,
+                easing = "sineInOut",
+            },
+        },
+    },
+})
+```
+
+- `from` and `to` are arrays of state names. A side that is left out means every state.
+- `tween` takes the same settings as `tweenDefault`. A setting it leaves out keeps the one of `tweenDefault`.
+- A state change that no entry matches uses `tweenDefault`.
+- At most one entry may match a state change, so the order of the array does not matter. An overlap raises an error
+  when `onTransition` or `animate` is called. The error lists every problem together: overlaps, a state the handler does
+  not have, an empty array, an entry that leaves out both sides, an entry that only matches a state to itself, and an
+  entry with no `tween`.
+- The settings are picked when `setState` starts the transition, once for each connection. A connection with no
+  overrides does no extra work. A source inside the settings is still read every frame.
+- When a transition is interrupted, the entry is picked for the state the handler was heading to and the new state. The
+  value still continues from where it is.
+- The speed works as it does without overrides: the duration is divided by the speed of the connection, then by the
+  global speed, as `(duration / localSpeed) / globalSpeed`.
+- A different tween for one field is another connection. Call `animate` or `onTransition` again with the settings that
+  field needs.
 
 ## Delays
 
@@ -73,7 +158,11 @@ such as list items that appear one after another:
 for index, item in items do
     handler.onTransition(function(_, _, current)
         item.Transparency = current.transparency
-    end, { delay = (index - 1) * 0.05 })
+    end, {
+        tweenDefault = {
+            delay = (index - 1) * 0.05,
+        },
+    })
 end
 ```
 
@@ -143,21 +232,51 @@ run, so only a frame time well above 33 ms shows real cost.
 | 5,000 | about 150 ms | about 27 ms | about 32 ms |
 | 10,000 | about 300 ms | about 55 ms | about 64 ms |
 
+`animate` and `onTransition` cost about the same. In one Studio run of 10,000 handlers, with one connection each:
+
+- Creating the handlers and connecting took about 450 ms for both, which is about 45 microseconds for each handler.
+- `setState` on all of them took about 270 ms for both.
+- `tweenOverrides` with six entries, where the matching entry was the last one, added about 20 microseconds to
+  connecting each handler and about 5 microseconds to its `setState`. A connection with no overrides pays nothing.
+
 Measure your own use. The numbers depend on the device, the number of fields, and the work your callbacks do.
 
 ## Changing settings during a transition
 
 When a setting is a Vide source, it is read every frame. Changing it affects the running transition,
-and Ripple restarts each tween from its current position. The remaining distance is covered with the new
+and each tween restarts from its current position. The remaining distance is covered with the new
 settings, so values do not jump, but the easing curve starts again from that point. Plain values are
 read once and never change.
 
 ## Types
 
-### TransitionOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
+### TransitionOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.4.0" />
 
 ```luau
 type TransitionOptions = {
+    tweenDefault: TweenSettings?, -- The tween settings of the connection
+    tweenOverrides: { TweenOverride }?, -- Tween settings for particular state changes
+}
+```
+
+Changed in 0.2.0: added `delay`, and the options can also be passed to one connection.
+
+Changed in 0.4.0: the settings moved into `tweenDefault`, and a handler no longer takes them.
+
+The options of one [`onTransition`](/guide/handlers#ontransition) or [`animate`](/guide/handlers#animate) connection.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `tweenDefault` | [`TweenSettings`](#tweensettings) | No | The tween settings of the connection. A setting left out takes the built-in default. |
+| `tweenOverrides` | `{ `[`TweenOverride`](#tweenoverride)` }` | No | Tween settings for particular state changes. See [Overrides for state changes](#overrides-for-state-changes). |
+
+An unknown key, a non-table value, or a setting at the top level raises an error when the connection is made. A top-level
+setting such as `duration` gets the message `onTransition options has an unknown key duration. Put duration inside tweenDefault`.
+
+### TweenSettings <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+type TweenSettings = {
     easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
     duration: (number | Source<number>)?, -- The duration in seconds
     speed: Source<number>?, -- How fast the transition advances
@@ -165,9 +284,7 @@ type TransitionOptions = {
 }
 ```
 
-Changed in 0.2.0: added `delay`, and the options can also be passed to one connection.
-
-Settings for the transitions of one handler or one connection. The tween is created by [Ripple](https://github.com/littensy/ripple).
+The tween settings of a connection. The easing curves are the standard equations that [easings.net](https://easings.net) lists.
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
@@ -176,7 +293,7 @@ Settings for the transitions of one handler or one connection. The tween is crea
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
 | `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
 
-Invalid values raise an error when the handler is created. This includes an unknown key, a
+Invalid values raise an error when `onTransition` or `animate` is called. This includes an unknown key, a
 non-table value, a negative `speed`, and a `speed` that is not a source. A source is also checked on
 creation, using its current value.
 
@@ -184,6 +301,37 @@ If a source later returns an invalid value, the transition keeps running instead
 error: `easing` falls back to `"linear"`, `duration` to `0.25`, and `delay` to `0`. A negative `speed` is treated as `0`,
 which pauses the transition, and any other invalid `speed` is treated as `1`. A paused transition keeps
 its values and does not call listeners again until the speed is above `0`.
+
+### TweenOverride <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+type TweenOverride = {
+    from: { string }?, -- The states the handler leaves
+    to: { string }?, -- The states the handler enters
+    tween: TweenSettings, -- The settings for the state changes that match
+}
+```
+
+One entry of `tweenOverrides`.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `from` | `{ string }` | No | The states the handler leaves. Every name must be a state of the handler. Left out means every state. |
+| `to` | `{ string }` | No | The states the handler enters. Every name must be a state of the handler. Left out means every state. |
+| `tween` | [`TweenSettings`](#tweensettings) | Yes | The settings for the matching state changes. A setting left out keeps the one of `tweenDefault`. |
+
+`onTransition` and `animate` raise one error that starts with `onTransition tweenOverrides has <n> problems:` and lists
+each problem on its own line:
+
+- `entry <n> must be a table`
+- `entry <n> has an unknown key <key>`
+- `entry <n> from has an unknown state "<state>"`, and the same for `to`
+- `entry <n> from is empty, so it matches nothing`, and the same for `to`
+- `entry <n> leaves out both from and to, so it matches every state change. Use tweenDefault for that`
+- `entry <n> only matches <state> to <state>, which is not a state change`
+- `entry <n> needs a tween table`
+- `entry <n>: <message>` for an invalid setting, such as `onTransition duration must be a finite non-negative number`
+- `entries <a> and <b> both match <state> to <state>`
 
 ### TweenName <Badge type="tip" text="Added in 0.1.0" />
 

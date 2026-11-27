@@ -268,6 +268,34 @@ VideState.color3() -> Schema<Color3>
 
 Accepts a `Color3`.
 
+### numberRange <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+VideState.numberRange() -> Schema<NumberRange>
+```
+
+Accepts a `NumberRange`. A [transition](/guide/transitions#animatable-fields) tweens its minimum and its
+maximum, and keeps the minimum at or below the maximum when an easing overshoots.
+
+### numberSequence <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+VideState.numberSequence() -> Schema<NumberSequence>
+```
+
+Accepts a `NumberSequence`, such as the `Transparency` of a `UIGradient`. A
+[transition](/guide/transitions#animatable-fields) tweens it when both values have the same number of keypoints.
+Otherwise it switches to the next value at the start.
+
+### colorSequence <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+VideState.colorSequence() -> Schema<ColorSequence>
+```
+
+Accepts a `ColorSequence`, such as the `Color` of a `UIGradient`. A [transition](/guide/transitions#animatable-fields)
+tweens it when both values have the same number of keypoints. Otherwise it switches to the next value at the start.
+
 ### udim <Badge type="tip" text="Added in 0.1.0" />
 
 ```luau

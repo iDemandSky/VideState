@@ -75,6 +75,6 @@ return function <T>(
         -- The order is exit, enter, change, then the transition.
         emitStateEvents(currentStateName, stateName)
         emitChange(from, to)
-        emitTransition(from, to, instant)
+        emitTransition(from, to, instant, currentStateName, stateName)
     end
 end

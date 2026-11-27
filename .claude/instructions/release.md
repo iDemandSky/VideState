@@ -15,10 +15,17 @@ Release only when the user asks. Publishing, tags, and GitHub releases are never
 - Test the install with `embr publish --local` and a scratch project, as described in [requires.md](requires.md).
 - Run every check in [larvae-checks.md](larvae-checks.md) and [testing.md](testing.md).
 
+## Keeping the version current
+
+The user allowed Claude to update the version while a release is being developed, because it is necessary. Keep `version` in
+`ember.toml` at the next version, and name the open changelog section `## [<version>] - Unreleased`, with the version in the
+`Added in` badges matching. Change them whenever the next version changes, for example when a breaking change turns a patch
+into a minor. This does not publish, tag, or push `main`.
+
 ## Steps
 
-1. Set `version` in `ember.toml`.
-2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [<version>] - <YYYY-MM-DD>` and add a new empty
+1. Check that `version` in `ember.toml` is the version being released.
+2. In `CHANGELOG.md`, change `## [<version>] - Unreleased` to `## [<version>] - <YYYY-MM-DD>` and add a new empty
    `## [Unreleased]` above it.
 3. Commit as `chore: release <version>` on `dev`, then push it as described in [git.md](git.md).
 4. Publish to Ember, tag `v<version>`, and create the GitHub release with the changelog entry as its notes.

@@ -40,9 +40,9 @@ export type TweenName =
     | "expoIn" | "expoOut" | "expoInOut"
     | "backIn" | "backOut" | "backInOut"
     | "elasticIn" | "elasticOut" | "elasticInOut"
---- Settings for how `onTransition` animates between states. A field left out is inherited from the handler options, then from the default. Each field accepts a plain value or a Vide source. A source is read every frame, so changing it affects the running transition and later ones.
-export type TransitionOptions = {
-    --- The Ripple easing applied to animatable fields and to `alpha`. Defaults to linear.
+--- The tween settings of one connection. A setting left out takes the built-in default. Each setting accepts a plain value or a Vide source, except `speed`, which is a source. A source is read every frame, so changing it affects the running transition and later ones.
+export type TweenSettings = {
+    --- The easing curve applied to animatable fields and to `alpha`. Defaults to linear.
     easing: (TweenName | Source<TweenName>)?,
     --- The duration in seconds. Must be finite and non-negative. Defaults to 0.25.
     duration: (number | Source<number>)?,
@@ -51,14 +51,32 @@ export type TransitionOptions = {
     --- How long a connection waits before its tween starts, in seconds. Read when a transition starts. The wait is scaled by the speed, so pausing holds it. Defaults to 0.
     delay: (number | Source<number>)?,
 }
+--- Tween settings for some of the state changes of a handler. A state change is a state the handler leaves and a state it enters. At most one override of a connection may match a state change.
+export type TweenOverride = {
+    --- The states the handler leaves. Left out means every state.
+    from: { string }?,
+    --- The states the handler enters. Left out means every state.
+    to: { string }?,
+    --- The tween settings for the state changes that match. A setting left out keeps the one of `tweenDefault`.
+    tween: TweenSettings,
+}
+--- Options for `onTransition` and `animate`.
+export type TransitionOptions = {
+    --- The tween settings of the connection.
+    tweenDefault: TweenSettings?,
+    --- Tween settings for particular state changes. An override replaces the settings of `tweenDefault` for the state changes it matches.
+    tweenOverrides: { TweenOverride }?,
+}
 --- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
 export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 --- Starts listening for transitions. A connection can pass options to override the tween settings of its handler. Returns a function that removes the listener.
 export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect
+--- Creates a Vide source for every field that follows one `onTransition` connection. A connection can pass options to override the tween settings of its handler. Returns the sources and a function that removes the connection.
+export type Animate<T> = (options: TransitionOptions?) -> (Sources<T>, Disconnect)
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
---- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame.
-export type StartTransition<T> = (from: T, to: T, instant: boolean) -> ()
+--- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
+export type StartTransition<T> = (from: T, to: T, instant: boolean, fromState: string, toState: string) -> ()
 --- Options for one `setState` call.
 export type SetStateOptions = {
     --- Skips the animation. Every `onTransition` connection receives the next state's values at once, with an alpha of 1. Defaults to false.
@@ -144,10 +162,6 @@ export type DebugSnapshot = {
 }
 --- The type of the EventEmitter utility module.
 export type EventEmitter = typeof(EventEmitter)
---- Options for creating a handler. `onTransition` sets the default tween settings of its `onTransition` listeners. A listener can override them with its own options.
-export type HandlerOptions = {
-    onTransition: TransitionOptions?,
-}
 --- A handler created from a rule. Each handler owns its state, sources, and cleanup.
 export type Handler<T> = {
     read sources: Sources<T>,
@@ -157,6 +171,7 @@ export type Handler<T> = {
     read onEnter: (stateName: string, callback: OnEnterCallback) -> Disconnect,
     read onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     read onTransition: ConnectTransition<T>,
+    read animate: Animate<T>,
     read pause: () -> (),
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,

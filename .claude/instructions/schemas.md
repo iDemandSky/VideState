@@ -1,7 +1,7 @@
 # Schema design
 
 A rule describes its properties with VideState's data type schemas. They are exposed as builders on `VideState`:
-`boolean`, `integer`, `float`, `string`, `enum`, `optional`, `table`, `record`, `color3`, `udim`, `udim2`, and
+`boolean`, `integer`, `float`, `string`, `enum`, `optional`, `table`, `record`, `color3`, `numberRange`, `numberSequence`, `colorSequence`, `udim`, `udim2`, and
 `vector2`. The API is documented in `docs/guide/schemas.md`.
 
 ## Design rules

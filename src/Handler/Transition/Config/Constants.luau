@@ -20,15 +20,21 @@ const TWEEN_NAMES: { [string]: boolean } = {
     elasticInOut = true,
 }
 
--- Keys allowed in the `onTransition` handler options.
+-- Keys allowed in the options of `onTransition` and `animate`.
 const OPTION_KEYS: { [string]: boolean } = {
+    tweenDefault = true,
+    tweenOverrides = true,
+}
+
+-- Keys allowed in the tween settings, such as `tweenDefault`.
+const SETTING_KEYS: { [string]: boolean } = {
     easing = true,
     duration = true,
     speed = true,
     delay = true,
 }
 
--- Value types that Ripple can interpolate directly.
+-- Value types that a tween can blend directly.
 const ANIMATABLE_TYPES: { [string]: boolean } = {
     number = true,
     vector = true,
@@ -48,5 +54,6 @@ return table.freeze({
     DEFAULT_DELAY = 0,
     TWEEN_NAMES = table.freeze(TWEEN_NAMES),
     OPTION_KEYS = table.freeze(OPTION_KEYS),
+    SETTING_KEYS = table.freeze(SETTING_KEYS),
     ANIMATABLE_TYPES = table.freeze(ANIMATABLE_TYPES),
 })

@@ -56,6 +56,22 @@ function api.register(metadata: RuleMetadata)
     }) :: RuleMetadata
 end
 
+-- Replaces the tags of a registered rule. The rule's addTags and removeTags call this.
+function api.setTags(name: string, tags: { string })
+    const metadata = rules[name]
+
+    if metadata == nil then
+        error(`No rule is registered under {name}`, 2)
+    end
+
+    rules[name] = table.freeze({
+        name = metadata.name,
+        description = metadata.description,
+        tags = table.freeze(table.clone(tags)),
+        allowedStateNames = metadata.allowedStateNames,
+    }) :: RuleMetadata
+end
+
 function api.get(name: string): RuleMetadata?
     return rules[name]
 end

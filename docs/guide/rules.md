@@ -49,17 +49,19 @@ Creates a rule and registers its metadata under `metadata.name`.
 | <Badge type="danger" text="Error" /> | A rule with the same `metadata.name` already exists | `Duplicate rule name: <name>` |
 | <Badge type="danger" text="Error" /> | `fields` is not a table | `expected a table of named field schemas` |
 
-## Creating handlers from a rule <Badge type="tip" text="Added in 0.1.0" />
+## Creating handlers from a rule <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.4.0" />
 
 Call `new` on a rule that [`rule`](#creating-a-rule) has already returned. It is not a function of `VideState`.
 
 ```luau
 Rule.new(
     states: { [string]: Sources<T> }, -- Vide sources for each state, keyed by state name
-    initialState: string, -- The state the handler starts in
-    options: HandlerOptions? -- Optional handler settings
+    initialState: string -- The state the handler starts in
 ) -> Handler<T>
 ```
+
+Changed in 0.4.0: a handler takes no options, so `new` has only the states and the initial state. The tween
+settings moved to [`onTransition`](/guide/handlers#ontransition) and [`animate`](/guide/handlers#animate).
 
 Creates a [handler](/guide/handlers) from the rule. Every state must provide a Vide source for each
 field in the rule, and each state's values are validated when `new` runs. A rule needs at least
@@ -71,7 +73,6 @@ two states.
 | --- | --- | --- |
 | `states` | `{ [string]: `[`Sources`](/guide/handlers#sources-1)`<T> }` | A dictionary of states. Each value is a record of Vide sources with one source per field. When `metadata.allowedStateNames` is set, every key must be in that list. |
 | `initialState` | `string` | The name of the state the handler starts in. Must be a key of `states`. |
-| `options` | [`HandlerOptions`](/guide/handlers#handleroptions)`?` | Optional. Settings for the handler. `onTransition` sets the easing, duration, and speed shared by its transition listeners. |
 
 **Returns**
 
@@ -91,14 +92,108 @@ two states.
 | <Badge type="danger" text="Error" /> | Fewer than two states | `rule requires at least 2 states` |
 | <Badge type="danger" text="Error" /> | A state name is not in `allowedStateNames` | `state "<state>" is not in allowedStateNames` |
 | <Badge type="danger" text="Error" /> | `initialState` is not one of the states | `unknown initial state "<state>"` |
-| <Badge type="danger" text="Error" /> | `onTransition` is not a table | `onTransition options must be a table` |
-| <Badge type="danger" text="Error" /> | `onTransition` has an unknown key | `onTransition options has an unknown key <key>` |
-| <Badge type="danger" text="Error" /> | `onTransition.easing` is not a known easing name | `onTransition easing must be a known easing name` |
-| <Badge type="danger" text="Error" /> | `onTransition.duration` is not a finite, non-negative number | `onTransition duration must be a finite non-negative number` |
-| <Badge type="danger" text="Error" /> | `onTransition.speed` is not a source | `onTransition speed must be a source` |
-| <Badge type="danger" text="Error" /> | `onTransition.speed` is negative | `onTransition speed must not be negative` |
-| <Badge type="danger" text="Error" /> | `onTransition.speed` is not finite | `onTransition speed must be a finite non-negative number` |
-| <Badge type="danger" text="Error" /> | `onTransition.delay` is not a finite, non-negative number | `onTransition delay must be a finite non-negative number` |
+| <Badge type="danger" text="Error" /> | A third argument is given | `new takes only the states and the initial state. Pass tweenDefault to onTransition or animate instead` |
+
+## Tags
+
+Tags group rules, and are set in the [`tags`](#rulemetadata) field of the metadata. These methods
+read and change a rule's tags after it was created. Tags are compared exactly as written, so they are
+never trimmed or lowercased. [`info`](/guide/info) and the [`everyHandler`](/guide/every-handler)
+filters read the tags each time they run, so a change reaches them at once.
+
+### getTags <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+rule.getTags() -> { string }
+```
+
+Returns the rule's tags.
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `{ string }` | A frozen copy of the tags in the order they were added. It is empty when the rule has none. Later changes do not affect it, so call `getTags` again to read them. |
+
+### hasTag <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+rule.hasTag(tag: string) -> boolean
+```
+
+Checks whether the rule has the tag.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `tag` | `string` | The tag to look for. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `boolean` | `true` when the rule has the exact tag, `false` when it does not. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `tag` is not a string | `Tag must be a string, got <type>` |
+
+### addTags <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+rule.addTags(...: string) -> boolean
+```
+
+Adds tags to the rule.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `...` | `string` | The tags to add. At least one is required. A tag that is repeated in one call counts once. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `boolean` | `true` when at least one tag was new. `false` when the rule already had every tag. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No tags are given | `addTags requires at least one tag` |
+| <Badge type="danger" text="Error" /> | A tag is not a string | `Tag <index> must be a string, got <type>` |
+
+### removeTags <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+rule.removeTags(...: string) -> boolean
+```
+
+Removes tags from the rule.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `...` | `string` | The tags to remove. At least one is required. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `boolean` | `true` when at least one tag was removed. `false` when the rule had none of them. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | No tags are given | `removeTags requires at least one tag` |
+| <Badge type="danger" text="Error" /> | A tag is not a string | `Tag <index> must be a string, got <type>` |
 
 ## Types
 
@@ -138,7 +233,11 @@ Gives the value type of a rule. Use it instead of reading `_schema` directly, an
 ```luau
 type Rule<Fields> = {
     _schema: Schema<Fields>, -- The schema built from the fields
-    new: (states: { [string]: Sources<T> }, initialState: string, options: HandlerOptions?) -> Handler<T>,
+    new: (states: { [string]: Sources<T> }, initialState: string) -> Handler<T>,
+    getTags: () -> { string },
+    hasTag: (tag: string) -> boolean,
+    addTags: (...string) -> boolean,
+    removeTags: (...string) -> boolean,
 }
 ```
 
@@ -148,3 +247,7 @@ A rule returned by [`rule`](#creating-a-rule). It is frozen, so it cannot be cha
 | --- | --- | --- |
 | `_schema` | [`Schema`](/guide/schemas#schema)`<Fields>` | The schema that validates each state. Pass the rule to [`InferRule`](#inferrule) instead of reading this directly. |
 | `new` | `function` | Creates a [handler](/guide/handlers). See [`new`](#creating-handlers-from-a-rule). |
+| `getTags` | `function` | Returns the rule's tags. See [`getTags`](#gettags). |
+| `hasTag` | `function` | Checks whether the rule has a tag. See [`hasTag`](#hastag). |
+| `addTags` | `function` | Adds tags to the rule. See [`addTags`](#addtags). |
+| `removeTags` | `function` | Removes tags from the rule. See [`removeTags`](#removetags). |

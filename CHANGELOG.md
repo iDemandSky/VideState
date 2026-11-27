@@ -7,6 +7,22 @@ version can contain breaking changes.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
+### Changed
+
+- VideState tweens values itself, and Ripple is no longer a dependency, so installing the package pulls one package
+  fewer. The values are the same as before, and each connection costs about 20 to 30% less time every frame. The tween
+  settings and the options did not change.
+- A handler takes no options. `rule.new(states, initialState)` is all it needs, and `HandlerOptions` is removed. The tween settings are passed to `onTransition` and `animate` instead, inside `tweenDefault`: `handler.onTransition(callback, { tweenDefault = { duration = 0.2 } })`. A setting that is left out takes the built-in default. Breaking: a third argument to `new` raises an error, and a setting at the top level of the options raises an error that points to `tweenDefault`.
+
+### Added
+
+- `tweenOverrides` in the options of `onTransition` and `animate`, which sets other tween settings for particular state changes. An entry has `from` and `to`, arrays of state names where a side that is left out means every state, and a `tween` with the settings to use. A state change that no entry matches uses `tweenDefault`. At most one entry may match a state change, so the order does not matter, and any problem raises one error that lists them all when the connection is made. The `TweenOverride` type.
+- The schemas `numberRange`, `numberSequence`, and `colorSequence`. A transition tweens a `NumberRange` by its minimum and maximum, and keeps the minimum at or below the maximum. It tweens a `NumberSequence` or a `ColorSequence` keypoint by keypoint when both values have the same number of keypoints, and switches at the start when they differ.
+- `handler.animate`, which returns a Vide source for every field that follows a transition, so a property can be bound to the animated value directly. It is `onTransition` in the form Vide expects, with the same options, and returns the sources and a disconnect function.
+- `rule.getTags`, `rule.hasTag`, `rule.addTags`, and `rule.removeTags`, which read a rule's tags, check one, and add or remove tags after it was created. `addTags` and `removeTags` take any number of tags and return whether the rule's tags changed. `info` and the `everyHandler` filters see the change at once.
+
 ## [0.3.0] - 2026-11-25
 
 ### Changed

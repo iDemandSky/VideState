@@ -4,17 +4,20 @@ const VideState = require("@VideState")
 
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
+-- A long transition, so a test can see it while it is still running.
+const SLOW = {
+    tweenDefault = {
+        duration = 3,
+    },
+}
+
 const function createPanel(name: string)
     return VideState.rule({
         opacity = VideState.float(),
     }, { name = name }).new({
         Idle = { opacity = Vide.source(0) },
         Active = { opacity = Vide.source(1) },
-    }, "Idle", {
-        onTransition = {
-            duration = 3,
-        },
-    })
+    }, "Idle")
 end
 
 -- The snapshot listed under `label`, or nil.
@@ -50,7 +53,7 @@ describe("debug tools", function()
         expect(idle.isRunning).toBe(false)
         expect(idle.startedAt).toBe(nil)
 
-        handler.onTransition(function() end)
+        handler.onTransition(function() end, SLOW)
         handler.setState("Active")
         handler.pause()
 
@@ -98,7 +101,7 @@ describe("debug tools", function()
 
         expect(frame.ClassName).toBe("Frame")
 
-        handler.onTransition(function() end)
+        handler.onTransition(function() end, SLOW)
         handler.setState("Active")
         task.wait(0.3)
 

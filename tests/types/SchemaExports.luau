@@ -11,6 +11,9 @@ local rule = VideState.rule({
     offset = VideState.udim(),
     size = VideState.udim2(),
     position = VideState.vector2(),
+    range = VideState.numberRange(),
+    fade = VideState.numberSequence(),
+    tint = VideState.colorSequence(),
     nested = VideState.record({
         enabled = VideState.boolean(),
     }),
@@ -27,6 +30,9 @@ local values: Values = {
     offset = UDim.new(),
     size = UDim2.new(),
     position = Vector2.new(),
+    range = NumberRange.new(0, 1),
+    fade = NumberSequence.new(0),
+    tint = ColorSequence.new(Color3.new()),
     nested = { enabled = false },
 }
 
@@ -41,6 +47,9 @@ local panel = rule.new({
         offset = Vide.source(UDim.new()),
         size = Vide.source(UDim2.new()),
         position = Vide.source(Vector2.new()),
+        range = Vide.source(NumberRange.new(0, 1)),
+        fade = Vide.source(NumberSequence.new(0)),
+        tint = Vide.source(ColorSequence.new(Color3.new())),
         nested = Vide.source({ enabled = false }),
     },
     Active = {
@@ -53,11 +62,17 @@ local panel = rule.new({
         offset = Vide.source(UDim.new(1, 0)),
         size = Vide.source(UDim2.fromOffset(100, 50)),
         position = Vide.source(Vector2.new(1, 2)),
+        range = Vide.source(NumberRange.new(2, 3)),
+        fade = Vide.source(NumberSequence.new(1)),
+        tint = Vide.source(ColorSequence.new(Color3.new(1, 1, 1))),
         nested = Vide.source({ enabled = true }),
     },
 }, "Idle")
 
 local visibleSource: Vide.Source<boolean> = panel.sources.visible
 local sizeSource: Vide.Source<UDim2> = panel.sources.size
+local rangeSource: Vide.Source<NumberRange> = panel.sources.range
+local fadeSource: Vide.Source<NumberSequence> = panel.sources.fade
+local tintSource: Vide.Source<ColorSequence> = panel.sources.tint
 
-return { values, panel, visibleSource, sizeSource }
+return { values, panel, visibleSource, sizeSource, rangeSource, fadeSource, tintSource }

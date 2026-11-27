@@ -3,6 +3,10 @@
 layout: home
 
 hero:
+  image:
+    light: /logo-light.svg
+    dark: /logo-dark.svg
+    alt: VideState
   name: VideState
   text: A Roblox Vide source state handler.
   tagline: Consistent transitions, seamless state changes, and inheritance-friendly Vide UI.

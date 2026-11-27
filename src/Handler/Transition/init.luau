@@ -1,5 +1,4 @@
 const Types = require("../Types")
-const Options = require("@self/Config/Options")
 const State = require("@self/State")
 const Connect = require("@self/Connect")
 const Start = require("@self/Start")
@@ -17,14 +16,12 @@ export type Transition<T> = {
 -- `getRate` scales the time that passes, and `settle` counts a connection of a transition as ended.
 return function <T>(
     state: State.State<T>,
-    options: Types.TransitionOptions?,
+    stateNames: { string },
     getRate: () -> number,
     settle: Types.SettleTransition
 ): Transition<T>
-    local handlerSettings = Options.parse(options)
-
     local transition: Transition<T> = {
-        onTransition = Connect(state, handlerSettings, settle),
+        onTransition = Connect(state, stateNames, settle),
         emit = Start(state, getRate, settle),
         stop = function()
             -- A new generation makes every running loop stale, so each one stops on its next frame.

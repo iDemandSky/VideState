@@ -260,6 +260,66 @@ describe("rule handlers", function()
         expect(Info.ruleHasTag("ExactTagPanel", " spaced ")).toBe(true)
     end)
 
+    it("adds and removes tags on a rule and reports whether they changed", function()
+        local rule = VideState.rule({ visible = VideState.boolean() }, {
+            name = "MutableTagPanel",
+            tags = { "mutableOne" },
+        })
+        local handler = rule.new({
+            Idle = { visible = Vide.source(false) },
+            Active = { visible = Vide.source(true) },
+        }, "Idle")
+
+        expect(table.concat(rule.getTags(), ",")).toBe("mutableOne")
+        expect(table.isfrozen(rule.getTags())).toBe(true)
+
+        expect(rule.hasTag("mutableOne")).toBe(true)
+        expect(rule.hasTag("mutableTwo")).toBe(false)
+        expect(rule.hasTag("mutableone")).toBe(false)
+
+        expect(rule.addTags("mutableOne")).toBe(false)
+        expect(rule.addTags("mutableOne", "mutableTwo", "mutableTwo")).toBe(true)
+        expect(Info.ruleHasTag("MutableTagPanel", "mutableTwo")).toBe(true)
+        expect(rule.hasTag("mutableTwo")).toBe(true)
+        expect(table.concat(rule.getTags(), ",")).toBe("mutableOne,mutableTwo")
+        expect(#(Info.get("MutableTagPanel") :: any).tags).toBe(2)
+
+        expect(VideState.everyHandler.withTags("mutableTwo").count()).toBe(1)
+
+        expect(rule.removeTags("missingTag")).toBe(false)
+        expect(rule.removeTags("mutableOne", "missingTag")).toBe(true)
+        expect(Info.ruleHasTag("MutableTagPanel", "mutableOne")).toBe(false)
+        expect(VideState.everyHandler.withTags("mutableTwo").count()).toBe(1)
+
+        handler.destroy()
+    end)
+
+    it("adds tags to a rule that was created without any", function()
+        local rule = VideState.rule({ visible = VideState.boolean() }, { name = "UntaggedPanel" })
+
+        expect(#rule.getTags()).toBe(0)
+        expect(rule.addTags("lateTag")).toBe(true)
+        expect(rule.getTags()[1]).toBe("lateTag")
+        expect(Info.ruleHasTag("UntaggedPanel", "lateTag")).toBe(true)
+    end)
+
+    it("rejects missing or non-string tags", function()
+        local rule = VideState.rule({ visible = VideState.boolean() }, { name = "BadTagPanel" })
+
+        expect(function()
+            rule.addTags()
+        end).toThrow("addTags requires at least one tag")
+        expect(function()
+            rule.removeTags()
+        end).toThrow("removeTags requires at least one tag")
+        expect(function()
+            rule.hasTag(5 :: any)
+        end).toThrow("Tag must be a string, got number")
+        expect(function()
+            rule.addTags(5 :: any)
+        end).toThrow("Tag 1 must be a string, got number")
+    end)
+
     it("rejects invalid arguments for tag lookups", function()
         expect(function()
             Info.getAllRulesWithTags()

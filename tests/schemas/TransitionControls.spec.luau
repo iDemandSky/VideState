@@ -11,11 +11,7 @@ describe("transition controls", function()
         }, { name = "PauseAllPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.5,
-            },
-        })
+        }, "Idle")
 
         local first: { number } = {}
         local second: { number } = {}
@@ -24,11 +20,17 @@ describe("transition controls", function()
 
         handler.onTransition(function(_, _, current)
             table.insert(first, current.opacity)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.5,
+            },
+        })
         handler.onTransition(function(_, _, current)
             table.insert(second, current.opacity)
         end, {
-            duration = 0.4,
+            tweenDefault = {
+                duration = 0.4,
+            },
         })
 
         local disconnectPause = handler.onPause(function(startedAt)
@@ -93,17 +95,17 @@ describe("transition controls", function()
         }, { name = "PausedStartPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.2,
-            },
-        })
+        }, "Idle")
 
         local values: { number } = {}
 
         handler.onTransition(function(_, _, current)
             table.insert(values, current.opacity)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.2,
+            },
+        })
 
         handler.pause()
         handler.setState("Active")
@@ -124,11 +126,7 @@ describe("transition controls", function()
         }, { name = "DelayPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.2,
-            },
-        })
+        }, "Idle")
 
         local first: { number } = {}
         local delayed: { number } = {}
@@ -136,11 +134,18 @@ describe("transition controls", function()
 
         handler.onTransition(function(_, _, current)
             table.insert(first, current.opacity)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.2,
+            },
+        })
         handler.onTransition(function(_, _, current)
             table.insert(delayed, current.opacity)
         end, {
-            delay = 0.6,
+            tweenDefault = {
+                duration = 0.2,
+                delay = 0.6,
+            },
         })
         handler.onFinish(function()
             finishes += 1
@@ -171,7 +176,12 @@ describe("transition controls", function()
         expect(delayed[#delayed]).toBe(0)
 
         expect(function()
-            handler.onTransition(function() end, { delay = -1 })
+            handler.onTransition(function() end, {
+                tweenDefault = {
+                    duration = 0.2,
+                    delay = -1,
+                },
+            })
         end).toThrow("onTransition delay must be a finite non-negative number")
     end)
 
@@ -181,18 +191,18 @@ describe("transition controls", function()
         }, { name = "DelayPausePanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.2,
-                delay = 0.3,
-            },
-        })
+        }, "Idle")
 
         local values: { number } = {}
 
         handler.onTransition(function(_, _, current)
             table.insert(values, current.opacity)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.2,
+                delay = 0.3,
+            },
+        })
 
         handler.pause()
         handler.setState("Active")
@@ -212,11 +222,7 @@ describe("transition controls", function()
         }, { name = "InstantPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 1,
-            },
-        })
+        }, "Idle")
 
         local values: { number } = {}
         local alphas: { number } = {}
@@ -225,7 +231,11 @@ describe("transition controls", function()
         handler.onTransition(function(_, _, current, alpha)
             table.insert(values, current.opacity)
             table.insert(alphas, alpha)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 1,
+            },
+        })
         handler.onFinish(function()
             finishes += 1
         end)
@@ -270,17 +280,17 @@ describe("transition controls", function()
         }, { name = "ScaleSpeedPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 1,
-            },
-        })
+        }, "Idle")
 
         local alpha = 0
 
         handler.onTransition(function(_, _, _, frameAlpha)
             alpha = frameAlpha
-        end)
+        end, {
+            tweenDefault = {
+                duration = 1,
+            },
+        })
 
         handler.setState("Active")
         task.wait(0.1)
@@ -315,17 +325,17 @@ describe("transition controls", function()
         }, { name = "KeptScalePanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 1,
-            },
-        })
+        }, "Idle")
 
         local alpha = 0
 
         handler.onTransition(function(_, _, _, frameAlpha)
             alpha = frameAlpha
-        end)
+        end, {
+            tweenDefault = {
+                duration = 1,
+            },
+        })
 
         handler.scaleSpeed({ speed = 20 })
         handler.setState("Active")
@@ -356,11 +366,7 @@ describe("transition controls", function()
         }, { name = "FinishPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 5,
-            },
-        })
+        }, "Idle")
 
         local first: { number } = {}
         local second: { number } = {}
@@ -369,11 +375,17 @@ describe("transition controls", function()
         handler.onTransition(function(_, _, current, alpha)
             table.insert(first, alpha)
             expect(current.opacity).toBe(alpha)
-        end)
+        end, {
+            tweenDefault = {
+                duration = 5,
+            },
+        })
         handler.onTransition(function(_, _, current)
             table.insert(second, current.opacity)
         end, {
-            duration = 3,
+            tweenDefault = {
+                duration = 3,
+            },
         })
         handler.onFinish(function(startedAt)
             table.insert(finishes, startedAt)
@@ -412,20 +424,22 @@ describe("transition controls", function()
         }, { name = "FinishEventPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.1,
-            },
-        })
+        }, "Idle")
 
         local finishes = 0
         local disconnectFinish = handler.onFinish(function()
             finishes += 1
         end)
 
-        handler.onTransition(function() end)
         handler.onTransition(function() end, {
-            duration = 0.5,
+            tweenDefault = {
+                duration = 0.1,
+            },
+        })
+        handler.onTransition(function() end, {
+            tweenDefault = {
+                duration = 0.5,
+            },
         })
 
         handler.setState("Active")
@@ -463,11 +477,7 @@ describe("transition controls", function()
         }, { name = "WaitPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.3,
-            },
-        })
+        }, "Idle")
 
         -- With nothing running, it returns at once.
         local startedAt = os.clock()
@@ -484,7 +494,11 @@ describe("transition controls", function()
 
         handler.onTransition(function(_, _, _, alpha)
             lastAlpha = alpha
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.3,
+            },
+        })
 
         handler.setState("Idle")
         handler.waitForFinish()
@@ -533,11 +547,7 @@ describe("transition controls", function()
         }, { name = "DestroyPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 0.5,
-            },
-        })
+        }, "Idle")
 
         local frames = 0
         local pauses = 0
@@ -546,7 +556,11 @@ describe("transition controls", function()
 
         handler.onTransition(function()
             frames += 1
-        end)
+        end, {
+            tweenDefault = {
+                duration = 0.5,
+            },
+        })
         handler.onPause(function()
             pauses += 1
         end)
@@ -596,18 +610,18 @@ describe("transition controls", function()
         }, { name = "PausedFinishPanel" }).new({
             Idle = { opacity = Vide.source(0) },
             Active = { opacity = Vide.source(1) },
-        }, "Idle", {
-            onTransition = {
-                duration = 1,
-            },
-        })
+        }, "Idle")
 
         local lastAlpha = 0
         local finishes = 0
 
         handler.onTransition(function(_, _, _, alpha)
             lastAlpha = alpha
-        end)
+        end, {
+            tweenDefault = {
+                duration = 1,
+            },
+        })
         handler.onFinish(function()
             finishes += 1
         end)

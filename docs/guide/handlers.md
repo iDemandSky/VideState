@@ -179,7 +179,7 @@ the next state.
 | <Badge type="danger" text="Error" /> | `stateName` is not a state of the handler | `onExit state "<state>" is not a state of this handler` |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onExit callback must be a function` |
 
-### onTransition <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
+### onTransition <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.4.0" />
 
 ```luau
 Handler.onTransition(
@@ -195,19 +195,20 @@ Handler.onTransition(
 
 Changed in 0.2.0: takes an optional `options` argument, and every connection tweens on its own.
 
+Changed in 0.4.0: the settings go inside `tweenDefault`, and a handler has no tween options of its own.
+
 Runs `callback` with a `current` value that moves from the previous state to the next one, and the
-`alpha` that shows how far along it is. Each animatable field is tweened with
-[Ripple](https://github.com/littensy/ripple). Fields that cannot be tweened, such as strings,
+`alpha` that shows how far along it is. Each animatable field is tweened. Fields that cannot be tweened, such as strings,
 booleans, and enums, are not transitioned: they switch to their next value at the start of the transition. Each connection has its own tween. Its
-settings come from `options`, and any setting it leaves out comes from the handler's
-[`onTransition`](#handleroptions) option, then from the default. See [Transitions](/guide/transitions) for the full behavior.
+settings come from the `tweenDefault` of `options`, and any setting it leaves out takes the built-in default. See
+[Transitions](/guide/transitions) for the full behavior.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
 | `callback` | `(from: T, to: T, current: T, alpha: number) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
-| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The easing, duration, and speed of this connection. Each field left out is inherited from the handler. |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
 
 **Returns**
 
@@ -220,7 +221,59 @@ settings come from `options`, and any setting it leaves out comes from the handl
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onTransition callback must be a function` |
-| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as the handler's [`onTransition`](/guide/rules#errors) option, such as `onTransition easing must be a known easing name` |
+| <Badge type="danger" text="Error" /> | `options` is invalid | See [`TransitionOptions`](/guide/transitions#transitionoptions), such as `onTransition easing must be a known easing name` |
+
+### animate <Badge type="tip" text="Added in 0.4.0" />
+
+```luau
+Handler.animate(
+    options: TransitionOptions? -- Tween settings for this connection only
+) -> (Sources<T>, Disconnect)
+```
+
+Returns a Vide source for every field, and the sources follow the transition. It is
+[`onTransition`](#ontransition) in the form Vide expects: `onTransition` pushes each frame into a callback
+that you write, while `animate` gives you sources to bind to properties, so Vide updates them for you. Both are
+the same transition underneath, with the same tween, the same options, and the same behavior for
+non-animatable fields. They differ only in how you receive the value.
+
+```luau
+const animated = handler.animate({
+    tweenDefault = {
+        duration = 0.2,
+        easing = "quadOut",
+    },
+})
+
+create "Frame" {
+    BackgroundTransparency = animated.transparency,
+}
+```
+
+The sources start at the values of the current state. They are separate from [`sources`](#sources), which
+switch to the next state at once and are not animated, and writing to them does nothing to the handler. Every
+call opens its own connection with its own tween, so call it once for each animation you need, not once for each
+property. Pause, [`scaleSpeed`](#scalespeed), and [`finish`](#finish) act on it like on any other connection. After
+[`destroy`](#destroy) the sources keep their last value.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`Sources`](#sources)`<T>` | One animated source for each field, with the same keys as the handler's `sources`. |
+| [`Disconnect`](#disconnect) | Call it to stop the sources from following. They keep their last value. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition), such as `onTransition easing must be a known easing name` |
 
 ### pause <Badge type="tip" text="Added in 0.2.0" />
 
@@ -417,17 +470,12 @@ component: `Vide.cleanup(handler.destroy)`.
 
 ## Types
 
-### HandlerOptions <Badge type="tip" text="Added in 0.1.0" />
+### HandlerOptions <Badge type="tip" text="Added in 0.1.0" /> <Badge type="danger" text="Removed in 0.4.0" />
 
-```luau
-type HandlerOptions = {
-    onTransition: TransitionOptions? -- Default tween settings of every onTransition connection
-}
-```
-
-| Field | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `onTransition` | [`TransitionOptions`](/guide/transitions#transitionoptions) | No | Linear easing, `0.25` seconds, speed `1`, no delay | The default easing, duration, speed, and delay of the handler's transition connections. A connection can override them. An invalid value raises an error when the handler is created. |
+A handler no longer takes options, so the type is gone. `rule.new` has only the states and the initial state, and the
+tween settings are passed to [`onTransition`](#ontransition) and [`animate`](#animate) instead, inside `tweenDefault`.
+Move `onTransition = { duration = 0.2 }` from the handler options to
+`handler.onTransition(callback, { tweenDefault = { duration = 0.2 } })`.
 
 ### Handler <Badge type="tip" text="Added in 0.1.0" />
 
@@ -440,6 +488,7 @@ type Handler<T> = {
     onEnter: (stateName: string, callback: OnEnterCallback) -> Disconnect,
     onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
+    animate: (options: TransitionOptions?) -> (Sources<T>, Disconnect),
     pause: () -> (),
     resume: () -> (),
     onPause: (callback: OnPauseCallback) -> Disconnect,

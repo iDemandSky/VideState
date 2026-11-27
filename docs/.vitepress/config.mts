@@ -5,8 +5,10 @@ export default defineConfig({
   title: "VideState",
   description: "A Roblox Vide source state handler.",
   base: '/VideState/',
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/VideState/favicon.svg' }]],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    logo: { light: '/logo-light.svg', dark: '/logo-dark.svg' },
     nav: [
       { text: 'Home', link: '/' },
       { text: 'About', link: '/introduction/about' },

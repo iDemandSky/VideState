@@ -7,6 +7,7 @@ Project rules and design notes live in `.claude/instructions/`, not here. Keep t
 @instructions/overview.md
 @instructions/status.md
 @instructions/decisions.md
+@instructions/dependencies.md
 @instructions/handlers.md
 @instructions/schemas.md
 @instructions/git.md

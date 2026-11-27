@@ -5,24 +5,34 @@ user settles a new one.
 
 ## Transitions
 
-- **Each `onTransition` connection has its own tween.** Handler options are the defaults, and a connection can pass its
-  own options to override each setting. The user wanted different settings per animated component.
+- **Each `onTransition` connection has its own tween.** The settings go in the connection's `tweenDefault`, and a handler
+  takes no options. 0.2.0 had handler options as the defaults, and 0.4.0 removed them. The user wanted different settings
+  per animated component, and found defaults on the handler confusing and extra lines to write.
 - **An interrupted transition continues from its current value.** When `setState` runs before a transition ends, the new
   tween starts from the last value that connection sent, not from the previous state's values. It builds a new tween
-  from that value instead of retargeting the old Ripple tweens, because the animatable fields can differ between
+  from that value instead of retargeting the old tweens, because the animatable fields can differ between
   transitions. The callback's `from` is still the previous state's values.
 - **`pause` acts on the whole handler.** `setState` while paused sends the first frame and holds it until `resume`. A
   connection's own `speed` source of `0` pauses only that connection and does not fire `onPause`.
 - **`resume` and `onResume` exist** because a `pause` with no way back would leave transitions stuck.
 - **The events pass `startedAt`,** the `os.clock()` time the most recent transition started. Before any transition, it
   is the time of the call.
+- **Tween settings are chosen per state pair, and a handler takes no options (built in 0.4.0).** `rule.new(states,
+  initialState)` has no third argument. The tween options go to `onTransition` and `animate`: `tweenDefault = {
+  duration, easing, speed, delay }`, and `tweenOverrides`, an array of entries `{ from = { names }, to = { names },
+  tween = { ... } }`. A side that is left out means every state. Any overlap between entries raises one batched error
+  when the call is made, so the array order never matters. The order for a setting is the matching entry, then
+  `tweenDefault`, then the built-in default (0.25 s, linear). The speed is `(duration / localSpeed) / globalSpeed`, as
+  now. A third argument to `new` raises an error that says where the settings moved. The user chose it over handler
+  defaults because it is simpler to read and cheaper. A sketch is in the artifact the user was shown.
+- **No per-field tween settings.** A source cannot be tweened on its own, and one `alpha` would have no meaning with
+  several durations. A different tween for one field is another `animate` call.
 - **`scaleSpeed` keeps its scale for every following transition by default.** `once = true` limits it to the running transition, and the next `setState` resets it. The kept scale is a separate base scale that multiplies with the once scale. The user chose `once` as the option name and `false` as its default. It multiplies each
   connection's own speed. It was called `fastForward` in 0.2.0 and renamed because a scale below 1 slows it down. It is not called `snapTransition`, because "snap" suggests an instant jump.
 - **`finish` is the instant jump.** It sends the last frame before it returns, and works while paused.
 - **`onFinish` fires once per transition,** when the last connection ends and at least one reached its end. A
   transition that a newer `setState` replaces never finishes.
-- **No `animated` sources.** Derived sources that follow the tween were proposed and dropped, because `onTransition`
-  already covers it.
+- **`handler.animate` returns the animatable sources of a transition.** An earlier decision dropped derived sources because `onTransition` already covers it. The user reopened it: `animate` is `onTransition` in the form Vide expects, a source for every field instead of a callback, so a property binds to it directly. It is a thin layer over one `onTransition` connection, so it takes the same options and has no tween code of its own. It returns `(sources, disconnect)`, and the sources are independent of `handler.sources`.
 - **`setState` takes `{ instant = true }`,** which runs the transition with a duration of 0: one frame with the next
   values and an alpha of 1, and `onFinish` still runs.
 - **`onExit` runs first, then `onEnter`, `onChange`, and the transition.** The callbacks receive the other state's name.
@@ -31,6 +41,13 @@ user settles a new one.
   going until the newer one ends.
 - **`destroy` stops transitions silently** (no last frame, no `onFinish`), removes every listener, releases waiting
   threads, and makes `setState` raise an error. The other functions do nothing afterwards.
+- **VideState tweens values itself, and Ripple is no longer a dependency.** The user asked for it after a measurement
+  showed that Ripple's tween was about 45% of the time of one connection's step. The shared frame step blends every
+  field and the alpha with one eased progress, picks each field's blend once when the tween is made, and has no
+  signals. It is 20 to 30% faster per connection, with the same values: parity tests against Ripple passed for all
+  19 easings and the value types before Ripple was removed. The easing curves and the Oklab conversion in
+  `Transition/Tween/` carry the notices of Ripple (MIT) and Oklab (MIT). The user dropped the spring option, which
+  would have used Ripple's springs.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
 
@@ -73,8 +90,12 @@ user settles a new one.
 
 ## Schemas
 
-- **No 3D schemas,** such as `Vector3`. VideState is for 2D UI. 2D types such as `NumberSequence` or `ColorSequence`
-  are still open.
+- **No 3D schemas,** such as `Vector3`. VideState is for 2D UI. The 2D types `NumberRange`, `NumberSequence`, and `ColorSequence` were added.
+- **Sequences are tweened only when their keypoint counts match.** The user accepted this: with different counts there
+  is no pairing, so the value switches at the start like a string. A `NumberRange` tweens its minimum and maximum and is
+  clamped so the minimum never passes the maximum, because an overshooting easing could break it. A sequence keeps its
+  first time at 0 and its last at 1 and keeps the others in order. Each is blended in
+  `Transition/Tween/Composite.luau`.
 
 ## Code and tooling
 

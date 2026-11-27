@@ -4,6 +4,13 @@ const VideState = require("@VideState")
 
 local describe, it, expect = Lest.describe, Lest.it, Lest.expect
 
+-- Long, because Studio's first frame can take over a second and would end a short transition early.
+const LONG = {
+    tweenDefault = {
+        duration = 5,
+    },
+}
+
 const function createHandler(name: string, tags: { string }?)
     return VideState.rule({
         opacity = VideState.float(),
@@ -13,11 +20,7 @@ const function createHandler(name: string, tags: { string }?)
     }).new({
         Idle = { opacity = Vide.source(0) },
         Active = { opacity = Vide.source(1) },
-    }, "Idle", {
-        onTransition = {
-            duration = 1,
-        },
-    })
+    }, "Idle")
 end
 
 -- A handler whose rule has the states Idle and Closed, instead of Idle and Active.
@@ -42,11 +45,11 @@ describe("every handler", function()
 
         first.onTransition(function(_, _, _, frameAlpha)
             firstAlpha = frameAlpha
-        end)
+        end, LONG)
 
         second.onTransition(function(_, _, _, frameAlpha)
             secondAlpha = frameAlpha
-        end)
+        end, LONG)
 
         first.setState("Active")
         task.wait(0.1)
@@ -79,7 +82,7 @@ describe("every handler", function()
 
         handler.onTransition(function(_, _, _, frameAlpha)
             alpha = frameAlpha
-        end)
+        end, LONG)
 
         VideState.everyHandler.scaleSpeed({ speed = 0.5 })
         handler.scaleSpeed({ speed = 0.5 })
@@ -100,11 +103,11 @@ describe("every handler", function()
 
         first.onTransition(function(_, _, _, frameAlpha)
             firstAlpha = frameAlpha
-        end)
+        end, LONG)
 
         second.onTransition(function(_, _, _, frameAlpha)
             secondAlpha = frameAlpha
-        end)
+        end, LONG)
 
         first.setState("Active")
         second.setState("Active")
@@ -158,11 +161,11 @@ describe("every handler", function()
         end)
 
         -- A handler only finishes a transition that has a connection.
-        first.onTransition(function() end)
+        first.onTransition(function() end, LONG)
 
         second.onTransition(function(_, _, _, frameAlpha)
             secondAlpha = frameAlpha
-        end)
+        end, LONG)
 
         first.setState("Active")
         second.setState("Active")
@@ -196,11 +199,11 @@ describe("every handler", function()
 
         menu.onTransition(function(_, _, _, frameAlpha)
             menuAlpha = frameAlpha
-        end)
+        end, LONG)
 
         hud.onTransition(function(_, _, _, frameAlpha)
             hudAlpha = frameAlpha
-        end)
+        end, LONG)
 
         menu.setState("Active")
         hud.setState("Active")
@@ -299,8 +302,8 @@ describe("every handler", function()
         local running = createHandler("EveryReadRunningPanel", { "EveryReadTag" })
         local idle = createHandler("EveryReadIdlePanel", { "EveryReadTag", "EveryReadIdle" })
 
-        running.onTransition(function() end)
-        idle.onTransition(function() end)
+        running.onTransition(function() end, LONG)
+        idle.onTransition(function() end, LONG)
 
         const tagged = VideState.everyHandler.withTags("EveryReadTag")
 

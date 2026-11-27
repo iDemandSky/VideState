@@ -10,6 +10,6 @@
   >
   > The message.
   ```
-- Keep a link's text to the name itself. Write `` [`onTransition`](#handleroptions) option ``, not
-  `` [`onTransition` option](#handleroptions) ``, because the code and the plain word render in different formats.
+- Keep a link's text to the name itself. Write `` [`tweenDefault`](#transitionoptions) setting ``, not
+  `` [`tweenDefault` setting](#transitionoptions) ``, because the code and the plain word render in different formats.
 - The docs site deploys from `main` only. See [release.md](release.md).
