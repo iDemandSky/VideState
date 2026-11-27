@@ -75,32 +75,32 @@ export type Design = {
     Disabled: Look,
 }
 
-local Default: Design = {
-    Idle = {
-        backgroundColor = Color3.fromRGB(60, 60, 70),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Hovered = {
-        backgroundColor = Color3.fromRGB(80, 80, 95),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 20,
-    },
-    Pressed = {
-        backgroundColor = Color3.fromRGB(40, 40, 50),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Disabled = {
-        backgroundColor = Color3.fromRGB(35, 35, 35),
-        textColor = Color3.fromRGB(120, 120, 120),
-        textSize = 18,
+local Designs: { [string]: Design } = {
+    Default = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(60, 60, 70),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(80, 80, 95),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 20,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(40, 40, 50),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(35, 35, 35),
+            textColor = Color3.fromRGB(120, 120, 120),
+            textSize = 18,
+        },
     },
 }
 
-return {
-    Default = Default,
-}
+return Designs
 ```
 
 :::

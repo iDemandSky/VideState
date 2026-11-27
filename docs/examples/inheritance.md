@@ -37,14 +37,14 @@ Every button requires it by that name, so there is still one definition.
 
 Each design is a table of type `Design`. It has the same states as the default design, with different values,
 so every design works with the same `createButton`. Add the two designs below to the **`ButtonDesigns`** ModuleScript,
-above its `return`.
+above its `return Designs`.
 
 The primary design is blue. Its text grows by two points when hovered, like the default design:
 
 ::: code-group
 
 ```luau [ReplicatedStorage/ButtonDesigns.luau]
-local Primary: Design = {
+Designs.Primary = {
     Idle = {
         backgroundColor = Color3.fromRGB(60, 120, 230),
         textColor = Color3.fromRGB(255, 255, 255),
@@ -76,7 +76,7 @@ property and not only in colors:
 ::: code-group
 
 ```luau [ReplicatedStorage/ButtonDesigns.luau]
-local Danger: Design = {
+Designs.Danger = {
     Idle = {
         backgroundColor = Color3.fromRGB(200, 60, 60),
         textColor = Color3.fromRGB(255, 255, 255),
@@ -102,19 +102,8 @@ local Danger: Design = {
 
 :::
 
-Then list them in its `return`, so a component picks a design by name:
-
-::: code-group
-
-```luau [ReplicatedStorage/ButtonDesigns.luau]
-return {
-    Default = Default,
-    Primary = Primary,
-    Danger = Danger,
-}
-```
-
-:::
+Each one is stored in `Designs` by name, so a component picks a design with `ButtonDesigns.Primary` or
+`ButtonDesigns.Danger`.
 
 ## 3. Build the menu
 
