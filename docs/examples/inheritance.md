@@ -36,74 +36,103 @@ Every button requires it by that name, so there is still one definition.
 ## 2. Add the designs
 
 Each design is a table of type `Design`. It has the same states as the default design, with different values,
-so every design works with the same `createButton`. Add the two designs below to the **`ButtonDesigns`** ModuleScript,
-above its `return Designs`.
+so every design works with the same `createButton`. Replace the **`ButtonDesigns`** ModuleScript with the version below.
+It keeps the types and the default design, and adds two more.
 
-The primary design is blue. Its text grows by two points when hovered, like the default design:
-
-::: code-group
-
-```luau [ReplicatedStorage/ButtonDesigns.luau]
-Designs.Primary = {
-    Idle = {
-        backgroundColor = Color3.fromRGB(60, 120, 230),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Hovered = {
-        backgroundColor = Color3.fromRGB(80, 140, 250),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 20,
-    },
-    Pressed = {
-        backgroundColor = Color3.fromRGB(40, 95, 190),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Disabled = {
-        backgroundColor = Color3.fromRGB(70, 80, 100),
-        textColor = Color3.fromRGB(150, 150, 150),
-        textSize = 18,
-    },
-}
-```
-
-:::
-
-The danger design is red. Its text does not grow on hover, which shows that designs can differ in any
-property and not only in colors:
+The primary design is blue. Its text grows by two points when hovered, like the default design. The danger design is
+red. Its text does not grow on hover, which shows that designs can differ in any property and not only in colors.
 
 ::: code-group
 
 ```luau [ReplicatedStorage/ButtonDesigns.luau]
-Designs.Danger = {
-    Idle = {
-        backgroundColor = Color3.fromRGB(200, 60, 60),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
+export type Look = {
+    backgroundColor: Color3,
+    textColor: Color3,
+    textSize: number,
+}
+
+export type Design = {
+    Idle: Look,
+    Hovered: Look,
+    Pressed: Look,
+    Disabled: Look,
+}
+
+local Designs: { [string]: Design } = {
+    Default = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(60, 60, 70),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(80, 80, 95),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 20,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(40, 40, 50),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(35, 35, 35),
+            textColor = Color3.fromRGB(120, 120, 120),
+            textSize = 18,
+        },
     },
-    Hovered = {
-        backgroundColor = Color3.fromRGB(225, 85, 85),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
+    Primary = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(60, 120, 230),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(80, 140, 250),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 20,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(40, 95, 190),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(70, 80, 100),
+            textColor = Color3.fromRGB(150, 150, 150),
+            textSize = 18,
+        },
     },
-    Pressed = {
-        backgroundColor = Color3.fromRGB(160, 40, 40),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Disabled = {
-        backgroundColor = Color3.fromRGB(90, 60, 60),
-        textColor = Color3.fromRGB(150, 150, 150),
-        textSize = 18,
+    Danger = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(200, 60, 60),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(225, 85, 85),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(160, 40, 40),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(90, 60, 60),
+            textColor = Color3.fromRGB(150, 150, 150),
+            textSize = 18,
+        },
     },
 }
+
+return Designs
 ```
 
 :::
 
-Each one is stored in `Designs` by name, so a component picks a design with `ButtonDesigns.Primary` or
-`ButtonDesigns.Danger`.
+A component picks a design by name, with `ButtonDesigns.Primary`, `ButtonDesigns.Danger`, or `ButtonDesigns.Default`.
 
 ## 3. Build the menu
 
