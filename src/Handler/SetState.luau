@@ -3,6 +3,7 @@ const Vide = require("../../packages/roblox/Vide")
 const Types = require("../Types")
 const Validation = require("../Validation")
 const ReducedMotion = require("../ReducedMotion")
+const Transitions = require("../Transitions")
 
 -- Keys allowed in the options of `setState`.
 const OPTION_KEYS: { [string]: boolean } = {
@@ -47,6 +48,7 @@ return function <T>(
     readState: (stateName: string) -> T,
     isDestroyed: () -> boolean,
     currentState: Vide.Source<string>,
+    transitionRules: Transitions.Rules?,
     emitStateEvents: (previousState: string, nextState: string) -> (),
     emitChange: Types.StateEmitter<T>,
     emitTransition: Types.StartTransition<T>
@@ -65,6 +67,15 @@ return function <T>(
 
         if currentStateName == stateName then
             return
+        end
+
+        if not Transitions.canChange(transitionRules, currentStateName, stateName) then
+            const rules = transitionRules :: Transitions.Rules
+
+            error(
+                `cannot change state from "{currentStateName}" to "{stateName}". Allowed: {Transitions.describeAllowed(rules, currentStateName)}`,
+                2
+            )
         end
 
         local currentValues = readState(currentStateName)

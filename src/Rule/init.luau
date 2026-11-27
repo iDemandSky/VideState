@@ -3,6 +3,7 @@ const Validation = require("./Validation")
 const Handler = require("./Handler")
 const Info = require("./Info")
 const Table = require("./Schemas/Primitives/Table")
+const Transitions = require("./Transitions")
 
 type Infer<S> = Types.Infer<S>
 type States<S> = { [string]: Types.Sources<Infer<S>> }
@@ -36,6 +37,8 @@ end
 return function <Fields>(fields: Fields, metadata: RuleMetadata)
     local schema = Table(fields)
     Validation.schema(schema)
+    -- A mistake in the transitions is raised when the rule is made. The handler checks them against its own states.
+    Transitions.parse(metadata.allowedTransitions, metadata.allowedStateNames, "the rule")
     Info.register(metadata)
 
     const ruleName = metadata.name
@@ -103,7 +106,14 @@ return function <Fields>(fields: Fields, metadata: RuleMetadata)
                 error("new takes only the states and the initial state. Pass tweenDefault to onTransition or animate instead", 2)
             end
 
-            return Handler(schema, states, initialState, metadata.allowedStateNames, metadata.name)
+            return Handler(
+                schema,
+                states,
+                initialState,
+                metadata.allowedStateNames,
+                metadata.name,
+                metadata.allowedTransitions
+            )
         end,
     })
 end

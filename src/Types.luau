@@ -129,7 +129,7 @@ export type EveryHandlerGroup = {
     read finish: () -> (),
     --- Calls `destroy` on every handler in scope.
     read destroy: () -> (),
-    --- Changes the state of every handler in scope. If any lacks the state, one error lists them and none changes.
+    --- Changes the state of every handler in scope. If any lacks the state, or its rule does not let it change to the state, one error lists them and none changes.
     read setState: (stateName: string, options: SetStateOptions?) -> (),
     --- How many handlers are in scope.
     read count: () -> number,
@@ -200,6 +200,8 @@ export type RuleMetadata<S> = {
     tags: { string }?,
     --- If none, then all state names are allowed
     allowedStateNames: { S }?,
+    --- For a state, the only states it can change to. A state that is not listed can change to any state. `setState` raises an error for a change that is not listed.
+    allowedTransitions: { [S]: { S } }?,
 }
 
 return table.freeze({})

@@ -176,6 +176,39 @@ const function describeMissing(members: { Registry.Member }, stateName: string):
     return total, table.concat(parts, ", ")
 end
 
+-- Counts the handlers whose rule does not let them change to the state, and lists their rules with how many handlers
+-- each has. A handler that lacks the state is not counted here, because it is reported on its own.
+const function describeBlocked(members: { Registry.Member }, stateName: string): (number, string)
+    local counts: { [string]: number } = {}
+    local ruleNames: { string } = {}
+    local total = 0
+
+    for _, member in members do
+        const entry = member.entry
+        const isBlocked = entry.hasState(stateName) and not entry.canChangeTo(stateName)
+
+        if isBlocked then
+            if counts[entry.ruleName] == nil then
+                counts[entry.ruleName] = 0
+                table.insert(ruleNames, entry.ruleName)
+            end
+
+            counts[entry.ruleName] += 1
+            total += 1
+        end
+    end
+
+    table.sort(ruleNames)
+
+    local parts: { string } = {}
+
+    for _, ruleName in ruleNames do
+        table.insert(parts, `{ruleName} ({counts[ruleName]})`)
+    end
+
+    return total, table.concat(parts, ", ")
+end
+
 -- Whether a handler is in scope. The state is read from the handler only when a state filter needs it.
 const function isInScope(scope: Scope, entry: Registry.Entry): boolean
     for tag in scope.tags do
@@ -280,6 +313,15 @@ const function createGroup(scope: Scope): Types.EveryHandlerGroup
         if missing > 0 then
             error(
                 `everyHandler.setState state "{stateName}" is missing in {missing} handlers: {description}. No handler changed state`,
+                0
+            )
+        end
+
+        const blocked, blockedDescription = describeBlocked(found, stateName)
+
+        if blocked > 0 then
+            error(
+                `everyHandler.setState cannot change to state "{stateName}" in {blocked} handlers: {blockedDescription}. No handler changed state`,
                 0
             )
         end

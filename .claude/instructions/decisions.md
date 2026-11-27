@@ -61,6 +61,11 @@ user settles a new one.
 - **`setReducedMotion` makes every `setState` instant.** It is global, affects only state changes that start after it
   is called, and a connection cannot opt out.
 
+- **`allowedTransitions` limits state changes per rule.** It maps a state to the only states it can change to, and a state
+  that is not listed is free. A blocked `setState` raises an error and changes nothing. The rule checks the names against
+  `allowedStateNames` when it is made, and each handler checks them against its own states. `everyHandler.setState`
+  checks every handler first, like a missing state.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`

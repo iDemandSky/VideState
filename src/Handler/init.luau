@@ -3,6 +3,7 @@ const TypedCore = require("../packages/luau/TypedCore")
 
 const Types = require("./Types")
 const Validation = require("./Validation")
+const Transitions = require("./Transitions")
 const DebugRegistry = require("./Debug/Registry")
 const EveryRegistry = require("./Every/Registry")
 const EveryScale = require("./Every/Scale")
@@ -36,7 +37,8 @@ return function <S>(
     states: { [string]: Sources<TypedCore.infer<S>> },
     initialState: string,
     allowedStateNames: { string }?,
-    ruleName: string
+    ruleName: string,
+    allowedTransitions: { [string]: { string } }?
 )
     type Values = TypedCore.infer<S>
 
@@ -65,6 +67,8 @@ return function <S>(
     end
 
     table.sort(stateNames)
+
+    const transitionRules = Transitions.parse(allowedTransitions, stateNames, "the handler")
 
     -- The transitions of the handler share this state, and the features below act on it.
     local state = TransitionState.create<<Values>>()
@@ -122,6 +126,7 @@ return function <S>(
             return destroyed
         end,
         currentState,
+        transitionRules,
         stateEvents.emit,
         change.emit,
         transition.emit
@@ -179,6 +184,9 @@ return function <S>(
         inspect = inspect,
         hasState = function(stateName: string): boolean
             return validatedStates[stateName] ~= nil
+        end,
+        canChangeTo = function(stateName: string): boolean
+            return Transitions.canChange(transitionRules, currentState(), stateName)
         end,
     })
 

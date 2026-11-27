@@ -18,6 +18,8 @@ export type Entry = {
     inspect: () -> Types.DebugSnapshot,
     -- Whether the handler has a state with this name.
     hasState: (stateName: string) -> boolean,
+    -- Whether the rule of the handler lets it change from its current state to this one.
+    canChangeTo: (stateName: string) -> boolean,
 }
 
 -- A handler together with what the filters read about it.

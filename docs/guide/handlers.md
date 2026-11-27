@@ -76,6 +76,7 @@ it to set the first layout of a component, or to snap it back without an animati
 | <Badge type="danger" text="Error" /> | `options.instant` is not a boolean | `setState instant must be a boolean` |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `state name must be a string, got <type>` |
 | <Badge type="danger" text="Error" /> | The state name is unknown | `unknown state "<state>"` |
+| <Badge type="danger" text="Error" /> | The rule's [`allowedTransitions`](/guide/rules#allowed-state-changes) do not let the active state change to it | `cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
 | <Badge type="danger" text="Error" /> | The state's values no longer match the schema | `Invalid state "<state>":` followed by the schema issues |
 
 A failed `setState` leaves the handler unchanged.

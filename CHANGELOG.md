@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `allowedTransitions` in the rule metadata limits which states a state can change to, so `setState` raises one clear
+  error for a change that is not allowed. `everyHandler.setState` checks it for every handler first.
 - `handler.progress(options)` returns a Vide source for the alpha of a transition, so a progress bar or a ring can bind
   to it directly. It takes the same options as `onTransition`.
 - `VideState.bezier(x1, y1, x2, y2)` and `VideState.easing(fn)` make an easing of your own for `easing`, such as a curve

@@ -350,6 +350,7 @@ VideState.everyHandler.setState("Closed")
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `everyHandler.setState state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | The rule of one or more handlers does not let them change to the state | `everyHandler.setState cannot change to state "<stateName>" in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 | <Badge type="danger" text="Error" /> | One or more handlers in scope lack the state | `everyHandler.setState state "<stateName>" is missing in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 
 An invalid `options` raises the errors of the handler's [`setState`](/guide/handlers#setstate).
