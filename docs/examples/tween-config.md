@@ -42,8 +42,11 @@ const tweenOverrides: { VideState.TweenOverride } = {
     },
 }
 
--- The names of `names` that the component has. `nil` means every state, so it stays `nil`.
-const function filterNames(names: { string }?, states: { [string]: any }): { string }?
+-- The names that the component has. `nil` means every state, so it stays `nil`.
+const function filterNames(
+    names: { string }?,
+    states: { [string]: any }
+): { string }?
     if names == nil then
         return nil
     end
@@ -59,9 +62,13 @@ const function filterNames(names: { string }?, states: { [string]: any }): { str
     return kept
 end
 
--- Whether some state in `from` and a different state in `to` exist, so the entry can match a state change.
--- A side that is `nil` stands for every state of the component.
-const function matchesChange(from: { string }?, to: { string }?, states: { [string]: any }): boolean
+-- Whether the entry can match a state change: some state in `from` and a
+-- different state in `to`. A side that is `nil` stands for every state.
+const function matchesChange(
+    from: { string }?,
+    to: { string }?,
+    states: { [string]: any }
+): boolean
     local fromNames = from or {}
     local toNames = to or {}
 
@@ -89,8 +96,9 @@ const function matchesChange(from: { string }?, to: { string }?, states: { [stri
 end
 
 -- Builds the options for one component. Pass it the states you give to `rule.new`.
--- A handler only accepts the states it has, so this drops the override names the component does not use,
--- and the entries that no longer match a state change. That lets one module serve components with different states.
+-- A handler only accepts the states it has, so this drops the override names
+-- the component does not use, and the entries that no longer match a state
+-- change. That lets one module serve components with different states.
 const function forStates(states: { [string]: any }): VideState.TransitionOptions
     local kept: { VideState.TweenOverride } = {}
 
