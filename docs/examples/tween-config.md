@@ -13,23 +13,29 @@ that file.
 ## The module
 
 Create a ModuleScript named **`TweenConfig`** in `ReplicatedStorage`, so components load it with
-`require(ReplicatedStorage.TweenConfig)`. It returns the options that `animate` and `onTransition` take.
+`require(ReplicatedStorage.TweenConfig)`. It returns two tables, `default` and `overrides`, that a component passes to
+`animate` and `onTransition` as `tweenDefault` and `tweenOverrides`.
 
 ::: code-group
 
 ```luau [ReplicatedStorage/TweenConfig.luau]
 const VideState = require("@VideState")
 
-const config: VideState.TransitionOptions = {
+type Config = {
+    default: VideState.TweenSettings,
+    overrides: { VideState.TweenOverride },
+}
+
+const config: Config = {
     -- The tween settings of every state change that no override matches.
-    tweenDefault = {
+    default = {
         duration = 0.15,
         easing = "quadOut",
     },
 
     -- Tween settings for particular state changes.
     -- `from` and `to` name states. A side that is left out means every state.
-    tweenOverrides = {
+    overrides = {
         {
             -- Pressing is quick and sharp.
             from = { "Idle", "Hovered" },
@@ -54,7 +60,7 @@ that have them, such as the rule below.
 
 ## Use it in a component
 
-A component requires the module and passes it to `animate`. It has no tween numbers of its own. This rule has the
+A component requires the module and passes its two tables to `animate`. It has no tween numbers of its own. This rule has the
 four states the config names, and each state holds a Vide source for each property:
 
 ::: code-group
@@ -79,7 +85,10 @@ const handler = ButtonRule.new({
     Disabled = { backgroundColor = Vide.source(Color3.fromRGB(35, 35, 35)) },
 }, "Idle")
 
-const animated = handler.animate(TweenConfig)
+const animated = handler.animate({
+    tweenDefault = TweenConfig.default,
+    tweenOverrides = TweenConfig.overrides,
+})
 
 const button = Vide.create "TextButton" {
     BackgroundColor3 = animated.backgroundColor,
@@ -89,5 +98,5 @@ const button = Vide.create "TextButton" {
 :::
 
 `handler.setState("Pressed")` now fades over 0.05 seconds and `handler.setState("Disabled")` over 0.5 seconds. Every
-other handler of `ButtonRule` makes the same `animate(TweenConfig)` call and fades the same way. See
+other handler of `ButtonRule` makes the same `animate` call and fades the same way. See
 [Components](/examples/components) for a complete button.
