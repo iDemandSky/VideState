@@ -28,6 +28,8 @@ VideState change their properties whenever the state changes.
   plus `count`, `isAnyRunning`, and `isAnyPaused`. Chain `withTags`, `withRule`, and `withStates`, or their `without` forms, to pick the handlers.
 - **Cleanup** with `destroy`.
 - **Debug tools**: `VideState.debug` lists tracked handlers, and its `view` is a Vide component.
+- **Testing**: a manual clock (`setManualClock`, `advanceClock`) steps transitions by exact times.
+- **Accessibility**: `setReducedMotion(true)` makes every state change instant.
 
 ## Install
 

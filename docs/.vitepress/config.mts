@@ -33,7 +33,8 @@ export default defineConfig({
           { text: 'Transitions', link: '/guide/transitions' },
           { text: 'Every handler', link: '/guide/every-handler' },
           { text: 'Info (debugging)', link: '/guide/info' },
-          { text: 'Debug view', link: '/guide/debug' }
+          { text: 'Debug view', link: '/guide/debug' },
+          { text: 'Testing', link: '/guide/testing' }
         ]
       },
       {

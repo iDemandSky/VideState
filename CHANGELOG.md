@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `VideState.setManualClock(enabled)`, `VideState.isManualClock()`, and `VideState.advanceClock(seconds)` step every
+  transition by hand, so a test checks the values at exact times.
 - `VideState.extend(base, extraFields, metadata)` makes a new rule from a base rule, with its fields, state names,
   transitions, and tags, and the ones you add. The base rule does not change.
 - `setState(name, { delay = seconds })` delays the first frame of one state change, and `everyHandler.setState(name,

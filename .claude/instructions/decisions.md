@@ -77,6 +77,10 @@ user settles a new one.
   State names and tags are joined, and the extension's transitions replace the base list for the same state. A rule
   keeps `_fields` and `_metadata` for it.
 
+- **Tests step transitions with a manual clock.** `setManualClock(true)` stops the shared loop, and `advanceClock(seconds)`
+  steps every job once with that delta, scaled like a real frame. The loop lives in `Transition/Loop.luau` so the clock
+  can reach it. The clock is global, and turning it off hands running transitions back to real frames.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`

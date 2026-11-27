@@ -1,5 +1,6 @@
 const Types = require("@self/Types")
 const ReducedMotion = require("@self/ReducedMotion")
+const Clock = require("@self/Clock")
 const Custom = require("@self/Handler/Transition/Tween/Custom")
 
 export type Infer<S> = Types.Infer<S>
@@ -58,6 +59,11 @@ return table.freeze({
     -- REDUCED MOTION --
     setReducedMotion = ReducedMotion.set,
     isReducedMotion = ReducedMotion.get,
+
+    -- TESTING --
+    setManualClock = Clock.setManualClock,
+    isManualClock = Clock.isManualClock,
+    advanceClock = Clock.advanceClock,
 
     -- EVERY HANDLER --
     everyHandler = require("@self/Every"),

@@ -10,6 +10,9 @@ Whenever you add, edit, or delete a feature, update the documentation in the sam
 | `debug` | `src/Debug/` | `docs/guide/debug.md` |
 | `info` | `src/Info.luau` | `docs/guide/info.md` |
 | `everyHandler` | `src/Every/` | `docs/guide/every-handler.md` |
+| Manual clock | `src/Clock.luau` | `docs/guide/testing.md` |
+| Reduced motion, custom easing | `src/ReducedMotion.luau`, `Transition/Tween/Custom.luau` | `docs/guide/transitions.md` |
+| `extend` | `src/Rule/Extend.luau` | `docs/guide/rules.md` |
 
 - Also update any `docs/examples/` page and the README section that uses the changed API.
 - Public type changes in `src/Types.luau` go in the doc of the class they belong to.
