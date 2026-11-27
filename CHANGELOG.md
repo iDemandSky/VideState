@@ -11,6 +11,8 @@ version can contain breaking changes.
 
 ### Added
 
+- `handler.progress(options)` returns a Vide source for the alpha of a transition, so a progress bar or a ring can bind
+  to it directly. It takes the same options as `onTransition`.
 - `VideState.bezier(x1, y1, x2, y2)` and `VideState.easing(fn)` make an easing of your own for `easing`, such as a curve
   copied from a design tool. The `Easing` and `CustomEasing` types are exported.
 - `VideState.setReducedMotion(enabled)` and `VideState.isReducedMotion()`. While it is on, every `setState` is instant,

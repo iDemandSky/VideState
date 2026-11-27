@@ -275,6 +275,58 @@ property. Pause, [`scaleSpeed`](#scalespeed), and [`finish`](#finish) act on it 
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition), such as `onTransition easing must be a known easing name` |
 
+### progress <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+Handler.progress(
+    options: TransitionOptions? -- Tween settings for this connection
+) -> (Source<number>, Disconnect)
+```
+
+Returns a Vide source that holds the progress of the transition, so a progress bar or a ring can bind to it without a
+callback. It is [`onTransition`](#ontransition) in the form Vide expects, like [`animate`](#animate), but it follows only
+the [`alpha`](/guide/transitions#alpha). The source is `1` when no transition is running, goes from `0` to `1` during
+each state change, and stays at `1` when the transition ends.
+
+```luau
+const progress = handler.progress({
+    tweenDefault = {
+        duration = 2,
+    },
+})
+
+Vide.create "Frame" {
+    Size = function()
+        return UDim2.fromScale(progress(), 1)
+    end,
+}
+```
+
+It is a thin layer over one `onTransition` connection, so it takes the same options and has its own tween. An easing
+that overshoots, such as `back`, takes the alpha below `0` or above `1` in between, so clamp it with
+`math.clamp(progress(), 0, 1)` when a bar must stay inside its frame. [`finish`](#finish), [`pause`](#pause), and
+[`scaleSpeed`](#scalespeed) act on it like on any other connection. After [`destroy`](#destroy) the source keeps its last
+value.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `Source<number>` | The progress of the transition, from `0` to `1`. |
+| [`Disconnect`](#disconnect) | Call it to stop the source from following. It keeps its last value. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition) |
+
 ### pause <Badge type="tip" text="Added in 0.2.0" />
 
 ```luau
@@ -489,6 +541,7 @@ type Handler<T> = {
     onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
     animate: (options: TransitionOptions?) -> (Sources<T>, Disconnect),
+    progress: (options: TransitionOptions?) -> (Source<number>, Disconnect),
     pause: () -> (),
     resume: () -> (),
     onPause: (callback: OnPauseCallback) -> Disconnect,

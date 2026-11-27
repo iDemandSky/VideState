@@ -51,6 +51,16 @@ user settles a new one.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
 
+- **`handler.progress` returns one source for the alpha.** It is `onTransition` in the form Vide expects, like `animate`, so
+  it takes the same options and has its own tween. The source starts at 1 (no transition running) and the alpha is not
+  clamped, because an overshooting easing is part of the transition.
+- **A custom easing is a table made by `VideState.bezier` or `VideState.easing`, never a bare function.** `easing`
+  already accepts a Vide source, which is a function, so a function there would be ambiguous. The tables are frozen and
+  kept in a weak set, so only checked ones are accepted. `bezier` follows CSS `cubic-bezier`, with `x1` and `x2` in 0 to
+  1.
+- **`setReducedMotion` makes every `setState` instant.** It is global, affects only state changes that start after it
+  is called, and a connection cannot opt out.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`

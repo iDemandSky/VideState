@@ -19,6 +19,7 @@ export type OnEnterCallback = Types.OnEnterCallback
 export type OnExitCallback = Types.OnExitCallback
 export type TweenSettings = Types.TweenSettings
 export type TweenOverride = Types.TweenOverride
+export type Progress<T> = Types.Progress<T>
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
 export type CustomEasing = Types.CustomEasing

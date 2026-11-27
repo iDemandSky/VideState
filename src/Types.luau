@@ -80,6 +80,8 @@ export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number
 export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect
 --- Creates a Vide source for every field that follows one `onTransition` connection. A connection can pass options to override the tween settings of its handler. Returns the sources and a function that removes the connection.
 export type Animate<T> = (options: TransitionOptions?) -> (Sources<T>, Disconnect)
+--- Creates a Vide source for the alpha of one `onTransition` connection. It starts at 1 and goes from 0 to 1 during each transition. A connection can pass options to override the tween settings of its handler. Returns the source and a function that removes the connection.
+export type Progress<T> = (options: TransitionOptions?) -> (Source<number>, Disconnect)
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
 --- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
@@ -179,6 +181,7 @@ export type Handler<T> = {
     read onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     read onTransition: ConnectTransition<T>,
     read animate: Animate<T>,
+    read progress: Progress<T>,
     read pause: () -> (),
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,
