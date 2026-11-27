@@ -58,6 +58,10 @@ user settles a new one.
   already accepts a Vide source, which is a function, so a function there would be ambiguous. The tables are frozen and
   kept in a weak set, so only checked ones are accepted. `bezier` follows CSS `cubic-bezier`, with `x1` and `x2` in 0 to
   1.
+- **`VideState.spring(bounce)` is a spring-shaped easing, and the docs say it is not a real spring.** The user wanted a spring
+  after hearing the limits. It is a damped oscillator over the duration, with a fixed decay so it has settled when the
+  duration ends, and a bounce from 0 (critically damped) to 1. A real spring needs speed carried over an interrupted
+  transition, which does not fit the shared alpha of a tween group, so it was not built. The docs keep a warning box.
 - **`setReducedMotion` makes every `setState` instant.** It is global, affects only state changes that start after it
   is called, and a connection cannot opt out.
 
