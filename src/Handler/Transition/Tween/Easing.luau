@@ -18,6 +18,8 @@
 -- their result can leave 0 to 1 in between.
 
 const PI = math.pi
+const sin = math.sin
+const cos = math.cos
 const C1 = 1.70158
 const C2 = C1 * 1.525
 const C3 = C1 + 1
@@ -53,15 +55,15 @@ const function cubicInOut(x: number): number
 end
 
 const function sineIn(x: number): number
-    return 1 - math.cos((x * PI) / 2)
+    return 1 - cos((x * PI) / 2)
 end
 
 const function sineOut(x: number): number
-    return math.sin((x * PI) / 2)
+    return sin((x * PI) / 2)
 end
 
 const function sineInOut(x: number): number
-    return -(math.cos(PI * x) - 1) / 2
+    return -(cos(PI * x) - 1) / 2
 end
 
 const function expoIn(x: number): number
@@ -109,7 +111,7 @@ const function elasticIn(x: number): number
         return 1
     end
 
-    return -(2 ^ (10 * x - 10)) * math.sin((x * 10 - 10.75) * C4)
+    return -(2 ^ (10 * x - 10)) * sin((x * 10 - 10.75) * C4)
 end
 
 const function elasticOut(x: number): number
@@ -121,7 +123,7 @@ const function elasticOut(x: number): number
         return 1
     end
 
-    return (2 ^ (-10 * x)) * math.sin((x * 10 - 0.75) * C4) + 1
+    return (2 ^ (-10 * x)) * sin((x * 10 - 0.75) * C4) + 1
 end
 
 const function elasticInOut(x: number): number
@@ -134,10 +136,10 @@ const function elasticInOut(x: number): number
     end
 
     if x < 0.5 then
-        return -((2 ^ (20 * x - 10)) * math.sin((20 * x - 11.125) * C5)) / 2
+        return -((2 ^ (20 * x - 10)) * sin((20 * x - 11.125) * C5)) / 2
     end
 
-    return ((2 ^ (-20 * x + 10)) * math.sin((20 * x - 11.125) * C5)) / 2 + 1
+    return ((2 ^ (-20 * x + 10)) * sin((20 * x - 11.125) * C5)) / 2 + 1
 end
 
 return table.freeze({

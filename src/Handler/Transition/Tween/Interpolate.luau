@@ -2,6 +2,9 @@ const CanTween = require("./CanTween")
 const Color = require("./Color")
 const Composite = require("./Composite")
 
+-- Read once, so a frame does not look the function up again.
+const lerp = math.lerp
+
 -- Returns a function that blends from one value to the other for an eased progress. The type is looked up once, when
 -- the function is made, so a frame does not have to check it again.
 const function make(from: any, to: any): (number) -> any
@@ -27,17 +30,17 @@ const function make(from: any, to: any): (number) -> any
 
     if kind == "UDim" then
         return function(alpha: number): any
-            return UDim.new(math.lerp(from.Scale, to.Scale, alpha), math.lerp(from.Offset, to.Offset, alpha))
+            return UDim.new(lerp(from.Scale, to.Scale, alpha), lerp(from.Offset, to.Offset, alpha))
         end
     end
 
     if kind == "Rect" then
         return function(alpha: number): any
             return Rect.new(
-                math.lerp(from.Min.X, to.Min.X, alpha),
-                math.lerp(from.Min.Y, to.Min.Y, alpha),
-                math.lerp(from.Max.X, to.Max.X, alpha),
-                math.lerp(from.Max.Y, to.Max.Y, alpha)
+                lerp(from.Min.X, to.Min.X, alpha),
+                lerp(from.Min.Y, to.Min.Y, alpha),
+                lerp(from.Max.X, to.Max.X, alpha),
+                lerp(from.Max.Y, to.Max.Y, alpha)
             )
         end
     end
