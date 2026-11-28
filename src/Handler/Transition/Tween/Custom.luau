@@ -131,28 +131,99 @@ const DEFAULT_BOUNCE = 0.3
 -- The least damping ratio a spring gets. A bounce of 1 is this, so the curve still settles inside its duration.
 const LEAST_DAMPING = 0.2
 
--- A curve that looks like a damped spring: it starts at 0, passes 1, wobbles around it, and has settled at 1 by the
--- end. It is a curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier
--- transition, and it always ends when the duration does. `bounce` goes from 0, which settles smoothly without passing
--- 1, to 1, which wobbles the most.
-const function spring(bounce: number?): Types.CustomEasing
+-- The highest first peak a spring can have, as a fraction past the target. It is the overshoot of the least damping.
+const MAX_HEIGHT = 0.5
+
+const SPRING_KEYS: { [string]: boolean } = {
+    bounce = true,
+    height = true,
+}
+
+-- The damping ratio whose first peak is `height` past the target. An underdamped spring overshoots by
+-- e^(-pi * z / sqrt(1 - z^2)), and this solves that for z.
+const function dampingForHeight(height: number): number
+    const logHeight = math.log(height)
+
+    return -logHeight / math.sqrt(math.pi * math.pi + logHeight * logHeight)
+end
+
+-- Reads the options of `spring` and returns the damping ratio. 1 means critically damped, which does not wobble.
+const function readSpringDamping(options: unknown): number
+    if options == nil then
+        return 1 - (1 - LEAST_DAMPING) * DEFAULT_BOUNCE
+    end
+
+    if type(options) ~= "table" then
+        error("spring options must be a table", 3)
+    end
+
+    const fields = options :: { [any]: unknown }
+
+    for key in fields do
+        local isKnownKey = SPRING_KEYS[key :: any] == true
+
+        if not isKnownKey then
+            error(`spring options has an unknown key {tostring(key)}`, 3)
+        end
+    end
+
+    const bounce = fields.bounce
+    const height = fields.height
+
+    if bounce ~= nil and height ~= nil then
+        error("spring takes bounce or height, not both", 3)
+    end
+
+    if height ~= nil then
+        const heightMessage = `spring height must be a number above 0 and at most {MAX_HEIGHT}`
+
+        -- The type check comes first, because the range check compares the value as a number.
+        if type(height) ~= "number" then
+            error(heightMessage, 3)
+        end
+
+        local isAboveZero = height > 0
+        local isAtMost = height <= MAX_HEIGHT
+
+        if not (isAboveZero and isAtMost) then
+            error(heightMessage, 3)
+        end
+
+        return dampingForHeight(height)
+    end
+
     local amount = DEFAULT_BOUNCE
 
     if bounce ~= nil then
-        local isNumber = type(bounce) == "number"
-        local isInRange = isNumber and bounce >= 0 and bounce <= 1
+        const bounceMessage = "spring bounce must be a number from 0 to 1"
 
-        if not isInRange then
-            error("spring bounce must be a number from 0 to 1", 2)
+        if type(bounce) ~= "number" then
+            error(bounceMessage, 3)
         end
 
-        amount = bounce :: number
+        local isAtLeastZero = bounce >= 0
+        local isAtMostOne = bounce <= 1
+
+        if not (isAtLeastZero and isAtMostOne) then
+            error(bounceMessage, 3)
+        end
+
+        amount = bounce
     end
 
+    return 1 - (1 - LEAST_DAMPING) * amount
+end
+
+-- A curve that looks like a damped spring: it starts at 0, passes 1, wobbles around it, and has settled at 1 by the
+-- end. It is a curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier
+-- transition, and it always ends when the duration does. `bounce` goes from 0, which settles smoothly without passing
+-- 1, to 1, which wobbles the most. `height` sets how far the first peak passes 1 instead.
+const function spring(options: { bounce: number?, height: number? }?): Types.CustomEasing
+    const damping = readSpringDamping(options)
     const decay = SPRING_DECAY
 
-    -- A bounce of 0 is critically damped, which has no wobble.
-    if amount == 0 then
+    -- A damping ratio of 1 is critically damped, which has no wobble.
+    if damping >= 1 then
         return make(function(progress: number): number
             if progress <= 0 then
                 return 0
@@ -166,8 +237,7 @@ const function spring(bounce: number?): Types.CustomEasing
         end)
     end
 
-    -- The damping ratio goes down as the bounce goes up. The decay is fixed, so the frequency follows from the ratio.
-    const damping = 1 - (1 - LEAST_DAMPING) * amount
+    -- The decay is fixed, so the frequency follows from the damping ratio.
     const frequency = decay * math.sqrt(1 - damping * damping) / damping
     const ratio = decay / frequency
 

@@ -331,7 +331,7 @@ finite number ends the transition with an error.
 
 ```luau
 VideState.spring(
-    bounce: number? -- How much it wobbles, from 0 to 1
+    options: SpringOptions? -- How much it wobbles, or how high the first bounce goes
 ) -> CustomEasing
 ```
 
@@ -342,7 +342,8 @@ duration ends.
 handler.animate({
     tweenDefault = {
         duration = 0.4,
-        easing = VideState.spring(0.4),
+        -- The first bounce goes 15% past the target.
+        easing = VideState.spring({ height = 0.15 }),
     },
 })
 ```
@@ -360,11 +361,21 @@ handler.animate({
 Use it for the look of a spring. If you need the behavior of one, VideState does not have it.
 :::
 
+Choose how it bounces with one of two options:
+
+- `bounce` is how much it wobbles, from `0` to `1`. `0` settles smoothly and never passes `1`.
+- `height` is how far the first bounce passes the target, as a fraction of the distance. `0.15` goes 15% past it, so a
+  value that moves from 0 to 100 reaches 115 before it settles.
+
+Height and wobbles are linked, because the curve has to settle inside the duration. A higher bounce overshoots further and
+wobbles more, and a `height` near the top of its range wobbles several times. A tall bounce with a single wobble is not
+possible. Use [`bezier`](#bezier) for that, such as `VideState.bezier(0.34, 1.56, 0.64, 1)`.
+
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `bounce` | `number?` | Optional. From `0` to `1`. `0` settles smoothly and never passes `1`. A higher value overshoots further and wobbles more, and `1` is the most. Defaults to `0.3`. |
+| `options` | [`SpringOptions`](#springoptions)`?` | Optional. Either `bounce` or `height`. With neither, the bounce is `0.3`. |
 
 **Returns**
 
@@ -376,10 +387,14 @@ Use it for the look of a spring. If you need the behavior of one, VideState does
 
 | | Cause | Message |
 | --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `spring options must be a table` |
+| <Badge type="danger" text="Error" /> | `options` has an unknown key | `spring options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | Both `bounce` and `height` are given | `spring takes bounce or height, not both` |
 | <Badge type="danger" text="Error" /> | `bounce` is not a number from 0 to 1 | `spring bounce must be a number from 0 to 1` |
+| <Badge type="danger" text="Error" /> | `height` is not a number above 0 and at most 0.5 | `spring height must be a number above 0 and at most 0.5` |
 
-The wobble has faded to about a third of a percent when the transition ends, so the last frame does not jump. A value of
-`bounce` above `0.7` wobbles a lot, and a short `duration` makes it look frantic.
+The wobble has faded to about a third of a percent when the transition ends, so the last frame does not jump. A `bounce`
+above `0.7` wobbles a lot, and a short `duration` makes it look frantic.
 
 ## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
 
@@ -563,6 +578,22 @@ type Easing = TweenName | CustomEasing
 ```
 
 The easing of a connection: the name of a built-in curve, or a [`CustomEasing`](#customeasing).
+
+### SpringOptions <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type SpringOptions = {
+    bounce: number?, -- How much it wobbles
+    height: number?, -- How far the first bounce passes the target
+}
+```
+
+The options of [`spring`](#spring). Give `bounce` or `height`, not both.
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `bounce` | `number` | No | `0.3` | From `0` to `1`. `0` settles smoothly and never passes `1`. A higher value overshoots further and wobbles more. |
+| `height` | `number` | No | | The first bounce goes this fraction past the target, above `0` and at most `0.5`. `0.15` is 15% past it. The wobbles follow from it. |
 
 ### CustomEasing <Badge type="tip" text="Added in 0.5.0" />
 

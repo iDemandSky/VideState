@@ -68,7 +68,7 @@ describe("custom easing", function()
 
     it("makes a spring curve that starts at 0 and has settled at 1 by the end", function()
         for _, bounce in { 0, 0.1, 0.3, 0.6, 1 } do
-            local spring = VideState.spring(bounce)
+            local spring = VideState.spring({ bounce = bounce })
 
             expect(spring.fn(0)).toBe(0)
             expect(spring.fn(1)).toBe(1)
@@ -77,7 +77,7 @@ describe("custom easing", function()
     end)
 
     it("makes a spring with no bounce that never passes 1 and never goes back", function()
-        local spring = VideState.spring(0)
+        local spring = VideState.spring({ bounce = 0 })
         local previous = 0
 
         -- cubic-style check against the closed form: 1 - (1 + 8t) * e^(-8t).
@@ -95,7 +95,7 @@ describe("custom easing", function()
 
     it("overshoots more as the bounce goes up", function()
         local function highest(bounce: number?): number
-            local spring = VideState.spring(bounce)
+            local spring = VideState.spring({ bounce = bounce })
             local top = 0
 
             for step = 1, 199 do
@@ -114,22 +114,56 @@ describe("custom easing", function()
         expect(high > middle).toBe(true)
 
         -- The default bounce is 0.3.
-        expect(highest(nil)).toBe(highest(0.3))
+        expect(VideState.spring().fn(0.4)).toBe(VideState.spring({ bounce = 0.3 }).fn(0.4))
     end)
 
-    it("rejects a spring bounce outside 0 to 1", function()
+    it("sets how high the first bounce goes with height", function()
+        for _, height in { 0.05, 0.1, 0.2, 0.35, 0.5 } do
+            local spring = VideState.spring({ height = height })
+            local top = 0
+
+            for step = 1, 999 do
+                top = math.max(top, spring.fn(step / 1000))
+            end
+
+            -- The highest point is the first peak, 1 plus the height.
+            expect(math.abs(top - (1 + height)) < 0.005).toBe(true)
+            expect(spring.fn(1)).toBe(1)
+            expect(math.abs(spring.fn(0.99) - 1) < 0.02).toBe(true)
+        end
+    end)
+
+    it("rejects spring options that are not valid", function()
         expect(function()
-            VideState.spring(-0.1)
+            VideState.spring({ bounce = -0.1 })
         end).toThrow("spring bounce must be a number from 0 to 1")
         expect(function()
-            VideState.spring(1.1)
+            VideState.spring({ bounce = 1.1 })
         end).toThrow("spring bounce must be a number from 0 to 1")
         expect(function()
-            VideState.spring("soft" :: any)
+            VideState.spring({ bounce = "soft" :: any })
         end).toThrow("spring bounce must be a number from 0 to 1")
         expect(function()
-            VideState.spring(0 / 0)
+            VideState.spring({ bounce = 0 / 0 })
         end).toThrow("spring bounce must be a number from 0 to 1")
+        expect(function()
+            VideState.spring({ height = 0 })
+        end).toThrow("spring height must be a number above 0 and at most 0.5")
+        expect(function()
+            VideState.spring({ height = 0.6 })
+        end).toThrow("spring height must be a number above 0 and at most 0.5")
+        expect(function()
+            VideState.spring({ height = "tall" :: any })
+        end).toThrow("spring height must be a number")
+        expect(function()
+            VideState.spring({ bounce = 0.3, height = 0.2 })
+        end).toThrow("spring takes bounce or height, not both")
+        expect(function()
+            VideState.spring({ speed = 2 } :: any)
+        end).toThrow("unknown key speed")
+        expect(function()
+            VideState.spring(0.3 :: any)
+        end).toThrow("spring options must be a table")
     end)
 
     it("plays a transition with a spring, and ends exactly on the next value", function()
@@ -143,7 +177,7 @@ describe("custom easing", function()
         end, {
             tweenDefault = {
                 duration = 1,
-                easing = VideState.spring(0.5),
+                easing = VideState.spring({ bounce = 0.5 }),
             },
         })
 
