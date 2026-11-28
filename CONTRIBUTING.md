@@ -64,6 +64,9 @@ default. `Bench.luau` holds the shared rounds, and there is one spec for each wa
 - `Animate.spec.luau` connects `animate`, which writes a Vide source for every field.
 - `Overrides.spec.luau` connects `animate` with six `tweenOverrides` entries, and the matching entry is the last one,
   so the lookup is as slow as it can be.
+- `Creation.spec.luau` and `Running.spec.luau` time one operation at a time, such as making a rule, a handler, a
+  connection, or a spring, and `setState`, the controls, `everyHandler`, and one frame of the shared loop. `Operations.luau`
+  holds the helpers. Each prints a `[bench]` line with the median and the fastest time of one call, in microseconds.
 
 
 ```sh
