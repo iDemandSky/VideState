@@ -122,9 +122,53 @@ describe("custom easing", function()
         end
     end)
 
+    it("sets how much height each bounce loses with loss", function()
+        for _, loss in { 0.2, 0.5, 0.8 } do
+            local spring = VideState.spring({ height = 0.3, bounces = 5, loss = loss })
+            local peaks: { number } = {}
+            local samples: { number } = {}
+
+            for step = 0, 8000 do
+                table.insert(samples, spring.fn(step / 8000))
+            end
+
+            for index = 2, #samples - 1 do
+                local isAbove = samples[index] > samples[index - 1]
+                local isPeak = isAbove and samples[index] >= samples[index + 1]
+
+                if isPeak and samples[index] > 1.0001 then
+                    table.insert(peaks, samples[index] - 1)
+                end
+            end
+
+            expect(#peaks).toBe(5)
+
+            -- Each bounce keeps 1 - loss of the one before. The last one is cut a little by the end of the curve.
+            for index = 2, 4 do
+                local kept = peaks[index] / peaks[index - 1]
+
+                expect(math.abs(kept - (1 - loss)) < 0.03).toBe(true)
+            end
+        end
+    end)
+
+    it("keeps the height of the first bounce whatever the loss is", function()
+        for _, loss in { 0.1, 0.5, 0.9 } do
+            local spring = VideState.spring({ height = 0.25, bounces = 3, loss = loss })
+            local top = 0
+
+            for step = 1, 3999 do
+                top = math.max(top, spring.fn(step / 4000))
+            end
+
+            expect(math.abs(top - 1.25) < 0.004).toBe(true)
+            expect(spring.fn(1)).toBe(1)
+        end
+    end)
+
     it("makes the same spring when the options are left out as with the defaults", function()
         local plain = VideState.spring()
-        local explicit = VideState.spring({ height = 0.15, bounces = 2 })
+        local explicit = VideState.spring({ height = 0.15, bounces = 2, loss = 0.5 })
 
         expect(plain.fn(0.3)).toBe(explicit.fn(0.3))
         expect(plain.fn(0.7)).toBe(explicit.fn(0.7))
@@ -152,6 +196,15 @@ describe("custom easing", function()
         expect(function()
             VideState.spring({ bounces = "many" :: any })
         end).toThrow("spring bounces must be a whole number")
+        expect(function()
+            VideState.spring({ loss = 0 })
+        end).toThrow("spring loss must be a number above 0 and below 1")
+        expect(function()
+            VideState.spring({ loss = 1 })
+        end).toThrow("spring loss must be a number above 0 and below 1")
+        expect(function()
+            VideState.spring({ loss = "half" :: any })
+        end).toThrow("spring loss must be a number")
         expect(function()
             VideState.spring({ bounce = 0.3 } :: any)
         end).toThrow("unknown key bounce")

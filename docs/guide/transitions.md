@@ -331,7 +331,7 @@ finite number ends the transition with an error.
 
 ```luau
 VideState.spring(
-    options: SpringOptions? -- How high the first bounce goes, and how many bounces there are
+    options: SpringOptions? -- How high the first bounce goes, how many bounces there are, and how much each loses
 ) -> CustomEasing
 ```
 
@@ -342,8 +342,8 @@ has settled at 1 when the duration ends.
 handler.animate({
     tweenDefault = {
         duration = 0.5,
-        -- The first bounce goes 20% past the target, and it bounces 3 times.
-        easing = VideState.spring({ height = 0.2, bounces = 3 }),
+        -- The first bounce goes 20% past the target, it bounces 3 times, and each bounce loses half its height.
+        easing = VideState.spring({ height = 0.2, bounces = 3, loss = 0.5 }),
     },
 })
 ```
@@ -361,20 +361,23 @@ handler.animate({
 Use it for the look of a spring. If you need the behavior of one, VideState does not have it.
 :::
 
-`height` and `bounces` are set separately, and the curve still ends on the duration:
+`height`, `bounces`, and `loss` are set separately, and the curve still ends on the duration:
 
 - `height` is how far the first bounce passes the target, as a fraction of the distance. `0.2` goes 20% past it, so a
   value that moves from 0 to 100 reaches 120 before it comes back.
 - `bounces` is how many times it passes the target and comes back.
+- `loss` is how much of its height each bounce loses. With `0.5`, each bounce is half as high as the one before, so
+  bounces of 20%, 10%, and 5%. A low `loss` keeps the bounces tall, and a high one makes them die out fast.
 
-Each bounce is lower than the one before, so every bounce can be seen. The last one is about a sixth of the height of the
-first, and you cannot set the heights of the bounces in between. Many bounces on a short `duration` look frantic.
+The height of each bounce after the first follows from `loss`, and you cannot set them one by one. The last bounce is cut
+a little short by the end of the curve, and a very small `height` with a high `loss` makes the later bounces too small to
+see. Many bounces on a short `duration` look frantic. With a single bounce, `loss` does nothing.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `options` | [`SpringOptions`](#springoptions)`?` | Optional. The height of the first bounce and the number of bounces. |
+| `options` | [`SpringOptions`](#springoptions)`?` | Optional. The height of the first bounce, the number of bounces, and how much height each bounce loses. |
 
 **Returns**
 
@@ -390,6 +393,7 @@ first, and you cannot set the heights of the bounces in between. Many bounces on
 | <Badge type="danger" text="Error" /> | `options` has an unknown key | `spring options has an unknown key <key>` |
 | <Badge type="danger" text="Error" /> | `height` is not a number above 0 and at most 0.5 | `spring height must be a number above 0 and at most 0.5` |
 | <Badge type="danger" text="Error" /> | `bounces` is not a whole number from 1 to 10 | `spring bounces must be a whole number from 1 to 10` |
+| <Badge type="danger" text="Error" /> | `loss` is not a number above 0 and below 1 | `spring loss must be a number above 0 and below 1` |
 
 ## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
 
@@ -580,6 +584,7 @@ The easing of a connection: the name of a built-in curve, or a [`CustomEasing`](
 type SpringOptions = {
     height: number?, -- How far the first bounce passes the target
     bounces: number?, -- How many bounces
+    loss: number?, -- How much height each bounce loses
 }
 ```
 
@@ -589,6 +594,7 @@ The options of [`spring`](#spring).
 | --- | --- | --- | --- | --- |
 | `height` | `number` | No | `0.15` | The first bounce goes this fraction past the target. Above `0` and at most `0.5`. `0.15` is 15% past it. |
 | `bounces` | `number` | No | `2` | How many times it passes the target and comes back. A whole number from `1` to `10`. |
+| `loss` | `number` | No | `0.5` | The fraction of its height that each bounce loses, above `0` and below `1`. `0.5` makes each bounce half as high as the one before. It does nothing with one bounce. |
 
 ### CustomEasing <Badge type="tip" text="Added in 0.5.0" />
 

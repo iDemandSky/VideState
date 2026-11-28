@@ -58,14 +58,16 @@ user settles a new one.
   already accepts a Vide source, which is a function, so a function there would be ambiguous. The tables are frozen and
   kept in a weak set, so only checked ones are accepted. `bezier` follows CSS `cubic-bezier`, with `x1` and `x2` in 0 to
   1.
-- **`VideState.spring({ height, bounces })` is a spring-shaped easing, and the docs say it is not a real spring.** The user
-  wanted a spring after hearing the limits, and then wanted the bounce height and the bounce count set separately while
-  the curve still ends on the duration. A damped oscillator cannot do that, because its decay ties the first peak to
+- **`VideState.spring({ height, bounces, loss })` is a spring-shaped easing, and the docs say it is not a real spring.** The user
+  wanted a spring after hearing the limits, and then wanted the bounce height, the bounce count, and the height lost per
+  bounce set separately while the curve still ends on the duration. A damped oscillator cannot do that, because its decay ties the first peak to
   the later ones. So the curve is `1 - size(t) * (cos + k sin)`, where the cosine fits `bounces` bounces in the
   duration, and `size` is `exp(-L(t))` with `L` a monotone cubic through the decay at each peak. The first peak is
-  solved by bisection to be exactly `height`, and each later bounce has the same extra decay, so the last is about
-  `LAST_BOUNCE` (0.15) of the first. `size` is corrected to reach 0 at the end, and the start slope is 0. Results are
-  cached by height and bounces. Heights above 0.5 and more than 10 bounces are rejected. A real spring needs speed
+  solved by bisection to be exactly `height`, and each later bounce adds the decay of `-ln(1 - loss)`, so each keeps
+  about `1 - loss` of the one before (within a few percent, and less exact at the last bounce). After the last bounce the
+  decay rises by `END_TAPER` (6), so `size` reaches 0 at the end without cutting that bounce short, and the start slope
+  is 0. Results are
+  cached by height, bounces, and loss. Heights above 0.5 and more than 10 bounces are rejected. A real spring needs speed
   carried over an interrupted transition, which does not fit the shared alpha of a tween group, so it was not built.
   The docs keep a warning box.
 - **`setReducedMotion` makes every `setState` instant.** It is global, affects only state changes that start after it

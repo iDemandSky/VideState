@@ -122,8 +122,9 @@ const function bezier(x1: number, y1: number, x2: number, y2: number): Types.Cus
     end)
 end
 
--- The last bounce of a spring is about this fraction of the first, so every bounce can be seen.
-const LAST_BOUNCE = 0.15
+-- After its last bounce, the size of the wobble of a spring falls by this much more decay, so the curve settles on 1 in
+-- the last half of a wobble. It is large enough that the last bounce is not cut short.
+const END_TAPER = 6
 
 -- The highest first bounce a spring can have, as a fraction past the target.
 const MAX_HEIGHT = 0.5
@@ -133,10 +134,12 @@ const MAX_BOUNCES = 10
 
 const DEFAULT_HEIGHT = 0.15
 const DEFAULT_BOUNCES = 2
+const DEFAULT_LOSS = 0.5
 
 const SPRING_KEYS: { [string]: boolean } = {
     height = true,
     bounces = true,
+    loss = true,
 }
 
 -- A smooth curve through the points that never turns around between two points that rise (Fritsch and Butland).
@@ -229,11 +232,11 @@ const function monotoneCurve(xs: { number }, ys: { number }): MonotoneCurve
 end
 
 -- The curve of a spring with `bounces` bounces. The wobble is a cosine that fits `bounces` bounces in the duration.
--- Its size starts at 1 and falls to `firstDecay` worth of decay at the first bounce, and then by the same amount for
--- every bounce after it, so each bounce is lower than the last. It reaches 0 at the end, so the curve ends on 1.
-const function buildSpring(firstDecay: number, bounces: number): (number) -> number
-    const lastRatio = LAST_BOUNCE ^ (1 / math.max(bounces - 1, 1))
-    const step = -math.log(lastRatio)
+-- Its size starts at 1 and falls to `firstDecay` worth of decay at the first bounce, and then by the decay of `loss`
+-- for every bounce after it, so each bounce keeps `1 - loss` of the one before. It reaches 0 at the end, so the curve
+-- ends on 1.
+const function buildSpring(firstDecay: number, bounces: number, loss: number): (number) -> number
+    const step = -math.log(1 - loss)
     const times: { number } = {
         0,
     }
@@ -247,7 +250,7 @@ const function buildSpring(firstDecay: number, bounces: number): (number) -> num
     end
 
     table.insert(times, 1)
-    table.insert(decays, firstDecay + bounces * step)
+    table.insert(decays, firstDecay + (bounces - 1) * step + END_TAPER)
 
     const decay = monotoneCurve(times, decays)
     const endSize = math.exp(-decays[#decays])
@@ -298,8 +301,8 @@ end
 -- answers are kept, because a game makes the same few springs again and again.
 const solved: { [string]: number } = {}
 
-const function solveDecay(height: number, bounces: number): number
-    const key = `{height}:{bounces}`
+const function solveDecay(height: number, bounces: number, loss: number): number
+    const key = `{height}:{bounces}:{loss}`
     const known = solved[key]
 
     if known ~= nil then
@@ -311,7 +314,7 @@ const function solveDecay(height: number, bounces: number): number
 
     for _ = 1, 50 do
         const middle = (low + high) / 2
-        const peak = firstPeak(buildSpring(middle, bounces), bounces)
+        const peak = firstPeak(buildSpring(middle, bounces, loss), bounces)
 
         if peak > height then
             low = middle
@@ -328,9 +331,9 @@ const function solveDecay(height: number, bounces: number): number
 end
 
 -- Reads the options of `spring`. The error level of 3 points at the user's call.
-const function readSpringOptions(options: unknown): (number, number)
+const function readSpringOptions(options: unknown): (number, number, number)
     if options == nil then
-        return DEFAULT_HEIGHT, DEFAULT_BOUNCES
+        return DEFAULT_HEIGHT, DEFAULT_BOUNCES, DEFAULT_LOSS
     end
 
     if type(options) ~= "table" then
@@ -349,8 +352,10 @@ const function readSpringOptions(options: unknown): (number, number)
 
     const height = fields.height
     const bounces = fields.bounces
+    const loss = fields.loss
     local heightValue = DEFAULT_HEIGHT
     local bouncesValue = DEFAULT_BOUNCES
+    local lossValue = DEFAULT_LOSS
 
     if height ~= nil then
         const heightMessage = `spring height must be a number above 0 and at most {MAX_HEIGHT}`
@@ -388,16 +393,34 @@ const function readSpringOptions(options: unknown): (number, number)
         bouncesValue = bounces
     end
 
-    return heightValue, bouncesValue
+    if loss ~= nil then
+        const lossMessage = "spring loss must be a number above 0 and below 1"
+
+        if type(loss) ~= "number" then
+            error(lossMessage, 3)
+        end
+
+        local isAboveZero = loss > 0
+        local isBelowOne = loss < 1
+
+        if not (isAboveZero and isBelowOne) then
+            error(lossMessage, 3)
+        end
+
+        lossValue = loss
+    end
+
+    return heightValue, bouncesValue, lossValue
 end
 
 -- A curve that looks like a damped spring: it starts at 0 without a jump, passes 1 by `height`, comes back and goes
--- past it again, `bounces` times, each bounce lower than the last, and ends on 1 when the duration ends. It is a
--- curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier transition.
-const function spring(options: { height: number?, bounces: number? }?): Types.CustomEasing
-    const height, bounces = readSpringOptions(options)
+-- past it again, `bounces` times, each bounce keeping `1 - loss` of the one before, and ends on 1 when the duration
+-- ends. It is a curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier
+-- transition.
+const function spring(options: { height: number?, bounces: number?, loss: number? }?): Types.CustomEasing
+    const height, bounces, loss = readSpringOptions(options)
 
-    return make(buildSpring(solveDecay(height, bounces), bounces))
+    return make(buildSpring(solveDecay(height, bounces, loss), bounces, loss))
 end
 
 -- Wraps a function of the progress from 0 to 1 that returns the eased progress. It is called with 0 and 1 once, to
