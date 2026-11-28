@@ -12,7 +12,7 @@ replaced Ripple with a built-in tween, which is 20 to 30% faster per connection,
 Argon. 0.3.0 (2026-11-25) renamed `fastForward` to `scaleSpeed` (breaking), added the `once` option
 (default `false`, so the scale stays), and added `VideState.everyHandler` with its filters, exclusions, conflict checks,
 `setState`, `destroy`, and the `count`, `isAnyRunning`, and `isAnyPaused` reads. 0.2.1 only changed the README. Versions
-0.1.0 to 0.1.2 are deprecated on Ember. 0.2.0 added per-connection `onTransition` options, pause and resume, `finish`,
+0.1.0 to 0.1.2, 0.2.0, 0.2.1, and 0.3.0 are deprecated on Ember. Deprecate a version when a later release changes the API in a way that needs the user's code to change. 0.2.0 added per-connection `onTransition` options, pause and resume, `finish`,
 `onFinish`, `setState(name, { instant = true })`, `onEnter` and `onExit`, `waitForFinish`, `destroy`, the `delay` option,
 the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its UI Labs story in `stories/`. See
 `CHANGELOG.md`.
