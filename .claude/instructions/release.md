@@ -25,8 +25,8 @@ into a minor. This does not publish, tag, or push `main`.
 ## Steps
 
 1. Check that `version` in `ember.toml` is the version being released.
-2. In `CHANGELOG.md`, change `## [<version>] - Unreleased` to `## [<version>] - <YYYY-MM-DD>` and add a new empty
-   `## [Unreleased]` above it.
+2. In `CHANGELOG.md`, change `## [<version>] - Unreleased` to `## [<version>] - <YYYY-MM-DD>`. Do not add an empty
+   `## [Unreleased]` section. The user does not want one, and the next version's section is created when its first change lands.
 3. Commit as `chore: release <version>` on `dev`, then push it as described in [git.md](git.md).
 4. Publish to Ember, tag `v<version>`, and create the GitHub release with the changelog entry as its notes.
 5. Tell the user which version was released.
