@@ -4,7 +4,7 @@ Update this file when a release ships, a limit is found or fixed, or an idea is 
 
 ## Released
 
-The latest release is 0.4.0 (2026-11-26). It removed the handler options (breaking): `rule.new(states, initialState)`
+The latest release is 0.5.0 (2026-11-28), described under "0.5.0" below. 0.4.0 (2026-11-26) removed the handler options (breaking): `rule.new(states, initialState)`
 takes no third argument, and the tween settings go in `tweenDefault` in the options of `onTransition` and `animate`. It
 added `tweenOverrides` (tween settings per state change), `handler.animate` (Vide sources for a transition), the schemas
 `numberRange`, `numberSequence`, and `colorSequence`, and `rule.getTags`, `hasTag`, `addTags`, and `removeTags`. It
@@ -17,14 +17,14 @@ Argon. 0.3.0 (2026-11-25) renamed `fastForward` to `scaleSpeed` (breaking), adde
 the shared frame loop with its benchmark (`lest bench`), and `VideState.debug` with its UI Labs story in `stories/`. See
 `CHANGELOG.md`.
 
-## Unreleased on `dev`
+## 0.5.0
 
-0.5.0 adds the `union` schema, `setReducedMotion`, custom easing (`bezier`, `easing`), `handler.progress`,
+0.5.0 added the `union` schema, `setReducedMotion`, custom easing (`bezier`, `easing`), `handler.progress`,
 `allowedTransitions` in the rule metadata, a `delay` option on `setState` with `stagger` on `everyHandler.setState`,
 `VideState.extend` for rule inheritance, `handler.playSequence` for state sequences, and the manual clock for tests (`setManualClock`, `advanceClock`). See
 `CHANGELOG.md`.
 
-`main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.4.0 only once the user
+`main` is synced by the user, never by Claude. The docs site deploys from `main`, so it shows 0.5.0 only once the user
 has pushed it there.
 
 ## Known limits
