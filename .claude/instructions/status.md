@@ -4,7 +4,7 @@ Update this file when a release ships, a limit is found or fixed, or an idea is 
 
 ## Released
 
-The latest release is 0.5.0 (2026-11-28), described under "0.5.0" below. 0.4.0 (2026-11-26) removed the handler options (breaking): `rule.new(states, initialState)`
+The latest release is 0.5.1 (2026-11-28), a patch that only changed the README and the frame loop's builtin reads. 0.5.0 (2026-11-28) is described under "0.5.0" below. 0.4.0 (2026-11-26) removed the handler options (breaking): `rule.new(states, initialState)`
 takes no third argument, and the tween settings go in `tweenDefault` in the options of `onTransition` and `animate`. It
 added `tweenOverrides` (tween settings per state change), `handler.animate` (Vide sources for a transition), the schemas
 `numberRange`, `numberSequence`, and `colorSequence`, and `rule.getTags`, `hasTag`, `addTags`, and `removeTags`. It

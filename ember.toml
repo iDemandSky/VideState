@@ -1,6 +1,6 @@
 [package]
 name = "idemandsky/videstate"
-version = "0.5.0"
+version = "0.5.1"
 description = "A state handler for Vide that lets you build UI components with states, and change their properties as the state changes."
 authors = ["iDemandSky"]
 repository = "https://github.com/iDemandSky/VideState"

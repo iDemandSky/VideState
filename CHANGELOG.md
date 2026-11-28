@@ -5,6 +5,15 @@ All notable changes to VideState are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the version is below 1.0.0, a minor
 version can contain breaking changes.
 
+## [0.5.1] - 2026-11-28
+
+### Changed
+
+- The README says that a `union` field tweens only between two values of the same animatable type, and switches at the
+  start when the types differ, such as a number and the string `"Auto"`. The behavior is the same as in 0.5.0.
+- The frame loop reads `math.lerp`, `math.sin`, `math.cos`, and `table.insert` once, instead of on every call. The
+  difference is too small to measure.
+
 ## [0.5.0] - 2026-11-28
 
 ### Added
