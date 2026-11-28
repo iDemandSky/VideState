@@ -236,8 +236,23 @@ To accept more than two schemas, nest the union: `VideState.union(a, VideState.u
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | An argument is not a schema | `expected the first union schema to be a schema`, and the same for the second |
 
-A field of a union type tweens only when the old and new values have the same animatable type, such as two numbers. When
-the types differ, such as a number and a string, the value switches at the start of the transition.
+::: warning A union does not tween between different types
+A transition blends the old and the new value only when both have the same animatable type. When the types differ, or the
+type cannot be animated, the field **switches at the start**: the new value is sent on the first frame and does not move
+after that. A union cannot animate from `100` to `"Auto"`.
+
+| From | To | Result |
+| --- | --- | --- |
+| `100` | `200` | Tweens, as two numbers. |
+| `UDim2` | `UDim2` | Tweens, as two `UDim2` values. |
+| `100` | `"Auto"` | Switches at the start, because a number and a string cannot be blended. |
+| `"Auto"` | `"Fill"` | Switches at the start, because a string cannot be animated. |
+| `UDim2` | `Color3` | Switches at the start, because the types differ. |
+
+The union does not check which schema accepted a value, so two numbers from different branches still tween. The other
+fields of the same state tween as usual. To animate toward a size that the layout decides, use a number for the field and
+a separate state for the automatic layout.
+:::
 
 ### table <Badge type="tip" text="Added in 0.1.0" />
 
