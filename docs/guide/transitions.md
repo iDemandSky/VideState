@@ -331,7 +331,7 @@ finite number ends the transition with an error.
 
 ```luau
 VideState.spring(
-    options: SpringOptions? -- How high the first bounce goes, how many bounces there are, and how much each loses
+    options: SpringOptions? -- The look of the bounces and when they happen
 ) -> CustomEasing
 ```
 
@@ -361,23 +361,54 @@ handler.animate({
 Use it for the look of a spring. If you need the behavior of one, VideState does not have it.
 :::
 
-`height`, `bounces`, and `loss` are set separately, and the curve still ends on the duration:
+All the settings are optional and are set separately, and the curve always ends on the duration. Two groups of them:
+
+**What the bounces look like**
 
 - `height` is how far the first bounce passes the target, as a fraction of the distance. `0.2` goes 20% past it, so a
   value that moves from 0 to 100 reaches 120 before it comes back.
 - `bounces` is how many times it passes the target and comes back.
 - `loss` is how much of its height each bounce loses. With `0.5`, each bounce is half as high as the one before, so
   bounces of 20%, 10%, and 5%. A low `loss` keeps the bounces tall, and a high one makes them die out fast.
+- `anticipation` is a small dip backwards before it moves. `0.1` dips 10% of the distance below the start, and then it
+  springs forward. The dip does not change how high the first bounce goes. Like a `back` easing, it takes `alpha` below `0`.
 
-The height of each bounce after the first follows from `loss`, and you cannot set them one by one. The last bounce is cut
-a little short by the end of the curve, and a very small `height` with a high `loss` makes the later bounces too small to
-see. Many bounces on a short `duration` look frantic. With a single bounce, `loss` does nothing.
+**When things happen**, as fractions of the duration:
+
+- `arrive` is when it first reaches the target. `0.3` reaches it at 30% of the duration, and the bounces fill the rest.
+  Without it, the first arrival comes sooner the more bounces there are.
+- `settle` is how long the last bounce takes to settle, from the top of the last bounce to the end. `0.2` means the last
+  bounce starts to settle at 80% of the duration.
+- `tightening` is how much shorter each bounce is than the one before. With `0.3`, each bounce takes 70% of the time of
+  the previous one, like a ball that bounces faster as it gets lower. `0` keeps every bounce the same length.
+
+```luau
+-- Reaches the target at 20% of the duration, then bounces 4 times, each shorter and lower than the last.
+VideState.spring({
+    height = 0.3,
+    bounces = 4,
+    loss = 0.4,
+    arrive = 0.2,
+    tightening = 0.3,
+})
+```
+
+A few things to know:
+
+- The height of each bounce after the first follows from `loss`, and you cannot set them one by one. The last bounce is cut
+  a little short by the end of the curve, so the heights are close to `loss`, not exact.
+- `arrive` and `settle` must add up to at most `0.9`, to leave room for the bounces.
+- A very small `height` with a high `loss` makes the later bounces too small to see. Many bounces on a short `duration`
+  look frantic.
+- With a single bounce, `loss` and `tightening` do nothing.
+- The first spring made with a set of options takes a few milliseconds to set up. The result is kept, so making the same
+  spring again costs almost nothing, and each frame costs about as much as `elasticOut`.
 
 **Parameters**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `options` | [`SpringOptions`](#springoptions)`?` | Optional. The height of the first bounce, the number of bounces, and how much height each bounce loses. |
+| `options` | [`SpringOptions`](#springoptions)`?` | Optional. The look of the bounces and when they happen. |
 
 **Returns**
 
@@ -394,6 +425,10 @@ see. Many bounces on a short `duration` look frantic. With a single bounce, `los
 | <Badge type="danger" text="Error" /> | `height` is not a number above 0 and at most 0.5 | `spring height must be a number above 0 and at most 0.5` |
 | <Badge type="danger" text="Error" /> | `bounces` is not a whole number from 1 to 10 | `spring bounces must be a whole number from 1 to 10` |
 | <Badge type="danger" text="Error" /> | `loss` is not a number above 0 and below 1 | `spring loss must be a number above 0 and below 1` |
+| <Badge type="danger" text="Error" /> | `arrive` or `settle` is not a number above 0 and at most 0.8 | `spring arrive must be a number above 0 and at most 0.8`, and the same for `settle` |
+| <Badge type="danger" text="Error" /> | `arrive` and `settle` add up to more than 0.9 | `spring arrive and settle must add up to at most 0.9, to leave room for the bounces` |
+| <Badge type="danger" text="Error" /> | `tightening` is not a number from 0 to 0.6 | `spring tightening must be a number from 0 to 0.6` |
+| <Badge type="danger" text="Error" /> | `anticipation` is not a number from 0 to 0.3 | `spring anticipation must be a number from 0 to 0.3` |
 
 ## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
 
@@ -585,6 +620,10 @@ type SpringOptions = {
     height: number?, -- How far the first bounce passes the target
     bounces: number?, -- How many bounces
     loss: number?, -- How much height each bounce loses
+    anticipation: number?, -- How far it dips backwards before it moves
+    arrive: number?, -- When it first reaches the target
+    settle: number?, -- How long the last bounce takes to settle
+    tightening: number?, -- How much shorter each bounce is than the last
 }
 ```
 
@@ -595,6 +634,10 @@ The options of [`spring`](#spring).
 | `height` | `number` | No | `0.15` | The first bounce goes this fraction past the target. Above `0` and at most `0.5`. `0.15` is 15% past it. |
 | `bounces` | `number` | No | `2` | How many times it passes the target and comes back. A whole number from `1` to `10`. |
 | `loss` | `number` | No | `0.5` | The fraction of its height that each bounce loses, above `0` and below `1`. `0.5` makes each bounce half as high as the one before. It does nothing with one bounce. |
+| `anticipation` | `number` | No | `0` | How far it dips below the start before it moves, as a fraction of the distance, from `0` to `0.3`. `0` is no dip. |
+| `arrive` | `number` | No | | When it first reaches the target, as a fraction of the duration, above `0` and at most `0.8`. Left out, the bounces are spaced evenly. |
+| `settle` | `number` | No | | How long the last bounce takes to settle, as a fraction of the duration, above `0` and at most `0.8`. Left out, the bounces are spaced evenly. |
+| `tightening` | `number` | No | `0` | How much shorter each bounce is than the one before, from `0` to `0.6`. `0.3` makes each bounce take 70% of the time of the previous one. It does nothing with one bounce. |
 
 ### CustomEasing <Badge type="tip" text="Added in 0.5.0" />
 

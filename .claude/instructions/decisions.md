@@ -58,15 +58,20 @@ user settles a new one.
   already accepts a Vide source, which is a function, so a function there would be ambiguous. The tables are frozen and
   kept in a weak set, so only checked ones are accepted. `bezier` follows CSS `cubic-bezier`, with `x1` and `x2` in 0 to
   1.
-- **`VideState.spring({ height, bounces, loss })` is a spring-shaped easing, and the docs say it is not a real spring.** The user
-  wanted a spring after hearing the limits, and then wanted the bounce height, the bounce count, and the height lost per
-  bounce set separately while the curve still ends on the duration. A damped oscillator cannot do that, because its decay ties the first peak to
+- **`VideState.spring(options)` is a spring-shaped easing, and the docs say it is not a real spring.** The user
+  wanted a spring after hearing the limits, and then wanted the bounce height, the bounce count, the height lost per
+  bounce, and later `arrive`, `settle`, `tightening`, and `anticipation`, all set separately while the curve still ends
+  on the duration. The user ruled out stiffness, damping, and mass, because they would make the spring unpredictable. A damped oscillator cannot do that, because its decay ties the first peak to
   the later ones. So the curve is `1 - size(t) * (cos + k sin)`, where the cosine fits `bounces` bounces in the
   duration, and `size` is `exp(-L(t))` with `L` a monotone cubic through the decay at each peak. The first peak is
   solved by bisection to be exactly `height`, and each later bounce adds the decay of `-ln(1 - loss)`, so each keeps
   about `1 - loss` of the one before (within a few percent, and less exact at the last bounce). After the last bounce the
   decay rises by `END_TAPER` (6), so `size` reaches 0 at the end without cutting that bounce short, and the start slope
-  is 0. Results are
+  is 0. The timing is a smooth monotone cubic for the phase of the cosine through the end of every quarter of a wobble:
+  `arrive` is the first quarter, `settle` is the last two, the rest share the time with each bounce `1 - tightening`
+  as long as the one before, and the phase at the end of the first quarter is solved so the curve crosses the target
+  exactly at `arrive`. `anticipation` subtracts a `sin^2` bump over the first quarter, solved so the lowest point is
+  exactly the depth, which leaves the first bounce untouched. Results are
   cached by height, bounces, and loss. Heights above 0.5 and more than 10 bounces are rejected. A real spring needs speed
   carried over an interrupted transition, which does not fit the shared alpha of a tween group, so it was not built.
   The docs keep a warning box.

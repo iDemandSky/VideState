@@ -166,9 +166,159 @@ describe("custom easing", function()
         end
     end)
 
+    it("reaches the target at the time that arrive sets", function()
+        for _, arrive in { 0.1, 0.25, 0.5 } do
+            local spring = VideState.spring({ height = 0.2, bounces = 3, arrive = arrive })
+            local reached = -1
+
+            for step = 0, 8000 do
+                if spring.fn(step / 8000) >= 1 then
+                    reached = step / 8000
+
+                    break
+                end
+            end
+
+            expect(math.abs(reached - arrive) < 0.002).toBe(true)
+        end
+    end)
+
+    it("keeps the height and the bounce count when arrive is set", function()
+        local spring = VideState.spring({ height = 0.3, bounces = 4, arrive = 0.2 })
+        local top = 0
+        local peaks = 0
+        local previous = 0
+        local rising = false
+
+        for step = 1, 8000 do
+            local value = spring.fn(step / 8000)
+
+            top = math.max(top, value)
+
+            if value > previous then
+                rising = true
+            elseif rising and previous > 1.0001 then
+                peaks += 1
+                rising = false
+            elseif value < previous then
+                rising = false
+            end
+
+            previous = value
+        end
+
+        expect(math.abs(top - 1.3) < 0.004).toBe(true)
+        expect(peaks).toBe(4)
+    end)
+
+    it("ends the last bounce the time that settle sets before the end", function()
+        for _, settle in { 0.1, 0.3 } do
+            local spring = VideState.spring({ height = 0.2, bounces = 3, settle = settle })
+            local lastPeak = 0
+            local samples: { number } = {}
+
+            for step = 0, 8000 do
+                table.insert(samples, spring.fn(step / 8000))
+            end
+
+            for index = 2, #samples - 1 do
+                local isAbove = samples[index] > samples[index - 1]
+                local isPeak = isAbove and samples[index] >= samples[index + 1]
+
+                if isPeak and samples[index] > 1.0001 then
+                    lastPeak = (index - 1) / 8000
+                end
+            end
+
+            expect(math.abs((1 - lastPeak) - settle) < 0.02).toBe(true)
+        end
+    end)
+
+    it("makes each bounce shorter than the last by tightening", function()
+        for _, tightening in { 0.2, 0.4 } do
+            local spring = VideState.spring({ height = 0.2, bounces = 4, tightening = tightening })
+            local times: { number } = {}
+            local samples: { number } = {}
+
+            for step = 0, 8000 do
+                table.insert(samples, spring.fn(step / 8000))
+            end
+
+            for index = 2, #samples - 1 do
+                local isAbove = samples[index] > samples[index - 1]
+                local isPeak = isAbove and samples[index] >= samples[index + 1]
+
+                if isPeak and samples[index] > 1.0001 then
+                    table.insert(times, (index - 1) / 8000)
+                end
+            end
+
+            expect(#times).toBe(4)
+
+            for index = 3, 4 do
+                local kept = (times[index] - times[index - 1]) / (times[index - 1] - times[index - 2])
+
+                expect(math.abs(kept - (1 - tightening)) < 0.06).toBe(true)
+            end
+        end
+    end)
+
+    it("dips backwards before it moves with anticipation, as deep as it says", function()
+        for _, anticipation in { 0.05, 0.15, 0.3 } do
+            local spring = VideState.spring({ height = 0.2, bounces = 3, anticipation = anticipation })
+            local lowest = 0
+            local top = 0
+
+            for step = 0, 8000 do
+                local value = spring.fn(step / 8000)
+
+                lowest = math.min(lowest, value)
+                top = math.max(top, value)
+            end
+
+            expect(math.abs(lowest + anticipation) < 0.004).toBe(true)
+            -- The dip does not change how high the first bounce goes.
+            expect(math.abs(top - 1.2) < 0.004).toBe(true)
+            expect(spring.fn(0)).toBe(0)
+            expect(spring.fn(1)).toBe(1)
+        end
+    end)
+
+    it("combines every setting and still ends on the target", function()
+        local spring = VideState.spring({
+            height = 0.3,
+            bounces = 4,
+            loss = 0.4,
+            arrive = 0.2,
+            settle = 0.2,
+            tightening = 0.3,
+            anticipation = 0.1,
+        })
+        local top = 0
+        local lowest = 0
+
+        for step = 1, 3999 do
+            local value = spring.fn(step / 4000)
+
+            top = math.max(top, value)
+            lowest = math.min(lowest, value)
+        end
+
+        expect(math.abs(top - 1.3) < 0.004).toBe(true)
+        expect(math.abs(lowest + 0.1) < 0.004).toBe(true)
+        expect(spring.fn(1)).toBe(1)
+        expect(math.abs(spring.fn(0.995) - 1) < 0.005).toBe(true)
+    end)
+
     it("makes the same spring when the options are left out as with the defaults", function()
         local plain = VideState.spring()
-        local explicit = VideState.spring({ height = 0.15, bounces = 2, loss = 0.5 })
+        local explicit = VideState.spring({
+            height = 0.15,
+            bounces = 2,
+            loss = 0.5,
+            tightening = 0,
+            anticipation = 0,
+        })
 
         expect(plain.fn(0.3)).toBe(explicit.fn(0.3))
         expect(plain.fn(0.7)).toBe(explicit.fn(0.7))
@@ -205,6 +355,36 @@ describe("custom easing", function()
         expect(function()
             VideState.spring({ loss = "half" :: any })
         end).toThrow("spring loss must be a number")
+        expect(function()
+            VideState.spring({ arrive = 0 })
+        end).toThrow("spring arrive must be a number above 0 and at most 0.8")
+        expect(function()
+            VideState.spring({ arrive = 0.9 })
+        end).toThrow("spring arrive must be a number above 0 and at most 0.8")
+        expect(function()
+            VideState.spring({ arrive = "soon" :: any })
+        end).toThrow("spring arrive must be a number")
+        expect(function()
+            VideState.spring({ settle = 0 })
+        end).toThrow("spring settle must be a number above 0 and at most 0.8")
+        expect(function()
+            VideState.spring({ settle = 0.9 })
+        end).toThrow("spring settle must be a number above 0 and at most 0.8")
+        expect(function()
+            VideState.spring({ arrive = 0.5, settle = 0.5 })
+        end).toThrow("spring arrive and settle must add up to at most 0.9")
+        expect(function()
+            VideState.spring({ tightening = -0.1 })
+        end).toThrow("spring tightening must be a number from 0 to 0.6")
+        expect(function()
+            VideState.spring({ tightening = 0.7 })
+        end).toThrow("spring tightening must be a number from 0 to 0.6")
+        expect(function()
+            VideState.spring({ anticipation = -0.1 })
+        end).toThrow("spring anticipation must be a number from 0 to 0.3")
+        expect(function()
+            VideState.spring({ anticipation = 0.4 })
+        end).toThrow("spring anticipation must be a number from 0 to 0.3")
         expect(function()
             VideState.spring({ bounce = 0.3 } :: any)
         end).toThrow("unknown key bounce")

@@ -27,8 +27,8 @@ version can contain breaking changes.
 - `handler.progress(options)` returns a Vide source for the alpha of a transition, so a progress bar or a ring can bind
   to it directly. It takes the same options as `onTransition`.
 - `VideState.bezier(x1, y1, x2, y2)` and `VideState.easing(fn)` make an easing of your own for `easing`, such as a curve
-  copied from a design tool. `VideState.spring({ height, bounces, loss })` makes a spring-shaped curve, with the height of the first bounce, the
-  number of bounces, and the height each bounce loses set separately. It is a
+  copied from a design tool. `VideState.spring(options)` makes a spring-shaped curve. `height`, `bounces`, and `loss` set the bounces, `anticipation`
+  adds a dip backwards before it moves, and `arrive`, `settle`, and `tightening` set when the bounces happen. It is a
   curve over the duration, not a physics spring: it takes no speed from an earlier transition. The `Easing` and
   `CustomEasing` types are exported.
 - `VideState.setReducedMotion(enabled)` and `VideState.isReducedMotion()`. While it is on, every `setState` is instant,
