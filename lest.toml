@@ -11,3 +11,8 @@ rojo = "default.project.json"
 include = ["tests/bench/**/*.spec.luau"]
 backend = "studio"
 default = false
+
+[suites.memory]
+include = ["tests/memory/**/*.spec.luau"]
+backend = "studio"
+default = false

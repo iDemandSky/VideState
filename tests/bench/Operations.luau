@@ -106,6 +106,81 @@ const function measure(group: string, name: string, iterations: number, work: (i
     )
 end
 
+-- Everything a memory measurement made stays alive until `releaseMemory`. If it were dropped, the collector would free it
+-- in the middle of the next measurement, and that one would read lower than what it really made.
+local graveyard: { any } = {}
+
+-- The memory in use in kilobytes. Roblox cannot force a collection, so this waits frame by frame until the reading has
+-- stopped falling for 15 frames, which is when the collector has freed the garbage that was waiting. It gives up after
+-- 300 frames.
+const function memoryNow(): number
+    local previous = collectgarbage("count")
+    local steady = 0
+
+    for _ = 1, 300 do
+        task.wait()
+
+        local now = collectgarbage("count")
+
+        if now < previous - 4 then
+            steady = 0
+        else
+            steady += 1
+        end
+
+        previous = math.min(previous, now)
+
+        if steady >= 15 then
+            break
+        end
+    end
+
+    return previous
+end
+
+-- Lets go of everything the memory measurements made. The collector frees it while the next measurement waits.
+const function releaseMemory()
+    table.clear(graveyard)
+end
+
+-- Builds `count` things that stay alive, and prints how many bytes each one takes. Whatever `prepare` makes is made
+-- first and is not counted, so the thing that is measured is only what `build` adds. It is the median of 3 runs. The
+-- building makes some garbage of its own, so the numbers are a little above what is kept.
+const function measureMemory(
+    group: string,
+    name: string,
+    count: number,
+    prepare: (index: number) -> any,
+    build: (prepared: any, index: number) -> any
+)
+    local results: { number } = {}
+
+    for _ = 1, 3 do
+        local prepared = {}
+
+        for index = 1, count do
+            prepared[index] = prepare(index)
+        end
+
+        local kept = {}
+        local before = memoryNow()
+
+        for index = 1, count do
+            kept[index] = build(prepared[index], index)
+        end
+
+        local after = memoryNow()
+
+        table.insert(results, (after - before) * 1024 / count)
+        table.insert(graveyard, prepared)
+        table.insert(graveyard, kept)
+    end
+
+    table.sort(results)
+
+    print(string.format("[bench] %s, %s: %.0f bytes each (%d made)", group, name, results[2], count))
+end
+
 -- Makes `count` handlers and lets `connect` add its connections to each one.
 const function createHandlers(rule: any, count: number, connect: (handler: any) -> ())
     local handlers = {}
@@ -128,6 +203,9 @@ end
 
 return table.freeze({
     measure = measure,
+    measureMemory = measureMemory,
+    memoryNow = memoryNow,
+    releaseMemory = releaseMemory,
     uniqueName = uniqueName,
     createStates = createStates,
     createRule = createRule,

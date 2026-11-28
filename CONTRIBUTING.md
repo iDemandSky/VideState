@@ -68,6 +68,11 @@ default. `Bench.luau` holds the shared rounds, and there is one spec for each wa
   connection, or a spring, and `setState`, the controls, `everyHandler`, and one frame of the shared loop. `Operations.luau`
   holds the helpers. Each prints a `[bench]` line with the median and the fastest time of one call, in microseconds.
 
+`tests/memory/` is its own suite, because the collector of one suite disturbs the readings of another. Run it with
+`lest memory`. Each `[bench]` line says how many bytes one rule, handler, or connection keeps alive. Roblox cannot force a
+garbage collection, so `Operations.luau` waits until the heap stops falling, and every measurement is the median of three
+runs. Run it a few times: a reading that repeats is real, and a negative or far higher one is the collector.
+
 
 ```sh
 larvae process

@@ -1,4 +1,5 @@
 const Vide = require("@packages/Vide")
+const Operations = require("./Operations")
 const VideState = require("@VideState")
 
 -- What each round connects to every handler:
@@ -172,6 +173,9 @@ end
 
 -- Runs every round for one mode and prints a `[bench]` line for each.
 const function run(mode: Mode)
+    -- Garbage that an earlier suite left behind would slow the frames, so wait until the collector has freed it.
+    Operations.memoryNow()
+
     -- One idle round first, so the first measured round does not pay for warming up.
     measure(mode, 100)
 
