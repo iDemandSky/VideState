@@ -20,7 +20,8 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'About', link: '/introduction/about' },
-          { text: 'Why VideState', link: '/introduction/why' }
+          { text: 'Why VideState', link: '/introduction/why' },
+          { text: 'Performance', link: '/introduction/performance' }
         ]
       },
       {

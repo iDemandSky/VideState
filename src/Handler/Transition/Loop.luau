@@ -1,3 +1,5 @@
+const insert = table.insert
+
 -- One running tween. `step` advances it by one frame and returns whether it keeps running.
 export type Job = {
     step: (deltaTime: number) -> boolean,
@@ -36,7 +38,7 @@ const function stepAll(deltaTime: number)
         local keepsRunning = stepJob(job, deltaTime)
 
         if keepsRunning then
-            table.insert(jobs, job)
+            insert(jobs, job)
         end
     end
 end
@@ -70,7 +72,7 @@ const function startLoop()
 end
 
 const function add(job: Job)
-    table.insert(jobs, job)
+    insert(jobs, job)
     startLoop()
 end
 
