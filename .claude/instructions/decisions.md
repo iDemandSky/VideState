@@ -58,10 +58,16 @@ user settles a new one.
   already accepts a Vide source, which is a function, so a function there would be ambiguous. The tables are frozen and
   kept in a weak set, so only checked ones are accepted. `bezier` follows CSS `cubic-bezier`, with `x1` and `x2` in 0 to
   1.
-- **`VideState.spring({ bounce })` or `({ height })` is a spring-shaped easing, and the docs say it is not a real spring.** The user wanted a spring
-  after hearing the limits. It is a damped oscillator over the duration, with a fixed decay so it has settled when the
-  duration ends, and a bounce from 0 (critically damped) to 1. `height` is the overshoot of the first peak (above 0, at most 0.5), and gives the damping ratio exactly. The height and the wobbles are linked by the fixed decay, so a tall bounce with one wobble is a `bezier`. A real spring needs speed carried over an interrupted
-  transition, which does not fit the shared alpha of a tween group, so it was not built. The docs keep a warning box.
+- **`VideState.spring({ height, bounces })` is a spring-shaped easing, and the docs say it is not a real spring.** The user
+  wanted a spring after hearing the limits, and then wanted the bounce height and the bounce count set separately while
+  the curve still ends on the duration. A damped oscillator cannot do that, because its decay ties the first peak to
+  the later ones. So the curve is `1 - size(t) * (cos + k sin)`, where the cosine fits `bounces` bounces in the
+  duration, and `size` is `exp(-L(t))` with `L` a monotone cubic through the decay at each peak. The first peak is
+  solved by bisection to be exactly `height`, and each later bounce has the same extra decay, so the last is about
+  `LAST_BOUNCE` (0.15) of the first. `size` is corrected to reach 0 at the end, and the start slope is 0. Results are
+  cached by height and bounces. Heights above 0.5 and more than 10 bounces are rejected. A real spring needs speed
+  carried over an interrupted transition, which does not fit the shared alpha of a tween group, so it was not built.
+  The docs keep a warning box.
 - **`setReducedMotion` makes every `setState` instant.** It is global, affects only state changes that start after it
   is called, and a connection cannot opt out.
 

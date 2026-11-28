@@ -122,35 +122,215 @@ const function bezier(x1: number, y1: number, x2: number, y2: number): Types.Cus
     end)
 end
 
--- How fast the wobble of a spring dies out, so it has faded to about a third of a percent when the transition ends.
-const SPRING_DECAY = 8
+-- The last bounce of a spring is about this fraction of the first, so every bounce can be seen.
+const LAST_BOUNCE = 0.15
 
--- The default bounce of `VideState.spring`.
-const DEFAULT_BOUNCE = 0.3
-
--- The least damping ratio a spring gets. A bounce of 1 is this, so the curve still settles inside its duration.
-const LEAST_DAMPING = 0.2
-
--- The highest first peak a spring can have, as a fraction past the target. It is the overshoot of the least damping.
+-- The highest first bounce a spring can have, as a fraction past the target.
 const MAX_HEIGHT = 0.5
 
+-- The most bounces a spring can have.
+const MAX_BOUNCES = 10
+
+const DEFAULT_HEIGHT = 0.15
+const DEFAULT_BOUNCES = 2
+
 const SPRING_KEYS: { [string]: boolean } = {
-    bounce = true,
     height = true,
+    bounces = true,
 }
 
--- The damping ratio whose first peak is `height` past the target. An underdamped spring overshoots by
--- e^(-pi * z / sqrt(1 - z^2)), and this solves that for z.
-const function dampingForHeight(height: number): number
-    const logHeight = math.log(height)
+-- A smooth curve through the points that never turns around between two points that rise (Fritsch and Butland).
+-- `evaluate` reads it, and `startSlope` is its slope at the first point.
+type MonotoneCurve = {
+    evaluate: (x: number) -> number,
+    startSlope: number,
+}
 
-    return -logHeight / math.sqrt(math.pi * math.pi + logHeight * logHeight)
+-- The slope at an end point from the three nearest points, kept in the direction of the curve.
+const function endSlope(h0: number, h1: number, d0: number, d1: number): number
+    const slope = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1)
+    const isSameDirection = slope * d0 > 0
+
+    if not isSameDirection then
+        return 0
+    end
+
+    const turns = d0 * d1 <= 0
+    const isSteep = math.abs(slope) > 3 * math.abs(d0)
+
+    if turns and isSteep then
+        return 3 * d0
+    end
+
+    return slope
 end
 
--- Reads the options of `spring` and returns the damping ratio. 1 means critically damped, which does not wobble.
-const function readSpringDamping(options: unknown): number
+-- Needs at least three points, with `xs` rising.
+const function monotoneCurve(xs: { number }, ys: { number }): MonotoneCurve
+    const count = #xs
+    const widths: { number } = {}
+    const secants: { number } = {}
+    const slopes: { number } = {}
+
+    for index = 1, count - 1 do
+        widths[index] = xs[index + 1] - xs[index]
+        secants[index] = (ys[index + 1] - ys[index]) / widths[index]
+    end
+
+    for index = 2, count - 1 do
+        const before = secants[index - 1]
+        const after = secants[index]
+        const turns = before * after <= 0
+
+        if turns then
+            slopes[index] = 0
+
+            continue
+        end
+
+        const weightBefore = 2 * widths[index] + widths[index - 1]
+        const weightAfter = widths[index] + 2 * widths[index - 1]
+
+        slopes[index] = (weightBefore + weightAfter) / (weightBefore / before + weightAfter / after)
+    end
+
+    slopes[1] = endSlope(widths[1], widths[2], secants[1], secants[2])
+    slopes[count] = endSlope(widths[count - 1], widths[count - 2], secants[count - 1], secants[count - 2])
+
+    const function evaluate(x: number): number
+        local segment = count - 1
+
+        for index = 1, count - 1 do
+            if x < xs[index + 1] then
+                segment = index
+
+                break
+            end
+        end
+
+        const width = widths[segment]
+        const along = (x - xs[segment]) / width
+        const rest = 1 - along
+        const startWeight = (1 + 2 * along) * rest * rest
+        const startSlopeWeight = along * rest * rest
+        const endWeight = along * along * (3 - 2 * along)
+        const endSlopeWeight = along * along * (along - 1)
+
+        return startWeight * ys[segment]
+            + startSlopeWeight * width * slopes[segment]
+            + endWeight * ys[segment + 1]
+            + endSlopeWeight * width * slopes[segment + 1]
+    end
+
+    return {
+        evaluate = evaluate,
+        startSlope = slopes[1],
+    }
+end
+
+-- The curve of a spring with `bounces` bounces. The wobble is a cosine that fits `bounces` bounces in the duration.
+-- Its size starts at 1 and falls to `firstDecay` worth of decay at the first bounce, and then by the same amount for
+-- every bounce after it, so each bounce is lower than the last. It reaches 0 at the end, so the curve ends on 1.
+const function buildSpring(firstDecay: number, bounces: number): (number) -> number
+    const lastRatio = LAST_BOUNCE ^ (1 / math.max(bounces - 1, 1))
+    const step = -math.log(lastRatio)
+    const times: { number } = {
+        0,
+    }
+    const decays: { number } = {
+        0,
+    }
+
+    for bounce = 1, bounces do
+        table.insert(times, (2 * bounce - 1) / (2 * bounces))
+        table.insert(decays, firstDecay + (bounce - 1) * step)
+    end
+
+    table.insert(times, 1)
+    table.insert(decays, firstDecay + bounces * step)
+
+    const decay = monotoneCurve(times, decays)
+    const endSize = math.exp(-decays[#decays])
+    const scale = 1 / (1 - endSize)
+    const frequency = 2 * math.pi * bounces
+    -- A start slope of 0 makes the curve start without a jump, like a spring that is let go.
+    const sineWeight = decay.startSlope * scale / frequency
+
+    return function(progress: number): number
+        if progress <= 0 then
+            return 0
+        end
+
+        if progress >= 1 then
+            return 1
+        end
+
+        const size = (math.exp(-decay.evaluate(progress)) - endSize) * scale
+        const angle = frequency * progress
+
+        return 1 - size * (math.cos(angle) + sineWeight * math.sin(angle))
+    end
+end
+
+-- How far the first bounce of the curve passes 1.
+const function firstPeak(curve: (number) -> number, bounces: number): number
+    const golden = (math.sqrt(5) - 1) / 2
+    local low = 0
+    local high = 1 / bounces
+    local left = high - golden * (high - low)
+    local right = low + golden * (high - low)
+
+    for _ = 1, 45 do
+        if curve(left) > curve(right) then
+            high = right
+        else
+            low = left
+        end
+
+        left = high - golden * (high - low)
+        right = low + golden * (high - low)
+    end
+
+    return curve((low + high) / 2) - 1
+end
+
+-- The decay that gives the first bounce its height. A faster decay lowers the bounce, so bisection finds it. The
+-- answers are kept, because a game makes the same few springs again and again.
+const solved: { [string]: number } = {}
+
+const function solveDecay(height: number, bounces: number): number
+    const key = `{height}:{bounces}`
+    const known = solved[key]
+
+    if known ~= nil then
+        return known
+    end
+
+    local low = 0.01
+    local high = 40
+
+    for _ = 1, 50 do
+        const middle = (low + high) / 2
+        const peak = firstPeak(buildSpring(middle, bounces), bounces)
+
+        if peak > height then
+            low = middle
+        else
+            high = middle
+        end
+    end
+
+    const decay = (low + high) / 2
+
+    solved[key] = decay
+
+    return decay
+end
+
+-- Reads the options of `spring`. The error level of 3 points at the user's call.
+const function readSpringOptions(options: unknown): (number, number)
     if options == nil then
-        return 1 - (1 - LEAST_DAMPING) * DEFAULT_BOUNCE
+        return DEFAULT_HEIGHT, DEFAULT_BOUNCES
     end
 
     if type(options) ~= "table" then
@@ -167,12 +347,10 @@ const function readSpringDamping(options: unknown): number
         end
     end
 
-    const bounce = fields.bounce
     const height = fields.height
-
-    if bounce ~= nil and height ~= nil then
-        error("spring takes bounce or height, not both", 3)
-    end
+    const bounces = fields.bounces
+    local heightValue = DEFAULT_HEIGHT
+    local bouncesValue = DEFAULT_BOUNCES
 
     if height ~= nil then
         const heightMessage = `spring height must be a number above 0 and at most {MAX_HEIGHT}`
@@ -189,71 +367,37 @@ const function readSpringDamping(options: unknown): number
             error(heightMessage, 3)
         end
 
-        return dampingForHeight(height)
+        heightValue = height
     end
 
-    local amount = DEFAULT_BOUNCE
+    if bounces ~= nil then
+        const bouncesMessage = `spring bounces must be a whole number from 1 to {MAX_BOUNCES}`
 
-    if bounce ~= nil then
-        const bounceMessage = "spring bounce must be a number from 0 to 1"
-
-        if type(bounce) ~= "number" then
-            error(bounceMessage, 3)
+        if type(bounces) ~= "number" then
+            error(bouncesMessage, 3)
         end
 
-        local isAtLeastZero = bounce >= 0
-        local isAtMostOne = bounce <= 1
+        local isWhole = bounces % 1 == 0
+        local isAtLeastOne = bounces >= 1
+        local isAtMost = bounces <= MAX_BOUNCES
 
-        if not (isAtLeastZero and isAtMostOne) then
-            error(bounceMessage, 3)
+        if not (isWhole and isAtLeastOne and isAtMost) then
+            error(bouncesMessage, 3)
         end
 
-        amount = bounce
+        bouncesValue = bounces
     end
 
-    return 1 - (1 - LEAST_DAMPING) * amount
+    return heightValue, bouncesValue
 end
 
--- A curve that looks like a damped spring: it starts at 0, passes 1, wobbles around it, and has settled at 1 by the
--- end. It is a curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier
--- transition, and it always ends when the duration does. `bounce` goes from 0, which settles smoothly without passing
--- 1, to 1, which wobbles the most. `height` sets how far the first peak passes 1 instead.
-const function spring(options: { bounce: number?, height: number? }?): Types.CustomEasing
-    const damping = readSpringDamping(options)
-    const decay = SPRING_DECAY
+-- A curve that looks like a damped spring: it starts at 0 without a jump, passes 1 by `height`, comes back and goes
+-- past it again, `bounces` times, each bounce lower than the last, and ends on 1 when the duration ends. It is a
+-- curve over the duration of the transition, not a simulated spring: it takes no speed from an earlier transition.
+const function spring(options: { height: number?, bounces: number? }?): Types.CustomEasing
+    const height, bounces = readSpringOptions(options)
 
-    -- A damping ratio of 1 is critically damped, which has no wobble.
-    if damping >= 1 then
-        return make(function(progress: number): number
-            if progress <= 0 then
-                return 0
-            end
-
-            if progress >= 1 then
-                return 1
-            end
-
-            return 1 - (1 + decay * progress) * math.exp(-decay * progress)
-        end)
-    end
-
-    -- The decay is fixed, so the frequency follows from the damping ratio.
-    const frequency = decay * math.sqrt(1 - damping * damping) / damping
-    const ratio = decay / frequency
-
-    return make(function(progress: number): number
-        if progress <= 0 then
-            return 0
-        end
-
-        if progress >= 1 then
-            return 1
-        end
-
-        const angle = frequency * progress
-
-        return 1 - math.exp(-decay * progress) * (math.cos(angle) + ratio * math.sin(angle))
-    end)
+    return make(buildSpring(solveDecay(height, bounces), bounces))
 end
 
 -- Wraps a function of the progress from 0 to 1 that returns the eased progress. It is called with 0 and 1 once, to

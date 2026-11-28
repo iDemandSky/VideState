@@ -66,86 +66,71 @@ describe("custom easing", function()
         end).toThrow("finite")
     end)
 
-    it("makes a spring curve that starts at 0 and has settled at 1 by the end", function()
-        for _, bounce in { 0, 0.1, 0.3, 0.6, 1 } do
-            local spring = VideState.spring({ bounce = bounce })
+    it("makes a spring that starts at 0, rises without a jump, and ends on 1", function()
+        for _, bounces in { 1, 2, 3, 5 } do
+            local spring = VideState.spring({ height = 0.2, bounces = bounces })
 
             expect(spring.fn(0)).toBe(0)
             expect(spring.fn(1)).toBe(1)
-            expect(math.abs(spring.fn(0.99) - 1) < 0.02).toBe(true)
+            expect(math.abs(spring.fn(0.99) - 1) < 0.01).toBe(true)
+
+            -- It does not jump at the start: the first thousandth of the time moves it very little.
+            expect(spring.fn(0.001) < 0.01).toBe(true)
         end
-    end)
-
-    it("makes a spring with no bounce that never passes 1 and never goes back", function()
-        local spring = VideState.spring({ bounce = 0 })
-        local previous = 0
-
-        -- cubic-style check against the closed form: 1 - (1 + 8t) * e^(-8t).
-        expect(math.abs(spring.fn(0.5) - (1 - 5 * math.exp(-4))) < 0.0001).toBe(true)
-
-        for step = 1, 100 do
-            local value = spring.fn(step / 100)
-
-            expect(value <= 1).toBe(true)
-            expect(value >= previous).toBe(true)
-
-            previous = value
-        end
-    end)
-
-    it("overshoots more as the bounce goes up", function()
-        local function highest(bounce: number?): number
-            local spring = VideState.spring({ bounce = bounce })
-            local top = 0
-
-            for step = 1, 199 do
-                top = math.max(top, spring.fn(step / 200))
-            end
-
-            return top
-        end
-
-        local low = highest(0.2)
-        local middle = highest(0.5)
-        local high = highest(0.9)
-
-        expect(low > 1).toBe(true)
-        expect(middle > low).toBe(true)
-        expect(high > middle).toBe(true)
-
-        -- The default bounce is 0.3.
-        expect(VideState.spring().fn(0.4)).toBe(VideState.spring({ bounce = 0.3 }).fn(0.4))
     end)
 
     it("sets how high the first bounce goes with height", function()
-        for _, height in { 0.05, 0.1, 0.2, 0.35, 0.5 } do
-            local spring = VideState.spring({ height = height })
-            local top = 0
+        for _, bounces in { 1, 2, 3, 5 } do
+            for _, height in { 0.05, 0.1, 0.2, 0.35, 0.5 } do
+                local spring = VideState.spring({ height = height, bounces = bounces })
+                local top = 0
 
-            for step = 1, 999 do
-                top = math.max(top, spring.fn(step / 1000))
+                for step = 1, 3999 do
+                    top = math.max(top, spring.fn(step / 4000))
+                end
+
+                -- The highest point is the first bounce, 1 plus the height.
+                expect(math.abs(top - (1 + height)) < 0.004).toBe(true)
             end
-
-            -- The highest point is the first peak, 1 plus the height.
-            expect(math.abs(top - (1 + height)) < 0.005).toBe(true)
-            expect(spring.fn(1)).toBe(1)
-            expect(math.abs(spring.fn(0.99) - 1) < 0.02).toBe(true)
         end
     end)
 
+    it("sets how many times it bounces with bounces, each bounce lower than the last", function()
+        for _, bounces in { 1, 2, 3, 5, 8 } do
+            local spring = VideState.spring({ height = 0.3, bounces = bounces })
+            local peaks: { number } = {}
+            local samples: { number } = {}
+
+            for step = 0, 8000 do
+                table.insert(samples, spring.fn(step / 8000))
+            end
+
+            for index = 2, #samples - 1 do
+                local isAbove = samples[index] > samples[index - 1]
+                local isPeak = isAbove and samples[index] >= samples[index + 1]
+
+                if isPeak and samples[index] > 1.0001 then
+                    table.insert(peaks, samples[index] - 1)
+                end
+            end
+
+            expect(#peaks).toBe(bounces)
+
+            for index = 2, #peaks do
+                expect(peaks[index] < peaks[index - 1]).toBe(true)
+            end
+        end
+    end)
+
+    it("makes the same spring when the options are left out as with the defaults", function()
+        local plain = VideState.spring()
+        local explicit = VideState.spring({ height = 0.15, bounces = 2 })
+
+        expect(plain.fn(0.3)).toBe(explicit.fn(0.3))
+        expect(plain.fn(0.7)).toBe(explicit.fn(0.7))
+    end)
+
     it("rejects spring options that are not valid", function()
-        expect(function()
-            VideState.spring({ bounce = -0.1 })
-        end).toThrow("spring bounce must be a number from 0 to 1")
-        expect(function()
-            VideState.spring({ bounce = 1.1 })
-        end).toThrow("spring bounce must be a number from 0 to 1")
-        expect(function()
-            VideState.spring({ bounce = "soft" :: any })
-        end).toThrow("spring bounce must be a number from 0 to 1")
-        expect(function()
-            VideState.spring({ bounce = 0 / 0 })
-        end).toThrow("spring bounce must be a number from 0 to 1")
         expect(function()
             VideState.spring({ height = 0 })
         end).toThrow("spring height must be a number above 0 and at most 0.5")
@@ -156,11 +141,20 @@ describe("custom easing", function()
             VideState.spring({ height = "tall" :: any })
         end).toThrow("spring height must be a number")
         expect(function()
-            VideState.spring({ bounce = 0.3, height = 0.2 })
-        end).toThrow("spring takes bounce or height, not both")
+            VideState.spring({ bounces = 0 })
+        end).toThrow("spring bounces must be a whole number from 1 to 10")
         expect(function()
-            VideState.spring({ speed = 2 } :: any)
-        end).toThrow("unknown key speed")
+            VideState.spring({ bounces = 2.5 })
+        end).toThrow("spring bounces must be a whole number from 1 to 10")
+        expect(function()
+            VideState.spring({ bounces = 11 })
+        end).toThrow("spring bounces must be a whole number from 1 to 10")
+        expect(function()
+            VideState.spring({ bounces = "many" :: any })
+        end).toThrow("spring bounces must be a whole number")
+        expect(function()
+            VideState.spring({ bounce = 0.3 } :: any)
+        end).toThrow("unknown key bounce")
         expect(function()
             VideState.spring(0.3 :: any)
         end).toThrow("spring options must be a table")
@@ -177,7 +171,7 @@ describe("custom easing", function()
         end, {
             tweenDefault = {
                 duration = 1,
-                easing = VideState.spring({ bounce = 0.5 }),
+                easing = VideState.spring({ height = 0.3, bounces = 3 }),
             },
         })
 
