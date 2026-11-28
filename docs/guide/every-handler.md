@@ -317,14 +317,16 @@ Group.finish() -> ()
 Calls [`finish`](/guide/handlers#finish) on every handler in scope: each one sends its last frame before
 `finish` returns, and then fires its own `onFinish`.
 
-### setState <Badge type="tip" text="Added in 0.3.0" />
+### setState <Badge type="tip" text="Added in 0.3.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 Group.setState(
     stateName: string, -- The state to change to
-    options: SetStateOptions? -- The same options as the handler's setState
+    options: EverySetStateOptions? -- The options of the handler's setState, and stagger
 ) -> ()
 ```
+
+Changed in 0.5.0: the options take `stagger`, which starts the handlers one after another.
 
 Calls [`setState`](/guide/handlers#setstate) on every handler in scope.
 
@@ -343,13 +345,15 @@ VideState.everyHandler.setState("Closed")
 | Name | Type | Description |
 | --- | --- | --- |
 | `stateName` | `string` | Required. The name of the state. |
-| `options` | [`SetStateOptions`](/guide/handlers#setstateoptions)`?` | Optional. The same options as the handler's `setState`, such as `instant`. |
+| `options` | [`EverySetStateOptions`](#everysetstateoptions)`?` | Optional. The options of the handler's `setState`, `instant` and `delay`, and `stagger`. |
 
 **Errors**
 
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `everyHandler.setState state name must be a string, got <type>` |
+| <Badge type="danger" text="Error" /> | `options.stagger` is not a finite non-negative number | `everyHandler.setState stagger must be a finite non-negative number` |
+| <Badge type="danger" text="Error" /> | The rule of one or more handlers does not let them change to the state | `everyHandler.setState cannot change to state "<stateName>" in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 | <Badge type="danger" text="Error" /> | One or more handlers in scope lack the state | `everyHandler.setState state "<stateName>" is missing in <count> handlers: <rule> (<handlers>), ... No handler changed state` |
 
 An invalid `options` raises the errors of the handler's [`setState`](/guide/handlers#setstate).
@@ -407,7 +411,7 @@ Group.isAnyPaused() -> boolean
 
 ## Types
 
-### EveryHandlerGroup <Badge type="tip" text="Added in 0.3.0" />
+### EveryHandlerGroup <Badge type="tip" text="Added in 0.3.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type EveryHandlerGroup = {
@@ -421,7 +425,7 @@ type EveryHandlerGroup = {
     pause: () -> (), -- Pauses the handlers in scope
     resume: () -> (), -- Resumes the handlers in scope
     finish: () -> (), -- Finishes the transitions of the handlers in scope
-    setState: (stateName: string, options: SetStateOptions?) -> (), -- Changes the state of the handlers in scope
+    setState: (stateName: string, options: EverySetStateOptions?) -> (), -- Changes the state of the handlers in scope
     destroy: () -> (), -- Destroys the handlers in scope
     count: () -> number, -- How many handlers are in scope
     isAnyRunning: () -> boolean, -- Whether any handler in scope has a running transition
@@ -429,4 +433,24 @@ type EveryHandlerGroup = {
 }
 ```
 
+Changed in 0.5.0: `setState` takes [`EverySetStateOptions`](#everysetstateoptions).
+
 The functions of `everyHandler`, and of every group that a filter returns. Each one is described above.
+
+### EverySetStateOptions <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type EverySetStateOptions = {
+    instant: boolean?, -- Skips the animation of this change
+    delay: number?, -- Seconds every connection waits before it starts
+    stagger: number?, -- Seconds between the handlers, in the order they were created
+}
+```
+
+The options of [`setState`](#setstate).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `instant` | `boolean` | No | `false` | The same as in the handler's [`SetStateOptions`](/guide/handlers#setstateoptions). |
+| `delay` | `number` | No | `0` | The same as in the handler's [`SetStateOptions`](/guide/handlers#setstateoptions), for every handler. |
+| `stagger` | `number` | No | `0` | Seconds between the handlers, in the order they were created. The first waits `0`, the second `stagger`, the third twice that, and so on, added to `delay`. Must be finite and non-negative. See [Staggering handlers](/guide/transitions#staggering-handlers). |

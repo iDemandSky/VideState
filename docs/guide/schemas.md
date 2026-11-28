@@ -6,9 +6,13 @@ outline: [2, 3]
 
 # Schemas
 
-Schema builders describe the shape of a value. Every builder returns a [`Schema<T>`](#schema) for a
+Schema builders describe the shape of a value. Every builder returns a `Schema<T>` for a
 Luau type `T`. Schemas are the field definitions that a [rule](/guide/rules) combines. Builders
 validate their options when they are called, and an invalid option raises an error.
+
+You do not call a schema yourself. Pass it as a field of a rule, and the rule checks the values of every state against
+it when a handler is created and whenever the state changes. A value that does not match raises an error that names the
+field and what was wrong.
 
 ## Primitives
 
@@ -24,7 +28,7 @@ Accepts `true` or `false`, and rejects every other type.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<boolean>` | A schema for booleans. |
+| `Schema``<boolean>` | A schema for booleans. |
 
 ### integer <Badge type="tip" text="Added in 0.1.0" />
 
@@ -51,7 +55,7 @@ Accepts finite whole numbers.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<number>` | A schema for whole numbers within the bounds. |
+| `Schema``<number>` | A schema for whole numbers within the bounds. |
 
 **Errors**
 
@@ -89,7 +93,7 @@ Accepts finite numbers, including whole numbers.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<number>` | A schema for finite numbers within the bounds and precision. |
+| `Schema``<number>` | A schema for finite numbers within the bounds and precision. |
 
 **Errors**
 
@@ -133,7 +137,7 @@ Accepts strings.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<string>` | A schema for strings. |
+| `Schema``<string>` | A schema for strings. |
 
 **Errors**
 
@@ -163,7 +167,7 @@ Accepts only the strings passed as arguments. Matching is case-sensitive.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<string>` | A schema that accepts one of the given strings. |
+| `Schema``<string>` | A schema that accepts one of the given strings. |
 
 **Errors**
 
@@ -186,13 +190,69 @@ Accepts `nil` and any value the inner schema accepts. A Vide source that holds `
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `schema` | [`Schema`](#schema)`<T>` | The schema to apply when the value is not `nil`. |
+| `schema` | `Schema``<T>` | The schema to apply when the value is not `nil`. |
 
 **Returns**
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<T?>` | A schema that accepts `nil` or a value accepted by `schema`. |
+| `Schema``<T?>` | A schema that accepts `nil` or a value accepted by `schema`. |
+
+### union <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.union(
+    first: Schema<A>, -- The schema that is tried first
+    second: Schema<B> -- The schema that is tried when the first one rejects the value
+) -> Schema<A | B>
+```
+
+Accepts any value that `first` or `second` accepts. The first schema is tried first, and its result is used when it
+accepts the value. A Vide source that holds a value of either schema is also accepted.
+
+```luau
+-- A width that is a number of pixels or the string "Auto".
+const width = VideState.union(VideState.float({ min = 0 }), VideState.enum("Auto"))
+```
+
+To accept more than two schemas, nest the union: `VideState.union(a, VideState.union(b, c))`.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `first` | `Schema``<A>` | The schema to try first. |
+| `second` | `Schema``<B>` | The schema to try when `first` rejects the value. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `Schema``<A | B>` | A schema that accepts a value accepted by either schema. |
+
+**Errors**
+
+| | When | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | An argument is not a schema | `expected the first union schema to be a schema`, and the same for the second |
+
+::: warning A union does not tween between different types
+A transition blends the old and the new value only when both have the same animatable type. When the types differ, or the
+type cannot be animated, the field **switches at the start**: the new value is sent on the first frame and does not move
+after that. A union cannot animate from `100` to `"Auto"`.
+
+| From | To | Result |
+| --- | --- | --- |
+| `100` | `200` | Tweens, as two numbers. |
+| `UDim2` | `UDim2` | Tweens, as two `UDim2` values. |
+| `100` | `"Auto"` | Switches at the start, because a number and a string cannot be blended. |
+| `"Auto"` | `"Fill"` | Switches at the start, because a string cannot be animated. |
+| `UDim2` | `Color3` | Switches at the start, because the types differ. |
+
+The union does not check which schema accepted a value, so two numbers from different branches still tween. The other
+fields of the same state tween as usual. To animate toward a size that the layout decides, use a number for the field and
+a separate state for the automatic layout.
+:::
 
 ### table <Badge type="tip" text="Added in 0.1.0" />
 
@@ -216,7 +276,7 @@ inferred from the field schemas, so [`Infer`](#infer) returns a table with the s
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<{ [string]: any }>` | A schema for tables with exactly these fields. |
+| `Schema``<{ [string]: any }>` | A schema for tables with exactly these fields. |
 
 **Errors**
 
@@ -246,7 +306,7 @@ can be any schema, including another record.
 
 | Type | Description |
 | --- | --- |
-| [`Schema`](#schema)`<{ [string]: any }>` | A schema for records with exactly these fields. |
+| `Schema``<{ [string]: any }>` | A schema for records with exactly these fields. |
 
 **Errors**
 
@@ -320,31 +380,6 @@ VideState.vector2() -> Schema<Vector2>
 
 Accepts a `Vector2`.
 
-## Schema
-
-### parse <Badge type="tip" text="Added in 0.1.0" />
-
-```luau
-Schema.parse(
-    value: unknown -- The value to check
-) -> ParseResult<T>
-```
-
-Checks a value against the schema without raising an error.
-
-**Parameters**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| `value` | `unknown` | The value to validate. |
-
-**Returns**
-
-| Type | Description |
-| --- | --- |
-| [`ParseResult`](#parseresult)`<T>` when valid: `{ ok: true, value: T }` | The value is valid. `value` is the accepted value, which can differ from the input, for example when a string is truncated. |
-| [`ParseResult`](#parseresult)`<T>` when invalid: `{ ok: false, issues: { ParseIssue } }` | The value is invalid. `issues` lists what was wrong. |
-
 ## Types
 
 ### Infer <Badge type="tip" text="Added in 0.1.0" />
@@ -408,19 +443,3 @@ Options for [`string`](#string).
 | --- | --- | --- | --- | --- |
 | `maxLength` | `number` | No | No limit | The maximum length, counted in Unicode code points rather than bytes. When set, strings with invalid UTF-8 are rejected. |
 | `truncate` | `boolean` | No | `false` | When `true`, longer strings are cut down to `maxLength` instead of rejected. |
-
-### ParseResult <Badge type="tip" text="Added in 0.1.0" />
-
-```luau
-type ParseResult<T> =
-    { ok: true, value: T }
-    | { ok: false, issues: { ParseIssue } }
-```
-
-The result of [`parse`](#parse). Check `ok` to tell the two cases apart.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `ok` | `boolean` | `true` when the value is valid. |
-| `value` | `T` | Only when `ok` is `true`. The accepted value, which can differ from the input, for example when a string is truncated. |
-| `issues` | `{ ParseIssue }` | Only when `ok` is `false`. What was wrong with the value. |

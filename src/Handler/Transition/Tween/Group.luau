@@ -18,13 +18,22 @@ export type Group<T> = {
     alphaFrom: number,
     alphaPosition: number,
     elapsed: number,
-    easing: Types.TweenName,
+    easing: Types.Easing,
     easingFunction: (number) -> number,
     duration: number,
     complete: boolean,
 }
 
-const function create<T>(from: T, to: T, easing: Types.TweenName, duration: number): Group<T>
+-- The function of an easing: a built-in name, or the function of a custom easing.
+const function resolve(easing: Types.Easing): (number) -> number
+    if type(easing) == "string" then
+        return Easing[easing]
+    end
+
+    return (easing :: Types.CustomEasing).fn
+end
+
+const function create<T>(from: T, to: T, easing: Types.Easing, duration: number): Group<T>
     local keys: { string } = {}
     local froms: { [string]: any } = {}
     local goals: { [string]: any } = {}
@@ -65,7 +74,7 @@ const function create<T>(from: T, to: T, easing: Types.TweenName, duration: numb
         alphaPosition = 0,
         elapsed = 0,
         easing = easing,
-        easingFunction = Easing[easing],
+        easingFunction = resolve(easing),
         duration = duration,
         complete = false,
     }
@@ -74,7 +83,7 @@ end
 -- Applies changed settings to a running group. Every tween restarts from its current position, so the remaining
 -- distance is covered with the new settings and the values do not jump, but the easing curve starts again from that
 -- point.
-const function configure<T>(group: Group<T>, easing: Types.TweenName, duration: number)
+const function configure<T>(group: Group<T>, easing: Types.Easing, duration: number)
     local isSameEasing = group.easing == easing
     local isSameDuration = group.duration == duration
     local isSame = isSameEasing and isSameDuration
@@ -84,7 +93,7 @@ const function configure<T>(group: Group<T>, easing: Types.TweenName, duration: 
     end
 
     group.easing = easing
-    group.easingFunction = Easing[easing] or group.easingFunction
+    group.easingFunction = resolve(easing) or group.easingFunction
     group.duration = duration
 
     if group.complete or group.elapsed == 0 then

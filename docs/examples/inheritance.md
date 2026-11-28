@@ -15,100 +15,141 @@ A **main menu with three buttons**, all made from the button component in [Compo
 
 | Button | Design | Purpose | Enabled |
 | --- | --- | --- | --- |
-| Play | `PrimaryDesign` (blue) | The main action | Yes |
-| Delete | `DangerDesign` (red) | A destructive action | Yes |
-| Shop | `DefaultDesign` (grey) | Not available yet | No |
+| Play | `ButtonDesigns.Primary` (blue) | The main action | Yes |
+| Delete | `ButtonDesigns.Danger` (red) | A destructive action | Yes |
+| Shop | `ButtonDesigns.Default` (grey) | Not available yet | No |
 
 All three buttons have the same four states (`Idle`, `Hovered`, `Pressed`, `Disabled`) and the same three
 properties (`backgroundColor`, `textColor`, `textSize`). Only the values differ. For example, `Idle` is blue
 for Play, red for Delete, and dark grey for Shop.
 
-This page continues the script from Components. The rule, the `Look` and `Design` types, `createStates`,
-`createButton`, and `DefaultDesign` are exactly the same, so they are not repeated here.
+This page continues from Components. The **`ButtonRule`** and **`Button`** ModuleScripts in `ReplicatedStorage` are exactly
+the same, so they are not repeated here. The new designs are added to **`ButtonDesigns`**.
 
 ## 1. The base component
 
-The base is the `ButtonRule` you already wrote. It is the contract that every design has to follow: each
-design provides `Idle`, `Hovered`, `Pressed`, and `Disabled`, with the same three properties.
-It is shown again only as a reminder, so do not define it a second time.
-
-```luau
-const ButtonRule = VideState.rule({
-    backgroundColor = VideState.color3(),
-    textColor = VideState.color3(),
-    textSize = VideState.integer({ min = 1 }),
-}, {
-    name = "Button",
-    allowedStateNames = { "Idle", "Hovered", "Pressed", "Disabled" },
-})
-```
+The base is the **`ButtonRule`** ModuleScript you already wrote. It is the contract that every design has to follow:
+each design provides `Idle`, `Hovered`, `Pressed`, and `Disabled`, with the same three properties. Do not change it.
+Every button requires it by that name, so there is still one definition.
 
 ## 2. Add the designs
 
-Each design is a table of type `Design`. It has the same states as `DefaultDesign`, with different values,
-so every design works with the same `createButton`.
+Each design is a table of type `Design`. It has the same states as the default design, with different values,
+so every design works with the same `createButton`. Replace the **`ButtonDesigns`** ModuleScript with the version below.
+It keeps the types and the default design, and adds two more.
 
-The primary design is blue. Its text grows by two points when hovered, like the default design:
+The primary design is blue. Its text grows by two points when hovered, like the default design. The danger design is
+red. Its text does not grow on hover, which shows that designs can differ in any property and not only in colors.
 
-```luau
-const PrimaryDesign: Design = {
-    Idle = {
-        backgroundColor = Color3.fromRGB(60, 120, 230),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
+::: code-group
+
+```luau [ReplicatedStorage/ButtonDesigns.luau]
+export type Look = {
+    backgroundColor: Color3,
+    textColor: Color3,
+    textSize: number,
+}
+
+export type Design = {
+    Idle: Look,
+    Hovered: Look,
+    Pressed: Look,
+    Disabled: Look,
+}
+
+local Designs: { [string]: Design } = {
+    Default = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(60, 60, 70),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(80, 80, 95),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 20,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(40, 40, 50),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(35, 35, 35),
+            textColor = Color3.fromRGB(120, 120, 120),
+            textSize = 18,
+        },
     },
-    Hovered = {
-        backgroundColor = Color3.fromRGB(80, 140, 250),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 20,
+    Primary = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(60, 120, 230),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(80, 140, 250),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 20,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(40, 95, 190),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(70, 80, 100),
+            textColor = Color3.fromRGB(150, 150, 150),
+            textSize = 18,
+        },
     },
-    Pressed = {
-        backgroundColor = Color3.fromRGB(40, 95, 190),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Disabled = {
-        backgroundColor = Color3.fromRGB(70, 80, 100),
-        textColor = Color3.fromRGB(150, 150, 150),
-        textSize = 18,
+    Danger = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(200, 60, 60),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(225, 85, 85),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(160, 40, 40),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(90, 60, 60),
+            textColor = Color3.fromRGB(150, 150, 150),
+            textSize = 18,
+        },
     },
 }
+
+return Designs
 ```
 
-The danger design is red. Its text does not grow on hover, which shows that designs can differ in any
-property and not only in colors:
+:::
 
-```luau
-const DangerDesign: Design = {
-    Idle = {
-        backgroundColor = Color3.fromRGB(200, 60, 60),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Hovered = {
-        backgroundColor = Color3.fromRGB(225, 85, 85),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Pressed = {
-        backgroundColor = Color3.fromRGB(160, 40, 40),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Disabled = {
-        backgroundColor = Color3.fromRGB(90, 60, 60),
-        textColor = Color3.fromRGB(150, 150, 150),
-        textSize = 18,
-    },
-}
-```
+A component picks a design by name, with `ButtonDesigns.Primary`, `ButtonDesigns.Danger`, or `ButtonDesigns.Default`.
 
 ## 3. Build the menu
 
-Create one button per design and place them in a list. Each button is its own handler, so changing one
+This LocalScript takes the place of `PlayButton`. It requires everything it uses, creates one button per design, and places them in a list. Each button is its own handler, so changing one
 never affects another.
 
-```luau
+::: code-group
+
+```luau [StarterPlayerScripts/MainMenu.client.luau]
+const Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Point @Vide at the Vide package in your project.
+const Vide = require("@Vide")
+const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
+const createButton = require(ReplicatedStorage.Button)
+
+const player = Players.LocalPlayer
+
 Vide.mount(function()
     return Vide.create "ScreenGui" {
         Name = "MainMenu",
@@ -121,20 +162,15 @@ Vide.mount(function()
                 VerticalAlignment = Enum.VerticalAlignment.Center,
                 Padding = UDim.new(0, 12),
             },
-            [2] = createButton("Play", PrimaryDesign, true),
-            [3] = createButton("Delete", DangerDesign, true),
-            [4] = createButton("Shop", DefaultDesign, false),
+            [2] = createButton("Play", ButtonDesigns.Primary, true),
+            [3] = createButton("Delete", ButtonDesigns.Danger, true),
+            [4] = createButton("Shop", ButtonDesigns.Default, false),
         },
     }
 end, player:WaitForChild("PlayerGui"))
 ```
 
+:::
+
 You get a blue Play button, a red Delete button, and a greyed-out Shop button. They share the same hover and
 press behavior, and each reacts on its own.
-
-## What to notice
-
-- The state structure is defined once, in the rule. A design that leaves out a property is rejected when its handler is created, and the `Design` type flags a missing state while you write it.
-- A new design is only data. The component's logic, such as the hover and press handling, is never copied.
-- Designs can differ in any property, not only colors. A design could use a bigger `textSize` in every state.
-- Each button owns its handler, so one button can be `Disabled` while another is `Hovered`.

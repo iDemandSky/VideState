@@ -41,7 +41,7 @@ Returns the name of the active state. It is a function, so call it to read the n
 | --- | --- |
 | `string` | The name of the active state. |
 
-### setState <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" />
+### setState <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 Handler.setState(
@@ -51,6 +51,9 @@ Handler.setState(
 ```
 
 Changed in 0.2.0: takes an optional `options` argument, so one change can skip its animation.
+
+Changed in 0.5.0: the options take `delay`, and a change that the rule's
+[`allowedTransitions`](/guide/rules#allowed-state-changes) do not list raises an error.
 
 Switches to a state. Later reads and writes of [`sources`](#sources) use that state's sources, and
 [`onChange`](#onchange) and [`onTransition`](#ontransition) listeners are called.
@@ -74,8 +77,10 @@ it to set the first layout of a component, or to snap it back without an animati
 | <Badge type="danger" text="Error" /> | `options` is not a table | `setState options must be a table` |
 | <Badge type="danger" text="Error" /> | `options` has an unknown key | `setState options has an unknown key <key>` |
 | <Badge type="danger" text="Error" /> | `options.instant` is not a boolean | `setState instant must be a boolean` |
+| <Badge type="danger" text="Error" /> | `options.delay` is not a finite non-negative number | `setState delay must be a finite non-negative number` |
 | <Badge type="danger" text="Error" /> | `stateName` is not a string | `state name must be a string, got <type>` |
 | <Badge type="danger" text="Error" /> | The state name is unknown | `unknown state "<state>"` |
+| <Badge type="danger" text="Error" /> | The rule's [`allowedTransitions`](/guide/rules#allowed-state-changes) do not let the active state change to it | `cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
 | <Badge type="danger" text="Error" /> | The state's values no longer match the schema | `Invalid state "<state>":` followed by the schema issues |
 
 A failed `setState` leaves the handler unchanged.
@@ -179,7 +184,7 @@ the next state.
 | <Badge type="danger" text="Error" /> | `stateName` is not a state of the handler | `onExit state "<state>" is not a state of this handler` |
 | <Badge type="danger" text="Error" /> | `callback` is not a function | `onExit callback must be a function` |
 
-### onTransition <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.4.0" />
+### onTransition <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.2.0" /> <Badge type="warning" text="Changed in 0.4.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 Handler.onTransition(
@@ -187,7 +192,8 @@ Handler.onTransition(
         from: T, -- The previous state's values
         to: T, -- The next state's values
         current: T, -- The values to render on this frame
-        alpha: number -- The eased progress, from 0 to 1
+        alpha: number, -- The eased progress, from 0 to 1
+        round: number -- The round of the sequence that started the transition, or 0
     ) -> (),
     options: TransitionOptions? -- Tween settings for this connection only
 ) -> Disconnect
@@ -196,6 +202,10 @@ Handler.onTransition(
 Changed in 0.2.0: takes an optional `options` argument, and every connection tweens on its own.
 
 Changed in 0.4.0: the settings go inside `tweenDefault`, and a handler has no tween options of its own.
+
+Changed in 0.5.0: the callback receives a fifth argument, `round`. It is the round of the
+[`playSequence`](#playsequence) that started the transition, counted from `1`, and `0` for a transition that no sequence
+started. A callback that does not declare it works as before.
 
 Runs `callback` with a `current` value that moves from the previous state to the next one, and the
 `alpha` that shows how far along it is. Each animatable field is tweened. Fields that cannot be tweened, such as strings,
@@ -207,7 +217,7 @@ settings come from the `tweenDefault` of `options`, and any setting it leaves ou
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `callback` | `(from: T, to: T, current: T, alpha: number) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
+| `callback` | `(from: T, to: T, current: T, alpha: number, round: number) -> ()` | Called at the start of a transition and on every frame until the transition ends. |
 | `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
 
 **Returns**
@@ -274,6 +284,148 @@ property. Pause, [`scaleSpeed`](#scalespeed), and [`finish`](#finish) act on it 
 | | Cause | Message |
 | --- | --- | --- |
 | <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition), such as `onTransition easing must be a known easing name` |
+
+### progress <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+Handler.progress(
+    options: TransitionOptions? -- Tween settings for this connection
+) -> (Source<number>, Disconnect)
+```
+
+Returns a Vide source that holds the progress of the transition, so a progress bar or a ring can bind to it without a
+callback. It is [`onTransition`](#ontransition) in the form Vide expects, like [`animate`](#animate), but it follows only
+the [`alpha`](/guide/transitions#alpha). The source is `1` when no transition is running, goes from `0` to `1` during
+each state change, and stays at `1` when the transition ends.
+
+```luau
+const progress = handler.progress({
+    tweenDefault = {
+        duration = 2,
+    },
+})
+
+Vide.create "Frame" {
+    Size = function()
+        return UDim2.fromScale(progress(), 1)
+    end,
+}
+```
+
+It is a thin layer over one `onTransition` connection, so it takes the same options and has its own tween. An easing
+that overshoots, such as `back`, takes the alpha below `0` or above `1` in between, so clamp it with
+`math.clamp(progress(), 0, 1)` when a bar must stay inside its frame. [`finish`](#finish), [`pause`](#pause), and
+[`scaleSpeed`](#scalespeed) act on it like on any other connection. After [`destroy`](#destroy) the source keeps its last
+value.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `options` | [`TransitionOptions`](/guide/transitions#transitionoptions)`?` | Optional. The tween settings of this connection, inside `tweenDefault`, and `tweenOverrides` for particular state changes. Each setting left out takes the built-in default. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `Source<number>` | The progress of the transition, from `0` to `1`. |
+| [`Disconnect`](#disconnect) | Call it to stop the source from following. It keeps its last value. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is invalid | The same messages as [`onTransition`](#ontransition) |
+
+### playSequence <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+Handler.playSequence(
+    steps: { SequenceStep }, -- The states to play, in order
+    options: SequenceOptions? -- Options for this sequence
+) -> (Source<number>, Disconnect)
+```
+
+Changes the state step by step. Each step calls [`setState`](#setstate), waits until its transition has finished, then
+waits for the step's `hold` before the next one. Use it for a notification that slides in, stays, and slides out, or a
+button that flashes and settles.
+
+```luau
+handler.playSequence({
+    { state = "Shown", hold = 3 }, -- slides in, then stays for 3 seconds
+    { state = "Hidden" },
+})
+```
+
+The first step starts before `playSequence` returns. The sequence ends after the last step's transition, or goes on
+from the first step again with `loop`. One pass over the steps is a round.
+
+```luau
+-- Flashes three times, then stops.
+local round = handler.playSequence({
+    { state = "Flash", hold = 0.2 },
+    { state = "Idle", hold = 0.2 },
+}, {
+    loop = 3,
+    onLoop = function(rounds)
+        print("rounds completed:", rounds)
+    end,
+})
+```
+
+The returned source holds the round that is being played, counted from `1`, so a label or a bar can bind to it. It stays
+at the last round when the sequence ends or is stopped. [`onTransition`](#ontransition) callbacks also receive the round
+of the sequence that started their transition, in their fifth argument.
+
+- **Anything else that changes the state stops it.** A `setState` from your code, or a sequence started later, ends the
+  running one, so a sequence never fights your own state changes. A newer `playSequence` replaces the running one.
+- **A hold is scaled time.** [`pause`](#pause) holds it, and [`scaleSpeed`](#scalespeed) shortens it. The hold after the
+  last step only counts when another round follows.
+- **`loop` counts the rounds.** `loop = true` plays until the sequence is stopped, and a whole number plays the steps that
+  many times in total, so `loop = 3` is three rounds and `loop = 1` is the same as no loop.
+- **`onLoop` runs at the end of every round**, including the last one, with the number of rounds completed. It must not
+  yield, because the sequence waits for it. A stopped sequence does not call it.
+- **Between rounds** the sequence waits one frame, so a loop of instant steps cannot hold up the game.
+- **A step that is already the current state** has no transition, so it goes straight to its hold.
+- **Reduced motion** makes each step instant, but the holds still apply.
+- **The states are checked first.** Every state must exist, and the rule's
+  [`allowedTransitions`](/guide/rules#allowed-state-changes) must allow each change from one step to the next. With
+  more than one round, they must also allow the change from the last step back to the first. If not, `playSequence` raises an error
+  before anything changes.
+- [`finish`](#finish) ends the step's transition at once, and the sequence moves on to the hold.
+- [`destroy`](#destroy) stops the sequence. A step that raises an error ends it, and the error is reported in the output.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `steps` | `{ `[`SequenceStep`](#sequencestep)` }` | The states to play, in order. Must have at least one step. |
+| `options` | [`SequenceOptions`](#sequenceoptions)`?` | Optional. Options for this sequence. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `Source<number>` | The round that is being played, counted from `1`. |
+| [`Disconnect`](#disconnect) | Call it to stop the sequence. The handler keeps the state it is in. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | The handler was destroyed | `playSequence cannot be called after destroy` |
+| <Badge type="danger" text="Error" /> | `steps` is not a list, or is empty | `playSequence steps must be a non-empty list of steps` |
+| <Badge type="danger" text="Error" /> | A step is not a table | `playSequence step <n> must be a table` |
+| <Badge type="danger" text="Error" /> | A step has an unknown key | `playSequence step <n> has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | A step has no state name | `playSequence step <n> needs a state name` |
+| <Badge type="danger" text="Error" /> | A step's state is not a state of the handler | `playSequence step <n> has an unknown state "<state>"` |
+| <Badge type="danger" text="Error" /> | A step's `hold` or `delay` is not a finite non-negative number | `playSequence step <n> hold must be a finite non-negative number`, and the same for `delay` |
+| <Badge type="danger" text="Error" /> | A step's `instant` is not a boolean | `playSequence step <n> instant must be a boolean` |
+| <Badge type="danger" text="Error" /> | The rule does not allow a change between two steps | `playSequence step <n> cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
+| <Badge type="danger" text="Error" /> | With `loop`, the rule does not allow the change from the last step to the first | `playSequence cannot loop: cannot change state from "<state>" to "<state>". Allowed: "<state>", ...` |
+| <Badge type="danger" text="Error" /> | `options` is not a table, or has an unknown key | `playSequence options must be a table`, `playSequence options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | `options.loop` is not a boolean or a whole number of at least 1 | `playSequence loop must be a boolean or a whole number of rounds, at least 1` |
+| <Badge type="danger" text="Error" /> | `options.onLoop` is not a function | `playSequence onLoop must be a function` |
 
 ### pause <Badge type="tip" text="Added in 0.2.0" />
 
@@ -477,7 +629,7 @@ tween settings are passed to [`onTransition`](#ontransition) and [`animate`](#an
 Move `onTransition = { duration = 0.2 }` from the handler options to
 `handler.onTransition(callback, { tweenDefault = { duration = 0.2 } })`.
 
-### Handler <Badge type="tip" text="Added in 0.1.0" />
+### Handler <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type Handler<T> = {
@@ -489,6 +641,8 @@ type Handler<T> = {
     onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     onTransition: (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect,
     animate: (options: TransitionOptions?) -> (Sources<T>, Disconnect),
+    progress: (options: TransitionOptions?) -> (Source<number>, Disconnect),
+    playSequence: (steps: { SequenceStep }, options: SequenceOptions?) -> (Source<number>, Disconnect),
     pause: () -> (),
     resume: () -> (),
     onPause: (callback: OnPauseCallback) -> Disconnect,
@@ -500,6 +654,8 @@ type Handler<T> = {
     destroy: () -> (),
 }
 ```
+
+Changed in 0.5.0: added [`progress`](#progress) and [`playSequence`](#playsequence).
 
 The type of a handler. Pass it the value type from [`InferRule`](/guide/rules#inferrule) so the
 handler matches its rule.
@@ -544,11 +700,13 @@ type OnExitCallback = (nextState: string) -> ()
 | --- | --- | --- |
 | `nextState` | `string` | The name of the state the handler enters. |
 
-### OnTransitionCallback <Badge type="tip" text="Added in 0.1.0" />
+### OnTransitionCallback <Badge type="tip" text="Added in 0.1.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
-type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
+type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number, round: number) -> ()
 ```
+
+Changed in 0.5.0: added `round`.
 
 | Name | Type | Description |
 | --- | --- | --- |
@@ -556,6 +714,7 @@ type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
 | `to` | `T` | The next state's values. |
 | `current` | `T` | The values to render on this frame. |
 | `alpha` | `number` | The eased progress, from 0 to 1. With `back` and `elastic` easings it can go below 0 or above 1. See [alpha](/guide/transitions#alpha). |
+| `round` | `number` | The round of the [`playSequence`](#playsequence) that started the transition, counted from `1`. `0` when no sequence started it. |
 
 ### OnPauseCallback <Badge type="tip" text="Added in 0.2.0" />
 
@@ -587,17 +746,57 @@ type OnFinishCallback = (startedAt: number) -> ()
 | --- | --- | --- |
 | `startedAt` | `number` | The `os.clock()` time at which the transition that finished started. |
 
-### SetStateOptions <Badge type="tip" text="Added in 0.2.0" />
+### SetStateOptions <Badge type="tip" text="Added in 0.2.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type SetStateOptions = {
     instant: boolean?, -- Skips the animation of this change
+    delay: number?, -- Seconds every connection waits before it starts
 }
 ```
+
+Changed in 0.5.0: added `delay`.
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `instant` | `boolean` | No | `false` | When `true`, every `onTransition` connection receives the next state's values at once, with an `alpha` of `1`. |
+| `delay` | `number` | No | `0` | Seconds every connection of this change waits before its first frame, added to the connection's own `delay`. It is scaled time, so `pause` holds it. An instant change ignores it. Must be finite and non-negative. |
+
+### SequenceStep <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type SequenceStep = {
+    state: string, -- The state to change to
+    hold: number?, -- Seconds to wait after the transition has finished
+    instant: boolean?, -- Skips the animation of this step
+    delay: number?, -- Seconds every connection waits before this step starts
+}
+```
+
+One step of [`playSequence`](#playsequence).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `state` | `string` | Yes | | The state to change to. It must be a state of the handler. |
+| `hold` | `number` | No | `0` | Seconds to wait after the step's transition has finished, before the next step. It is scaled time, so `pause` holds it. Must be finite and non-negative. |
+| `instant` | `boolean` | No | `false` | The same as in [`SetStateOptions`](#setstateoptions). |
+| `delay` | `number` | No | `0` | The same as in [`SetStateOptions`](#setstateoptions). |
+
+### SequenceOptions <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type SequenceOptions = {
+    loop: (boolean | number)?, -- How many rounds to play
+    onLoop: ((round: number) -> ())?, -- Called at the end of every round
+}
+```
+
+The options of [`playSequence`](#playsequence).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `loop` | `boolean` or `number` | No | `false` | How many times the steps play. `true` plays them until the sequence is stopped, a whole number of at least `1` plays them that many times in total, and `false` plays them once. |
+| `onLoop` | `(round: number) -> ()` | No | | Called when a round ends, with how many rounds have been completed, including after the last round. It must not yield. |
 
 ### ScaleSpeedOptions <Badge type="warning" text="Changed in 0.3.0" />
 

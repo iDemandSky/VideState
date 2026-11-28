@@ -1,4 +1,7 @@
 const Types = require("@self/Types")
+const ReducedMotion = require("@self/ReducedMotion")
+const Clock = require("@self/Clock")
+const Custom = require("@self/Handler/Transition/Tween/Custom")
 
 export type Infer<S> = Types.Infer<S>
 export type InferRule<R> = Types.InferRule<R>
@@ -13,12 +16,19 @@ export type OnFinishCallback = Types.OnFinishCallback
 export type ScaleSpeedOptions = Types.ScaleSpeedOptions
 export type EveryHandlerGroup = Types.EveryHandlerGroup
 export type SetStateOptions = Types.SetStateOptions
+export type EverySetStateOptions = Types.EverySetStateOptions
 export type OnEnterCallback = Types.OnEnterCallback
 export type OnExitCallback = Types.OnExitCallback
 export type TweenSettings = Types.TweenSettings
 export type TweenOverride = Types.TweenOverride
+export type Progress<T> = Types.Progress<T>
+export type SequenceStep = Types.SequenceStep
+export type SequenceOptions = Types.SequenceOptions
+export type PlaySequence = Types.PlaySequence
 export type Handler<T> = Types.Handler<T>
 export type TweenName = Types.TweenName
+export type CustomEasing = Types.CustomEasing
+export type Easing = Types.Easing
 export type TransitionOptions = Types.TransitionOptions
 export type DebugSnapshot = Types.DebugSnapshot
 
@@ -29,6 +39,7 @@ return table.freeze({
     float = require("@self/Schemas/Primitives/Float"),
     integer = require("@self/Schemas/Primitives/Integer"),
     optional = require("@self/Schemas/Primitives/Optional"),
+    union = require("@self/Schemas/Primitives/Union"),
     string = require("@self/Schemas/Primitives/String"),
     table = require("@self/Schemas/Primitives/Table"),
     record = require("@self/Schemas/Record"),
@@ -42,6 +53,21 @@ return table.freeze({
 
     -- METHODS --
     rule = require("@self/Rule"),
+    extend = require("@self/Rule/Extend"),
+
+    -- EASING --
+    bezier = Custom.bezier,
+    spring = Custom.spring,
+    easing = Custom.fromFunction,
+
+    -- REDUCED MOTION --
+    setReducedMotion = ReducedMotion.set,
+    isReducedMotion = ReducedMotion.get,
+
+    -- TESTING --
+    setManualClock = Clock.setManualClock,
+    isManualClock = Clock.isManualClock,
+    advanceClock = Clock.advanceClock,
 
     -- EVERY HANDLER --
     everyHandler = require("@self/Every"),

@@ -3,12 +3,15 @@ const TypedCore = require("../packages/luau/TypedCore")
 
 const Types = require("./Types")
 const Validation = require("./Validation")
+const Transitions = require("./Transitions")
 const DebugRegistry = require("./Debug/Registry")
 const EveryRegistry = require("./Every/Registry")
 const EveryScale = require("./Every/Scale")
 const Change = require("@self/Change")
 const StateEvents = require("@self/StateEvents")
 const Animate = require("@self/Animate")
+const Progress = require("@self/Progress")
+const Sequence = require("@self/Sequence")
 const Transition = require("@self/Transition")
 const TransitionState = require("@self/Transition/State")
 const Pause = require("@self/Pause")
@@ -24,6 +27,8 @@ type Handler<T> = Types.Handler<T>
 --   StateEvents onEnter, onExit
 --   Transition  onTransition
 --   Animate     animate
+--   Progress    progress
+--   Sequence    playSequence
 --   Pause       pause, resume, onPause, onResume
 --   ScaleSpeed scaleSpeed
 --   Finish      finish, onFinish, waitForFinish
@@ -34,7 +39,8 @@ return function <S>(
     states: { [string]: Sources<TypedCore.infer<S>> },
     initialState: string,
     allowedStateNames: { string }?,
-    ruleName: string
+    ruleName: string,
+    allowedTransitions: { [string]: { string } }?
 )
     type Values = TypedCore.infer<S>
 
@@ -64,6 +70,8 @@ return function <S>(
 
     table.sort(stateNames)
 
+    const transitionRules = Transitions.parse(allowedTransitions, stateNames, "the handler")
+
     -- The transitions of the handler share this state, and the features below act on it.
     local state = TransitionState.create<<Values>>()
 
@@ -88,8 +96,11 @@ return function <S>(
 
     local transition = Transition<<Values>>(state, stateNames, getRate, finish.settle)
     local animate = Animate<<Values>>(transition.onTransition, sources)
+    local progress = Progress<<Values>>(transition.onTransition)
     local destroyed = false
     local registered: EveryRegistry.Controls? = nil
+
+    local sequence: Sequence.Sequence
 
     -- Stops every transition and removes every listener. `setState` raises an error afterwards.
     const function destroy()
@@ -104,6 +115,7 @@ return function <S>(
         end
 
         transition.stop()
+        sequence.clear()
         change.clear()
         stateEvents.clear()
         pause.clear()
@@ -119,10 +131,41 @@ return function <S>(
             return destroyed
         end,
         currentState,
+        transitionRules,
         stateEvents.emit,
         change.emit,
         transition.emit
     )
+
+    sequence = Sequence({
+        getState = function(): string
+            return currentState()
+        end,
+        hasState = function(stateName: string): boolean
+            return validatedStates[stateName] ~= nil
+        end,
+        checkChange = function(from: string, to: string): string?
+            local isFree = from == to or Transitions.canChange(transitionRules, from, to)
+
+            if isFree then
+                return nil
+            end
+
+            return `cannot change state from "{from}" to "{to}". Allowed: {Transitions.describeAllowed(transitionRules :: Transitions.Rules, from)}`
+        end,
+        isDestroyed = function(): boolean
+            return destroyed
+        end,
+        setState = setState,
+        waitForFinish = finish.waitForFinish,
+        getGeneration = function(): number
+            return state.generation
+        end,
+        getRate = getRate,
+        setRound = function(round: number)
+            state.round = round
+        end,
+    })
 
     -- What the debug tools show about this handler. The label is filled in by `debug.track`.
     const function inspect(): Types.DebugSnapshot
@@ -157,6 +200,8 @@ return function <S>(
         onExit = stateEvents.onExit,
         onTransition = transition.onTransition,
         animate = animate,
+        progress = progress,
+        playSequence = sequence.playSequence,
         pause = pause.pause,
         resume = pause.resume,
         onPause = pause.onPause,
@@ -175,6 +220,9 @@ return function <S>(
         inspect = inspect,
         hasState = function(stateName: string): boolean
             return validatedStates[stateName] ~= nil
+        end,
+        canChangeTo = function(stateName: string): boolean
+            return Transitions.canChange(transitionRules, currentState(), stateName)
         end,
     })
 

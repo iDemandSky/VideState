@@ -136,6 +136,7 @@ handler.animate({
 - `from` and `to` are arrays of state names. A side that is left out means every state.
 - `tween` takes the same settings as `tweenDefault`. A setting it leaves out keeps the one of `tweenDefault`.
 - A state change that no entry matches uses `tweenDefault`.
+- To keep `tweenDefault` and `tweenOverrides` in one module that many components share, see [Tween config](/examples/tween-config).
 - At most one entry may match a state change, so the order of the array does not matter. An overlap raises an error
   when `onTransition` or `animate` is called. The error lists every problem together: overlaps, a state the handler does
   not have, an empty array, an entry that leaves out both sides, an entry that only matches a state to itself, and an
@@ -171,6 +172,25 @@ end
 - `setState(name, { instant = true })` skips the delay, and [`finish`](/guide/handlers#finish) ends a connection that
   is still waiting.
 - The transition finishes, and [`onFinish`](/guide/handlers#onfinish) runs, only after the most delayed connection ends.
+
+### Delaying a state change <Badge type="tip" text="Added in 0.5.0" />
+
+`setState(name, { delay = seconds })` delays one state change. The state changes at once, so `currentState` and the
+events update, but every connection waits that long before its first frame, on top of its own `delay`.
+
+### Staggering handlers <Badge type="tip" text="Added in 0.5.0" />
+
+To stagger separate handlers, such as one handler per list item, pass `stagger` to
+[`everyHandler.setState`](/guide/every-handler#setstate). The handlers start one after another, in the order they were
+created:
+
+```luau
+-- The first item starts at once, the second after 0.05 seconds, the third after 0.1 seconds, and so on.
+VideState.everyHandler.withRule("ListItem").setState("Shown", { stagger = 0.05 })
+```
+
+Each handler receives a `delay` of `stagger × its position`, added to any `delay` you pass. Create the handlers in the
+order they should appear.
 
 ## Pausing
 
@@ -212,6 +232,256 @@ handler.finish()
 - [`onFinish`](/guide/handlers#onfinish) runs once per transition, when the last connection that was playing it ends. A transition that a newer `setState` replaces does not finish.
 - Connections with different durations finish at different times, so the event waits for the slowest one.
 - [`waitForFinish`](/guide/handlers#waitforfinish) yields until the handler has no running transition, for code that runs in sequence.
+
+## Custom easing <Badge type="tip" text="Added in 0.5.0" />
+
+The built-in easings are names. For a curve of your own, make one and pass it as `easing`:
+
+```luau
+handler.animate({
+    tweenDefault = {
+        duration = 0.3,
+        -- The same curve as CSS cubic-bezier(0.34, 1.56, 0.64, 1).
+        easing = VideState.bezier(0.34, 1.56, 0.64, 1),
+    },
+})
+```
+
+The functions below return a value that `easing` accepts in place of a name, including from a Vide source. A plain
+function does not work in `easing`, because a function there is read as a source. A table that was not made by these
+two is rejected.
+
+### bezier <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.bezier(
+    x1: number, -- The horizontal position of the first control point
+    y1: number, -- The vertical position of the first control point
+    x2: number, -- The horizontal position of the second control point
+    y2: number -- The vertical position of the second control point
+) -> CustomEasing
+```
+
+Makes a cubic bezier easing, like CSS `cubic-bezier`, so a curve from a design tool works as it is. The curve starts at
+0 and ends at 1.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `x1` | `number` | Must be between `0` and `1`. |
+| `y1` | `number` | Any finite number. A value outside 0 to 1 overshoots like the `back` easings. |
+| `x2` | `number` | Must be between `0` and `1`. |
+| `y2` | `number` | Any finite number. A value outside 0 to 1 overshoots like the `back` easings. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`CustomEasing`](#customeasing) | An easing for the `easing` setting. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | A number is not finite | `bezier expects four finite numbers` |
+| <Badge type="danger" text="Error" /> | `x1` or `x2` is outside 0 to 1 | `bezier x1 and x2 must be between 0 and 1` |
+
+### easing <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.easing(
+    fn: (number) -> number -- Takes the progress from 0 to 1 and returns the eased progress
+) -> CustomEasing
+```
+
+Wraps your own easing function:
+
+```luau
+easing = VideState.easing(function(progress)
+    return progress * progress
+end)
+```
+
+The function is called with `0` and `1` when it is made, and it must return finite numbers for both. It should return
+`0` at `0` and `1` at `1`, so a transition starts at the old value and ends at the new one. A later result that is not a
+finite number ends the transition with an error.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `fn` | `(number) -> number` | The easing curve. It may overshoot. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`CustomEasing`](#customeasing) | An easing for the `easing` setting. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `fn` is not a function | `easing expects a function, got <type>` |
+| <Badge type="danger" text="Error" /> | `fn` does not return a finite number for `0` or `1` | `easing must return a finite number for a progress of 0 and 1` |
+| <Badge type="danger" text="Error" /> | During a transition, `fn` returns a value that is not a finite number | `a custom easing returned a value that is not a finite number` |
+
+### spring <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.spring(
+    options: SpringOptions? -- The look of the bounces and when they happen
+) -> CustomEasing
+```
+
+Makes an easing in the shape of a spring: it starts at 0 without a jump, passes 1, comes back and passes it again, and
+has settled at 1 when the duration ends.
+
+```luau
+handler.animate({
+    tweenDefault = {
+        duration = 0.5,
+        -- The first bounce goes 20% past the target, it bounces 3 times, and each bounce loses half its height.
+        easing = VideState.spring({ height = 0.2, bounces = 3, loss = 0.5 }),
+    },
+})
+```
+
+::: warning This is not a real spring
+`spring` is a curve, like `backOut` or `elasticOut`, with a bounce you can adjust. It is not a physics simulation.
+
+- **It always takes the whole `duration`.** A real spring settles when its energy runs out. This curve is fitted to the
+  duration you give, so the duration is also the time it takes to settle.
+- **It does not keep the speed of an earlier transition.** If `setState` interrupts a transition, the new one starts
+  from the current value with no speed, so a quick change of mind shows a small kink where a real spring would curve
+  smoothly.
+- **It does not react to how far the value travels.** A short move and a long move wobble for the same time.
+
+Use it for the look of a spring. If you need the behavior of one, VideState does not have it.
+:::
+
+All the settings are optional and are set separately, and the curve always ends on the duration. Two groups of them:
+
+**What the bounces look like**
+
+- `height` is how far the first bounce passes the target, as a fraction of the distance. `0.2` goes 20% past it, so a
+  value that moves from 0 to 100 reaches 120 before it comes back.
+- `bounces` is how many times it passes the target and comes back.
+- `loss` is how much of its height each bounce loses. With `0.5`, each bounce is half as high as the one before, so
+  bounces of 20%, 10%, and 5%. A low `loss` keeps the bounces tall, and a high one makes them die out fast.
+- `anticipation` is a small dip backwards before it moves. `0.1` dips 10% of the distance below the start, and then it
+  springs forward. The dip does not change how high the first bounce goes. Like a `back` easing, it takes `alpha` below `0`.
+
+**When things happen**, as fractions of the duration:
+
+- `arrive` is when it first reaches the target. `0.3` reaches it at 30% of the duration, and the bounces fill the rest.
+  Without it, the first arrival comes sooner the more bounces there are.
+- `settle` is how long the last bounce takes to settle, from the top of the last bounce to the end. `0.2` means the last
+  bounce starts to settle at 80% of the duration.
+- `tightening` is how much shorter each bounce is than the one before. With `0.3`, each bounce takes 70% of the time of
+  the previous one, like a ball that bounces faster as it gets lower. `0` keeps every bounce the same length.
+
+```luau
+-- Reaches the target at 20% of the duration, then bounces 4 times, each shorter and lower than the last.
+VideState.spring({
+    height = 0.3,
+    bounces = 4,
+    loss = 0.4,
+    arrive = 0.2,
+    tightening = 0.3,
+})
+```
+
+A few things to know:
+
+- The height of each bounce after the first follows from `loss`, and you cannot set them one by one. The last bounce is cut
+  a little short by the end of the curve, so the heights are close to `loss`, not exact.
+- `arrive` and `settle` must add up to at most `0.9`, to leave room for the bounces.
+- A very small `height` with a high `loss` makes the later bounces too small to see. Many bounces on a short `duration`
+  look frantic.
+- With a single bounce, `loss` and `tightening` do nothing.
+- The first spring made with a set of options takes a few milliseconds to set up. The result is kept, so making the same
+  spring again costs almost nothing, and each frame costs about as much as `elasticOut`.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `options` | [`SpringOptions`](#springoptions)`?` | Optional. The look of the bounces and when they happen. |
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| [`CustomEasing`](#customeasing) | An easing for the `easing` setting. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `options` is not a table | `spring options must be a table` |
+| <Badge type="danger" text="Error" /> | `options` has an unknown key | `spring options has an unknown key <key>` |
+| <Badge type="danger" text="Error" /> | `height` is not a number above 0 and at most 0.5 | `spring height must be a number above 0 and at most 0.5` |
+| <Badge type="danger" text="Error" /> | `bounces` is not a whole number from 1 to 10 | `spring bounces must be a whole number from 1 to 10` |
+| <Badge type="danger" text="Error" /> | `loss` is not a number above 0 and below 1 | `spring loss must be a number above 0 and below 1` |
+| <Badge type="danger" text="Error" /> | `arrive` or `settle` is not a number above 0 and at most 0.8 | `spring arrive must be a number above 0 and at most 0.8`, and the same for `settle` |
+| <Badge type="danger" text="Error" /> | `arrive` and `settle` add up to more than 0.9 | `spring arrive and settle must add up to at most 0.9, to leave room for the bounces` |
+| <Badge type="danger" text="Error" /> | `tightening` is not a number from 0 to 0.6 | `spring tightening must be a number from 0 to 0.6` |
+| <Badge type="danger" text="Error" /> | `anticipation` is not a number from 0 to 0.3 | `spring anticipation must be a number from 0 to 0.3` |
+
+## Reduced motion <Badge type="tip" text="Added in 0.5.0" />
+
+Some players turn animations off. [`setReducedMotion`](#setreducedmotion) makes every following `setState` instant, so
+each [`onTransition`](/guide/handlers#ontransition) connection receives one frame with the next values and an alpha of
+`1`, and [`onFinish`](/guide/handlers#onfinish) still runs. Call it from your game's settings, and set it back to
+`false` to animate again.
+
+```luau
+VideState.setReducedMotion(true)
+
+handler.setState("Open") -- plays as one frame, whatever the duration is
+```
+
+It affects every handler, including ones created later, and only the state changes that start after it is called. A
+transition that is already running keeps playing, and `finish` ends it at once. A connection cannot opt out, so it also
+applies to a spinner or a progress bar that you animate with `onTransition`.
+
+### setReducedMotion <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.setReducedMotion(
+    enabled: boolean -- Whether every state change is instant
+) -> ()
+```
+
+Turns reduced motion on or off. It is off by default.
+
+**Parameters**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `enabled` | `boolean` | `true` makes every following `setState` instant. `false` animates again. |
+
+**Errors**
+
+| | Cause | Message |
+| --- | --- | --- |
+| <Badge type="danger" text="Error" /> | `enabled` is not a boolean | `setReducedMotion expects a boolean, got <type>` |
+
+### isReducedMotion <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+VideState.isReducedMotion() -> boolean
+```
+
+Returns whether reduced motion is on.
+
+**Returns**
+
+| Type | Description |
+| --- | --- |
+| `boolean` | `true` while every state change is instant. Defaults to `false`. |
 
 ## Performance
 
@@ -273,22 +543,24 @@ The options of one [`onTransition`](/guide/handlers#ontransition) or [`animate`]
 An unknown key, a non-table value, or a setting at the top level raises an error when the connection is made. A top-level
 setting such as `duration` gets the message `onTransition options has an unknown key duration. Put duration inside tweenDefault`.
 
-### TweenSettings <Badge type="tip" text="Added in 0.4.0" />
+### TweenSettings <Badge type="tip" text="Added in 0.4.0" /> <Badge type="warning" text="Changed in 0.5.0" />
 
 ```luau
 type TweenSettings = {
-    easing: (TweenName | Source<TweenName>)?, -- The easing curve applied to animatable fields and alpha
+    easing: (Easing | Source<Easing>)?, -- The easing curve applied to animatable fields and alpha
     duration: (number | Source<number>)?, -- The duration in seconds
     speed: Source<number>?, -- How fast the transition advances
     delay: (number | Source<number>)?, -- How long a connection waits before its tween starts
 }
 ```
 
+Changed in 0.5.0: `easing` also takes a [`CustomEasing`](#customeasing) made with [`bezier`](#bezier), [`easing`](#easing), or [`spring`](#spring).
+
 The tween settings of a connection. The easing curves are the standard equations that [easings.net](https://easings.net) lists.
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `easing` | [`TweenName`](#tweenname) or `Source<TweenName>` | No | `"linear"` | The easing curve. An unknown name raises an error. |
+| `easing` | [`Easing`](#easing) or `Source<Easing>` | No | `"linear"` | The easing curve: a name, or one made with [`bezier`](#bezier) or [`easing`](#easing). An unknown name raises an error. |
 | `duration` | `number` or `Source<number>` | No | `0.25` | The duration in seconds. Must be finite and non-negative. |
 | `speed` | `Source<number>` | No | `1` | A Vide source read every frame. `1` is normal speed, `0` pauses, and larger values play faster. It must never be negative, so a transition never moves backwards. |
 | `delay` | `number` or `Source<number>` | No | `0` | How long a connection waits, in seconds, before it sends its first frame. Read when a transition starts. Must be finite and non-negative. See [Delays](#delays). |
@@ -332,6 +604,51 @@ each problem on its own line:
 - `entry <n> needs a tween table`
 - `entry <n>: <message>` for an invalid setting, such as `onTransition duration must be a finite non-negative number`
 - `entries <a> and <b> both match <state> to <state>`
+
+### Easing <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type Easing = TweenName | CustomEasing
+```
+
+The easing of a connection: the name of a built-in curve, or a [`CustomEasing`](#customeasing).
+
+### SpringOptions <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type SpringOptions = {
+    height: number?, -- How far the first bounce passes the target
+    bounces: number?, -- How many bounces
+    loss: number?, -- How much height each bounce loses
+    anticipation: number?, -- How far it dips backwards before it moves
+    arrive: number?, -- When it first reaches the target
+    settle: number?, -- How long the last bounce takes to settle
+    tightening: number?, -- How much shorter each bounce is than the last
+}
+```
+
+The options of [`spring`](#spring).
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `height` | `number` | No | `0.15` | The first bounce goes this fraction past the target. Above `0` and at most `0.5`. `0.15` is 15% past it. |
+| `bounces` | `number` | No | `2` | How many times it passes the target and comes back. A whole number from `1` to `10`. |
+| `loss` | `number` | No | `0.5` | The fraction of its height that each bounce loses, above `0` and below `1`. `0.5` makes each bounce half as high as the one before. It does nothing with one bounce. |
+| `anticipation` | `number` | No | `0` | How far it dips below the start before it moves, as a fraction of the distance, from `0` to `0.3`. `0` is no dip. |
+| `arrive` | `number` | No | | When it first reaches the target, as a fraction of the duration, above `0` and at most `0.8`. Left out, the bounces are spaced evenly. |
+| `settle` | `number` | No | | How long the last bounce takes to settle, as a fraction of the duration, above `0` and at most `0.8`. Left out, the bounces are spaced evenly. |
+| `tightening` | `number` | No | `0` | How much shorter each bounce is than the one before, from `0` to `0.6`. `0.3` makes each bounce take 70% of the time of the previous one. It does nothing with one bounce. |
+
+### CustomEasing <Badge type="tip" text="Added in 0.5.0" />
+
+```luau
+type CustomEasing = {
+    read fn: (number) -> number,
+}
+```
+
+A curve made with [`VideState.bezier`](#bezier), [`VideState.easing`](#easing), or [`VideState.spring`](#spring). `fn` takes the progress
+and returns the eased progress. Only these two functions make one.
 
 ### TweenName <Badge type="tip" text="Added in 0.1.0" />
 

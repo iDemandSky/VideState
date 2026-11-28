@@ -1,61 +1,6 @@
 const Options = require("./Config/Options")
 const Group = require("./Tween/Group")
-
--- One running tween. `step` advances it by one frame and returns whether it keeps running.
-type Job = {
-    step: (deltaTime: number) -> boolean,
-    stop: () -> (),
-}
-
--- Every running tween of every handler, stepped by one shared loop. A job added during a frame starts on the
--- next one.
-local jobs: { Job } = {}
-local isLooping = false
-
--- Steps one job. A listener that raises an error ends only its own job, and the error is still reported.
-const function stepJob(job: Job, deltaTime: number): boolean
-    local ok, result = pcall(job.step, deltaTime)
-
-    if ok then
-        return result
-    end
-
-    job.stop()
-    task.spawn(error, result, 0)
-
-    return false
-end
-
--- Runs while any job is left, then stops until the next job is added.
-const function loop()
-    while #jobs > 0 do
-        local deltaTime = task.wait()
-        local current = jobs
-
-        jobs = {}
-
-        for _, job in current do
-            local keepsRunning = stepJob(job, deltaTime)
-
-            if keepsRunning then
-                table.insert(jobs, job)
-            end
-        end
-    end
-
-    isLooping = false
-end
-
-const function add(job: Job)
-    table.insert(jobs, job)
-
-    if isLooping then
-        return
-    end
-
-    isLooping = true
-    task.spawn(loop)
-end
+const Loop = require("./Loop")
 
 -- Sends the first frame, then steps the group on the shared loop until it is done. With a delay, the first frame
 -- waits until that much scaled time has passed; without one, it is sent at once.
@@ -136,7 +81,7 @@ return function <T>(
         end
     end
 
-    add({
+    Loop.add({
         step = function(deltaTime: number): boolean
             if isStale() then
                 return false

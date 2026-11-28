@@ -32,6 +32,7 @@ const function play<T>(
     instant: boolean,
     fromState: string,
     toState: string,
+    extraDelay: number,
     getRate: () -> number,
     settle: Types.SettleTransition
 )
@@ -60,8 +61,8 @@ const function play<T>(
 
     connection.run = run
 
-    -- An instant transition ignores the delay as well.
-    local delay = if instant then 0 else settings.getDelay()
+    -- An instant transition ignores the delay as well. The delay of `setState` adds to the connection's own.
+    local delay = if instant then 0 else settings.getDelay() + extraDelay
 
     Scheduler(group, settings, delay, getRate, function(current: T, alpha: number): number
         -- A connection that was disconnected is no longer in the table, so its loop stops.
@@ -70,7 +71,7 @@ const function play<T>(
         end
 
         connection.current = current
-        connection.callback(from, to, current, alpha)
+        connection.callback(from, to, current, alpha, transition.round)
 
         return 1
     end, function(): boolean
@@ -90,7 +91,7 @@ return function<T>(
     getRate: () -> number,
     settle: Types.SettleTransition
 ): Types.StartTransition<T>
-    return function(from: T, to: T, instant: boolean, fromState: string, toState: string)
+    return function(from: T, to: T, instant: boolean, fromState: string, toState: string, extraDelay: number)
         state.generation += 1
         state.startedAt = os.clock()
         state.scale = 1
@@ -106,6 +107,7 @@ return function<T>(
         -- they are being started. A transition with no connections ends right away.
         local transition: Types.Transition = {
             generation = state.generation,
+            round = state.round,
             pending = #ids + 1,
             completed = false,
             fired = false,
@@ -122,7 +124,7 @@ return function<T>(
                 continue
             end
 
-            play(state, transition, id, connection, from, to, instant, fromState, toState, getRate, settle)
+            play(state, transition, id, connection, from, to, instant, fromState, toState, extraDelay, getRate, settle)
         end
 
         settle(transition, false)

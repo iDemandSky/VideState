@@ -12,6 +12,16 @@ if errorlevel 1 (
     exit /b 1
 )
 
+rem The Luau LSP in the editor reads sourcemap.json in the repo root, and misses new files until it is rebuilt.
+rem Build it from default.project.json, which maps src/ as written, then keep it current in the background.
+argon sourcemap default.project.json --output sourcemap.json
+if errorlevel 1 (
+    echo [serve] argon sourcemap failed. Fix the error above and run again.
+    pause
+    exit /b 1
+)
+start "" /b argon sourcemap default.project.json --output sourcemap.json --watch
+
 rem The watcher rewrites .larvae\build.project.json when it starts, and Argon reports "Top level project
 rem file was deleted" and skips changes if that happens while it runs. So remove the file, start the
 rem watcher in the background of this same window, and start Argon only once the file is back.

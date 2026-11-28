@@ -5,7 +5,35 @@ All notable changes to VideState are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the version is below 1.0.0, a minor
 version can contain breaking changes.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-28
+
+### Added
+
+- `handler.playSequence(steps, options)` changes the state step by step, waiting for each transition and an optional
+  `hold`. `loop` is `true` or a number of rounds, `onLoop(round)` runs at the end of every round, and the call returns a
+  source for the round being played and a function to stop it. `onTransition` callbacks receive the round as a fifth
+  argument, which is `0` outside a sequence. Anything else that changes the state stops the sequence.
+- `VideState.setManualClock(enabled)`, `VideState.isManualClock()`, and `VideState.advanceClock(seconds)` step every
+  transition by hand, so a test checks the values at exact times.
+- `VideState.extend(base, extraFields, metadata)` makes a new rule from a base rule, with its fields, state names,
+  transitions, and tags, and the ones you add. The base rule does not change.
+- `setState(name, { delay = seconds })` delays the first frame of one state change, and `everyHandler.setState(name,
+  { stagger = seconds })` starts the handlers one after another, in the order they were created, for list items that
+  appear in turn.
+- `allowedTransitions` in the rule metadata limits which states a state can change to, so `setState` raises one clear
+  error for a change that is not allowed. `everyHandler.setState` checks it for every handler first.
+- `handler.progress(options)` returns a Vide source for the alpha of a transition, so a progress bar or a ring can bind
+  to it directly. It takes the same options as `onTransition`.
+- `VideState.bezier(x1, y1, x2, y2)` and `VideState.easing(fn)` make an easing of your own for `easing`, such as a curve
+  copied from a design tool. `VideState.spring(options)` makes a spring-shaped curve. `height`, `bounces`, and `loss` set the bounces, `anticipation`
+  adds a dip backwards before it moves, and `arrive`, `settle`, and `tightening` set when the bounces happen. It is a
+  curve over the duration, not a physics spring: it takes no speed from an earlier transition. The `Easing` and
+  `CustomEasing` types are exported.
+- `VideState.setReducedMotion(enabled)` and `VideState.isReducedMotion()`. While it is on, every `setState` is instant,
+  for players who turn animations off.
+- `VideState.union(first, second)` accepts a value that either schema accepts, such as a number or the string `"Auto"`.
+  More than two schemas are written by nesting. A union field tweens only between two values of the same type, and
+  otherwise switches at the start like a string.
 
 ## [0.4.0] - 2026-11-26
 

@@ -51,6 +51,62 @@ user settles a new one.
 - **One shared loop steps every transition,** measured with `lest bench` before and after. Each step runs in a
   `pcall`, so a failing callback stops only its own connection. Callbacks must not yield.
 
+- **`handler.progress` returns one source for the alpha.** It is `onTransition` in the form Vide expects, like `animate`, so
+  it takes the same options and has its own tween. The source starts at 1 (no transition running) and the alpha is not
+  clamped, because an overshooting easing is part of the transition.
+- **A custom easing is a table made by `VideState.bezier` or `VideState.easing`, never a bare function.** `easing`
+  already accepts a Vide source, which is a function, so a function there would be ambiguous. The tables are frozen and
+  kept in a weak set, so only checked ones are accepted. `bezier` follows CSS `cubic-bezier`, with `x1` and `x2` in 0 to
+  1.
+- **`VideState.spring(options)` is a spring-shaped easing, and the docs say it is not a real spring.** The user
+  wanted a spring after hearing the limits, and then wanted the bounce height, the bounce count, the height lost per
+  bounce, and later `arrive`, `settle`, `tightening`, and `anticipation`, all set separately while the curve still ends
+  on the duration. The user ruled out stiffness, damping, and mass, because they would make the spring unpredictable. A damped oscillator cannot do that, because its decay ties the first peak to
+  the later ones. So the curve is `1 - size(t) * (cos + k sin)`, where the cosine fits `bounces` bounces in the
+  duration, and `size` is `exp(-L(t))` with `L` a monotone cubic through the decay at each peak. The first peak is
+  solved by bisection to be exactly `height`, and each later bounce adds the decay of `-ln(1 - loss)`, so each keeps
+  about `1 - loss` of the one before (within a few percent, and less exact at the last bounce). After the last bounce the
+  decay rises by `END_TAPER` (6), so `size` reaches 0 at the end without cutting that bounce short, and the start slope
+  is 0. The timing is a smooth monotone cubic for the phase of the cosine through the end of every quarter of a wobble:
+  `arrive` is the first quarter, `settle` is the last two, the rest share the time with each bounce `1 - tightening`
+  as long as the one before, and the phase at the end of the first quarter is solved so the curve crosses the target
+  exactly at `arrive`. `anticipation` subtracts a `sin^2` bump over the first quarter, solved so the lowest point is
+  exactly the depth, which leaves the first bounce untouched. Results are
+  cached by height, bounces, and loss. Heights above 0.5 and more than 10 bounces are rejected. A real spring needs speed
+  carried over an interrupted transition, which does not fit the shared alpha of a tween group, so it was not built.
+  The docs keep a warning box.
+- **`setReducedMotion` makes every `setState` instant.** It is global, affects only state changes that start after it
+  is called, and a connection cannot opt out.
+
+- **`allowedTransitions` limits state changes per rule.** It maps a state to the only states it can change to, and a state
+  that is not listed is free. A blocked `setState` raises an error and changes nothing. The rule checks the names against
+  `allowedStateNames` when it is made, and each handler checks them against its own states. `everyHandler.setState`
+  checks every handler first, like a missing state.
+
+- **Stagger is an option of `everyHandler.setState`, built on a `delay` option of `setState`.** `setState(name, { delay })`
+  adds to each connection's own delay, is scaled time, and an instant change ignores it. `stagger` gives each handler
+  `stagger × its position` in the order the handlers were created, which the registry now keeps. A handler's own
+  `setState` rejects `stagger`.
+
+- **Rule inheritance is `VideState.extend(base, extraFields, metadata)`, not a method on the rule.** A method would make
+  the rule module call itself, and the analyzer then loses the type of every rule. The fields are merged with a type
+  function, because Typed's inference does not accept an intersection. A field the base already has raises an error.
+  State names and tags are joined, and the extension's transitions replace the base list for the same state. A rule
+  keeps `_fields` and `_metadata` for it.
+
+- **Tests step transitions with a manual clock.** `setManualClock(true)` stops the shared loop, and `advanceClock(seconds)`
+  steps every job once with that delta, scaled like a real frame. The loop lives in `Transition/Loop.luau` so the clock
+  can reach it. The clock is global, and turning it off hands running transitions back to real frames.
+
+- **`playSequence` is built on `setState` and `waitForFinish`, with its own timer on the shared loop.** A step waits until the
+  handler is idle, then holds in scaled time, so pause, `scaleSpeed`, and the manual clock apply to the hold. The sequence
+  ends when the handler's generation moves past the one it made, so any outside `setState`, `destroy`, or a newer
+  sequence stops it. The steps and the rule's `allowedTransitions` are checked before the first change. The option is
+  `loop`, because `repeat` is a Luau keyword, and it is `true` or a number of rounds in total. `onLoop(round)` runs at
+  the end of every round, the call returns `(Source<number>, Disconnect)` like `animate` and `progress`, and
+  `onTransition` callbacks get the round as a fifth argument, read when the transition starts (0 outside a sequence). A looping sequence waits one frame between rounds, so instant steps
+  cannot hold up the game.
+
 ## Every handler
 
 - **`VideState.everyHandler` acts on all handlers.** The user first chose a `VideState.every` namespace with `handler`
@@ -96,6 +152,11 @@ user settles a new one.
   clamped so the minimum never passes the maximum, because an overshooting easing could break it. A sequence keeps its
   first time at 0 and its last at 1 and keeps the others in order. Each is blended in
   `Transition/Tween/Composite.luau`.
+
+- **`union` takes two schemas, and more are nested.** `VideState.union(first, second)` wraps Typed's binary union, so the
+  inferred type stays exact (`A | B`). A variadic version could not be typed by the analyzer. The first schema is tried
+  first. A union field tweens only between two values of the same animatable type, and otherwise switches at the start,
+  like a string.
 
 ## Code and tooling
 

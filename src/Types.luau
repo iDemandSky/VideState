@@ -40,10 +40,17 @@ export type TweenName =
     | "expoIn" | "expoOut" | "expoInOut"
     | "backIn" | "backOut" | "backInOut"
     | "elasticIn" | "elasticOut" | "elasticInOut"
+--- An easing made with `VideState.bezier` or `VideState.easing`.
+export type CustomEasing = {
+    --- Takes the progress from 0 to 1 and returns the eased progress.
+    read fn: (number) -> number,
+}
+--- An easing: the name of a built-in one, or one the game made.
+export type Easing = TweenName | CustomEasing
 --- The tween settings of one connection. A setting left out takes the built-in default. Each setting accepts a plain value or a Vide source, except `speed`, which is a source. A source is read every frame, so changing it affects the running transition and later ones.
 export type TweenSettings = {
     --- The easing curve applied to animatable fields and to `alpha`. Defaults to linear.
-    easing: (TweenName | Source<TweenName>)?,
+    easing: (Easing | Source<Easing>)?,
     --- The duration in seconds. Must be finite and non-negative. Defaults to 0.25.
     duration: (number | Source<number>)?,
     --- How fast the transition advances. Must never be negative, so a transition never moves backwards. Defaults to 1, and 0 pauses.
@@ -67,24 +74,66 @@ export type TransitionOptions = {
     --- Tween settings for particular state changes. An override replaces the settings of `tweenDefault` for the state changes it matches.
     tweenOverrides: { TweenOverride }?,
 }
---- Called during a transition with the previous value, the new value, the current value, and the alpha. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1.
-export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number) -> ()
+--- Called during a transition with the previous value, the new value, the current value, the alpha, and the round. The current value tweens numeric and vector fields toward the new value and switches other fields to the new value at the start. The alpha is the eased progress from 0 to 1. Back and elastic easings overshoot, so it can go below 0 or above 1. The round is the round of the `playSequence` that started the transition, counted from 1, and 0 when no sequence started it.
+export type OnTransitionCallback<T> = (from: T, to: T, current: T, alpha: number, round: number) -> ()
 --- Starts listening for transitions. A connection can pass options to override the tween settings of its handler. Returns a function that removes the listener.
 export type ConnectTransition<T> = (callback: OnTransitionCallback<T>, options: TransitionOptions?) -> Disconnect
 --- Creates a Vide source for every field that follows one `onTransition` connection. A connection can pass options to override the tween settings of its handler. Returns the sources and a function that removes the connection.
 export type Animate<T> = (options: TransitionOptions?) -> (Sources<T>, Disconnect)
+--- Creates a Vide source for the alpha of one `onTransition` connection. It starts at 1 and goes from 0 to 1 during each transition. A connection can pass options to override the tween settings of its handler. Returns the source and a function that removes the connection.
+export type Progress<T> = (options: TransitionOptions?) -> (Source<number>, Disconnect)
+--- One step of `playSequence`.
+export type SequenceStep = {
+    --- The state to change to. It must be a state of the handler.
+    state: string,
+    --- Seconds to wait after the step's transition has finished, before the next step. Scaled time, so a pause holds it. Defaults to 0.
+    hold: number?,
+    --- Skips the animation of this step. Defaults to false.
+    instant: boolean?,
+    --- Seconds every connection waits before this step starts, as in `SetStateOptions`. Defaults to 0.
+    delay: number?,
+}
+--- Options for `playSequence`.
+export type SequenceOptions = {
+    --- How many times the steps play. `true` plays them until the sequence is stopped, and a whole number plays them that many times in total. Defaults to false, which plays them once.
+    loop: (boolean | number)?,
+    --- Called when a round ends, with how many rounds have been completed. It must not yield, because the sequence waits for it.
+    onLoop: ((round: number) -> ())?,
+}
+--- Changes the state step by step, waiting for each transition to finish. Returns a source that holds the round being played, counted from 1, and a function that stops the sequence.
+export type PlaySequence = (steps: { SequenceStep }, options: SequenceOptions?) -> (Source<number>, Disconnect)
 --- Sends a state change to the listeners, with the previous and the new value.
 export type StateEmitter<T> = (from: T, to: T) -> ()
 --- Starts a transition on every `onTransition` connection. An instant transition ends on its first frame. The state names pick the tween settings of an override.
-export type StartTransition<T> = (from: T, to: T, instant: boolean, fromState: string, toState: string) -> ()
+export type StartTransition<T> = (
+    from: T,
+    to: T,
+    instant: boolean,
+    fromState: string,
+    toState: string,
+    delay: number
+) -> ()
 --- Options for one `setState` call.
 export type SetStateOptions = {
     --- Skips the animation. Every `onTransition` connection receives the next state's values at once, with an alpha of 1. Defaults to false.
     instant: boolean?,
+    --- Seconds every connection waits before it starts, added to its own `delay`. Scaled like that delay, so a pause holds it. An instant change ignores it. Defaults to 0.
+    delay: number?,
+}
+--- Options for `everyHandler.setState`.
+export type EverySetStateOptions = {
+    --- The same as in `SetStateOptions`.
+    instant: boolean?,
+    --- The same as in `SetStateOptions`, for every handler.
+    delay: number?,
+    --- Seconds between the handlers, in the order they were created: the first waits 0, the second this much, and so on. Added to `delay`. Defaults to 0.
+    stagger: number?,
 }
 --- One `setState` that has listeners. It is finished when every connection that was playing it has ended.
 export type Transition = {
     generation: number,
+    -- The round of the sequence that started it, or 0.
+    round: number,
     pending: number,
     completed: boolean,
     fired: boolean,
@@ -120,8 +169,8 @@ export type EveryHandlerGroup = {
     read finish: () -> (),
     --- Calls `destroy` on every handler in scope.
     read destroy: () -> (),
-    --- Changes the state of every handler in scope. If any lacks the state, one error lists them and none changes.
-    read setState: (stateName: string, options: SetStateOptions?) -> (),
+    --- Changes the state of every handler in scope. If any lacks the state, or its rule does not let it change to the state, one error lists them and none changes.
+    read setState: (stateName: string, options: EverySetStateOptions?) -> (),
     --- How many handlers are in scope.
     read count: () -> number,
     --- Whether any handler in scope has a running transition.
@@ -172,6 +221,8 @@ export type Handler<T> = {
     read onExit: (stateName: string, callback: OnExitCallback) -> Disconnect,
     read onTransition: ConnectTransition<T>,
     read animate: Animate<T>,
+    read progress: Progress<T>,
+    read playSequence: PlaySequence,
     read pause: () -> (),
     read resume: () -> (),
     read onPause: (callback: OnPauseCallback) -> Disconnect,
@@ -190,6 +241,8 @@ export type RuleMetadata<S> = {
     tags: { string }?,
     --- If none, then all state names are allowed
     allowedStateNames: { S }?,
+    --- For a state, the only states it can change to. A state that is not listed can change to any state. `setState` raises an error for a change that is not listed.
+    allowedTransitions: { [S]: { S } }?,
 }
 
 return table.freeze({})

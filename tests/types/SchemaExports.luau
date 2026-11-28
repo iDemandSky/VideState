@@ -8,6 +8,7 @@ local rule = VideState.rule({
     order = VideState.integer({ min = 0 }),
     title = VideState.string({ maxLength = 100, truncate = true }),
     color = VideState.color3(),
+    width = VideState.union(VideState.float(), VideState.string()),
     offset = VideState.udim(),
     size = VideState.udim2(),
     position = VideState.vector2(),
@@ -27,6 +28,7 @@ local values: Values = {
     order = 1,
     title = "Panel",
     color = Color3.new(),
+    width = 1,
     offset = UDim.new(),
     size = UDim2.new(),
     position = Vector2.new(),
@@ -44,6 +46,7 @@ local panel = rule.new({
         order = Vide.source(1),
         title = Vide.source("Panel"),
         color = Vide.source(Color3.new()),
+        width = Vide.source(1 :: number | string),
         offset = Vide.source(UDim.new()),
         size = Vide.source(UDim2.new()),
         position = Vide.source(Vector2.new()),
@@ -59,6 +62,7 @@ local panel = rule.new({
         order = Vide.source(2),
         title = Vide.source("Open"),
         color = Vide.source(Color3.new(1, 1, 1)),
+        width = Vide.source("Auto" :: number | string),
         offset = Vide.source(UDim.new(1, 0)),
         size = Vide.source(UDim2.fromOffset(100, 50)),
         position = Vide.source(Vector2.new(1, 2)),
@@ -70,9 +74,10 @@ local panel = rule.new({
 }, "Idle")
 
 local visibleSource: Vide.Source<boolean> = panel.sources.visible
+local widthSource: Vide.Source<number | string> = panel.sources.width
 local sizeSource: Vide.Source<UDim2> = panel.sources.size
 local rangeSource: Vide.Source<NumberRange> = panel.sources.range
 local fadeSource: Vide.Source<NumberSequence> = panel.sources.fade
 local tintSource: Vide.Source<ColorSequence> = panel.sources.tint
 
-return { values, panel, visibleSource, sizeSource, rangeSource, fadeSource, tintSource }
+return { values, panel, visibleSource, widthSource, sizeSource, rangeSource, fadeSource, tintSource }

@@ -5,10 +5,11 @@ description: Build a menu button that reacts to the mouse, with a rule as its bl
 
 # Components
 
-VideState lets you build UI components the way you would in Vue.js. A [rule](/guide/rules) is the
-component's blueprint: the properties it has and the states it can be in. A
-[handler](/guide/handlers) is one instance of that component, with its own state and values. Vide
-creates the Instances, and the handler decides what their properties are.
+VideState lets you build UI components the way you would in [Vue.js](https://vuejs.org/) (at least from what I currently use for other projects).
+
+A [rule](/guide/rules) is the component's blueprint: the properties it has and the states it can be in.
+
+A [handler](/guide/handlers) is one instance of that component, with its own state and values. Vide creates the Instances, and the handler decides what their properties are.
 
 ## What we're building
 
@@ -24,20 +25,22 @@ A **Play button** for a game's main menu. It reacts to the mouse, and every reac
 Every state sets the same three properties: `backgroundColor`, `textColor`, and `textSize`. The colors
 and the text size fade over 0.15 seconds when the state changes, instead of jumping.
 
-The steps below continue one script. Put them together in order, in a LocalScript.
+The rule, the designs, and the button are shared by every button, so they live in three ModuleScripts in
+`ReplicatedStorage`: **`ButtonRule`**, **`ButtonDesigns`**, and **`Button`**. One LocalScript requires them and shows
+the result. Create them in the order below.
 
 ## 1. Describe the component
 
 The rule lists the properties a button has and the states it can be in. `allowedStateNames` makes
-VideState reject any state that is not one of the four.
+VideState reject any state that is not one of the four. Create a ModuleScript named **`ButtonRule`** in
+`ReplicatedStorage` that returns it:
 
-```luau
-const Players = game:GetService("Players")
--- Point @Vide at the Vide package in your project.
-const Vide = require("@Vide")
+::: code-group
+
+```luau [ReplicatedStorage/ButtonRule.luau]
 const VideState = require("@VideState")
 
-const ButtonRule = VideState.rule({
+return VideState.rule({
     backgroundColor = VideState.color3(),
     textColor = VideState.color3(),
     textSize = VideState.integer({ min = 1 }),
@@ -47,12 +50,18 @@ const ButtonRule = VideState.rule({
 })
 ```
 
+:::
+
 ## 2. Design how each state looks
 
 A design says what every state looks like. It is plain data, so it is easy to change or replace. The
-`Look` and `Design` types match the rule, and your editor flags a missing state or property.
+`Look` and `Design` types match the rule, and your editor flags a missing state or property. Create a ModuleScript
+named **`ButtonDesigns`** in `ReplicatedStorage`. It holds the types and every design, so a look is changed in one
+place:
 
-```luau
+::: code-group
+
+```luau [ReplicatedStorage/ButtonDesigns.luau]
 export type Look = {
     backgroundColor: Color3,
     textColor: Color3,
@@ -66,36 +75,55 @@ export type Design = {
     Disabled: Look,
 }
 
-const DefaultDesign: Design = {
-    Idle = {
-        backgroundColor = Color3.fromRGB(60, 60, 70),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Hovered = {
-        backgroundColor = Color3.fromRGB(80, 80, 95),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 20,
-    },
-    Pressed = {
-        backgroundColor = Color3.fromRGB(40, 40, 50),
-        textColor = Color3.fromRGB(255, 255, 255),
-        textSize = 18,
-    },
-    Disabled = {
-        backgroundColor = Color3.fromRGB(35, 35, 35),
-        textColor = Color3.fromRGB(120, 120, 120),
-        textSize = 18,
+local Designs: { [string]: Design } = {
+    Default = {
+        Idle = {
+            backgroundColor = Color3.fromRGB(60, 60, 70),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Hovered = {
+            backgroundColor = Color3.fromRGB(80, 80, 95),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 20,
+        },
+        Pressed = {
+            backgroundColor = Color3.fromRGB(40, 40, 50),
+            textColor = Color3.fromRGB(255, 255, 255),
+            textSize = 18,
+        },
+        Disabled = {
+            backgroundColor = Color3.fromRGB(35, 35, 35),
+            textColor = Color3.fromRGB(120, 120, 120),
+            textSize = 18,
+        },
     },
 }
+
+return Designs
 ```
 
-## 3. Turn the design into sources
+:::
 
-A handler needs a Vide source for each property in each state. This helper builds them from a design.
+## 3. Build the button
 
-```luau
-const function createStates(design: Design)
+Create a third ModuleScript named **`Button`** in `ReplicatedStorage`. It returns `createButton`, which makes one button.
+A handler needs a Vide source for each property in each state, so `createStates` builds them from a design. Calling
+`ButtonRule.new` creates the handler, which is this button's component instance. The button starts in `Idle`, or in
+`Disabled` when it is not enabled.
+
+::: code-group
+
+```luau [ReplicatedStorage/Button.luau]
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Point @Vide at the Vide package in your project.
+const Vide = require("@Vide")
+const ButtonRule = require(ReplicatedStorage.ButtonRule)
+const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
+
+type Design = ButtonDesigns.Design
+
+local function createStates(design: Design)
     local states = {}
 
     for stateName, look in design do
@@ -108,15 +136,8 @@ const function createStates(design: Design)
 
     return states
 end
-```
 
-## 4. Build the button
-
-`createButton` makes one button. Calling `ButtonRule.new` creates the handler, which is this
-button's component instance. The button starts in `Idle`, or in `Disabled` when it is not enabled.
-
-```luau
-const function createButton(label: string, design: Design, enabled: boolean)
+local function createButton(label: string, design: Design, enabled: boolean)
     local handler = ButtonRule.new(createStates(design), if enabled then "Idle" else "Disabled")
 
     -- The state sources change instantly. `animate` returns sources that fade between the states instead.
@@ -167,31 +188,42 @@ const function createButton(label: string, design: Design, enabled: boolean)
 
     return button
 end
+
+return createButton
 ```
 
-## 5. Show it
+:::
 
-Create the Play button and mount it in the player's screen.
+## 4. Show it
 
-```luau
+Create the Play button and mount it in the player's screen. This LocalScript requires everything it uses.
+
+::: code-group
+
+```luau [StarterPlayerScripts/PlayButton.client.luau]
+const Players = game:GetService("Players")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Point @Vide at the Vide package in your project.
+const Vide = require("@Vide")
+const ButtonDesigns = require(ReplicatedStorage.ButtonDesigns)
+const createButton = require(ReplicatedStorage.Button)
+
 const player = Players.LocalPlayer
 
 Vide.mount(function()
     return Vide.create "ScreenGui" {
         Name = "Components",
         ResetOnSpawn = false,
-        [1] = createButton("Play", DefaultDesign, true),
+        [1] = createButton("Play", ButtonDesigns.Default, true),
     }
 end, player:WaitForChild("PlayerGui"))
 ```
 
+:::
+
 Hover over the button and it lightens and grows. Hold the mouse down and it darkens. Pass `false`
 as the last argument to `createButton` and it starts greyed out and ignores the mouse.
 
-## What to notice
-
-- The rule is written once. Every button is a new handler made with `ButtonRule.new`, and each handler keeps its own state.
-- The component's states and properties live in the rule, so a state name outside `allowedStateNames` is rejected.
-- `createButton` only reads from the handler. It never decides colors itself, so changing a design needs no change to the component.
-- `handler.animate()` gives the properties as sources that fade between the states, so they bind straight to the Instance. [`onTransition`](/guide/handlers#ontransition) is the same transition with a callback, for when you need to run your own code on each frame.
-- To make another button, call `createButton` again. To make a different looking button, pass another design. See [Inheritance](/examples/inheritance).
+To make another button, call `createButton` again. To make a different looking button, pass another design. See
+[Inheritance](/examples/inheritance). To keep the tween settings in one shared module instead of in each button, see
+[Tween config](/examples/tween-config).
